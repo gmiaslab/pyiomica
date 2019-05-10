@@ -1,4 +1,4 @@
-import pyiomica
+from pyiomica import pyiomica
 
 import os
 import timeMeasure
@@ -18,12 +18,6 @@ def mathematica_round(values, N=6):
 
 if __name__ == '__main__':
 
-    #dictionary = pyiomica.OBOGODictionary()
-
-
-
-
-
     np.random.seed(0)
 
     def processData(dataFileName, timesFileName, saveDir):
@@ -40,12 +34,12 @@ if __name__ == '__main__':
 
         TestEstimate = False
 
-        processRawData = True
+        processRawData = False
         drawHistograms = False
         drawSamplePeriodograms = False
-        calculateNullDistributionsAutocorrelations = True
-        calculateAutocorrelations = True
-        calculateSignificant = True
+        calculateNullDistributionsAutocorrelations = False
+        calculateAutocorrelations = False
+        calculateSignificant = False
         DrawDendrogramHeatmap = True
 
         if TestEstimate:
