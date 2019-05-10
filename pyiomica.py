@@ -31,22 +31,99 @@ import VisibilityGraph as vg
 import urllib.request
 import shutil
 
+import pymysql
+import datetime
+
 print("MathIOmica >> PyIOmica (https://mathiomica.org), by G. Mias Lab")
 
+
+### Utility functions #############################################################################
+'''
+Creates a path of directories, unless the path already exists.
+'''
+def createDirectories(path):
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    return
+
+
+'''
+A handy way to parallelize a function call
+'''
+def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
+
+    instPool = multiprocessing.Pool(processes = NumberOfAvailableCPUs)
+    return_values = instPool.map(func, list_of_tuples_of_func_params)
+    instPool.close()
+    instPool.join()
+
+    return np.vstack(return_values)
+  
+
+'''
+Pickle object into a file
+'''
+def write(data, fileName, withPKLZextension = True):
+
+    with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'wb') as temp_file:
+        pickle.dump(data, temp_file, protocol=4)
+
+    return
+
+
+'''
+Unpickle object from a file
+'''
+def read(fileName, withPKLZextension = True):
+
+    with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'rb') as temp_file:
+        data = pickle.load(temp_file)
+        return data
+
+    return
+
+###################################################################################################
+
+
+
+### Global constants ##############################################################################
+'''
+ConstantGeneDictionary is a global gene/protein dictionary variable typically created by GetGeneDictionary.
+'''
+ConstantGeneDictionary = None
+
+'''
+ConstantMathIOmicaDataDirectory is a global variable pointing to the MathIOmica data directory.
+'''
+ConstantMathIOmicaDataDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData"])
+
+'''
+ConstantMathIOmicaExamplesDirectory is a global variable pointing to the MathIOmica example data directory.
+'''
+ConstantMathIOmicaExamplesDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleData"])
+
+'''
+ConstantMathIOmicaExampleVideosDirectory is a global variable pointing to the MathIOmica example videos directory.
+'''
+ConstantMathIOmicaExampleVideosDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleVideos"])
+
+for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirectory, ConstantMathIOmicaExampleVideosDirectory]:
+    createDirectories(path)
+
+###################################################################################################
+
+
+
 ### Annotations and Enumerations ##################################################################
-
-
 '''
 OBOGODictionary() is an Open Biomedical Ontologies (OBO) Gene Ontology (GO) vocabulary dictionary generator.
 returns: Dictionary
 '''
 def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", ImportDirectly=False, MathIOmicaDataDirectory=None, OBOFile="goBasicObo.txt"):
 
-    MathIOmicaDataDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData"])
-
-    if not os.path.exists(MathIOmicaDataDirectory):
-        os.makedirs(MathIOmicaDataDirectory)
-
+    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
     fileGOOBO = "\\".join([MathIOmicaDataDirectory, OBOFile])
 
     #import the GO OBO file: we check if the OBO file Exist, if not, attempt to download and create it
@@ -86,11 +163,673 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
 
 
 '''
-GOAnalysis calculates input data over-representation analysis for Gene Ontology (GO) categories.
+GetGeneDictionary() creates an ID/accession dictionary from a UCSC search - typically of gene annotations.
 '''
-def GOAnalysis(data):
+def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectLabels = None,
+                    ImportDirectly = False, JavaGBs = '8', Species = "human", KEGGUCSCSplit = [True,"KEGG Gene ID"]):
+       
+    UCSCSQLSelectLabels = {"human": ["UCSC ID", "UniProt ID", "Gene Symbol", 
+        "RefSeq ID", "NCBI Protein Accession", "Ensembl ID", 
+        "KEGG Gene ID", "HGU133Plus2 Affymetrix ID"]}
+
+    #Update these to match any change in query
+    #Query for UCSC SQL server
+    UCSCSQLString = {"human": 
+       "SELECT hg19.kgXref.kgID, hg19.kgXref.spID, \
+        hg19.kgXref.geneSymbol, hg19.kgXref.refseq, hg19.kgXref.protAcc, \
+        hg19.knownToEnsembl.value, hg19.knownToKeggEntrez.keggEntrez, \
+        hg19.knownToU133Plus2.value FROM hg19.kgXref LEFT JOIN \
+        hg19.knownToEnsembl ON hg19.kgXref.kgID = hg19.knownToEnsembl.name \
+        LEFT JOIN hg19.knownToKeggEntrez ON hg19.kgXref.kgID = \
+        hg19.knownToKeggEntrez.name LEFT JOIN hg19.knownToU133Plus2 ON \
+        hg19.kgXref.kgID = hg19.knownToU133Plus2.name"}
+
+    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory
+
+    geneUCSCTable = "\\".join([MathIOmicaDataDirectory, Species + "GeneUCSCTable"])
+       
+    #If the user asked us to import directly, import directly with SQL, otherwise, get it from a directory they specify
+    if not os.path.isfile(geneUCSCTable):
+        print("Did Not Find Gene Translation Files, Attempting to Download from UCSC...")
+        ImportDirectly = True
+    else:
+        termTable = read(geneUCSCTable, False)[1]
+
+    if ImportDirectly:
+        #Connect to the database from UCSC
+        ucscDatabase = pymysql.connect("genome-mysql.cse.ucsc.edu","genomep","password")
+
+        if ucscDatabase==None:
+           print("Could not establish connection to UCSC. Please try again or add MathIOmica's dictionary manually at ", geneUCSCTable)
+           return
+
+        #Prepare a cursor object using cursor() method
+        ucscDatabaseCursor = ucscDatabase.cursor()
+
+        try:
+           #Execute the SQL command
+           ucscDatabaseCursor.execute(UCSCSQLString[Species])
+
+           #Fetch all the rows in a list of lists.
+           termTable = ucscDatabaseCursor.fetchall()
+
+        except:
+           print ("Error: unable to fetch data")
+
+        termTable = np.array(termTable).T
+        termTable[np.where(termTable=="")] = None
+
+        #Get all the terms we are going to need, import with SQL the combined tables,and export with a time stamp
+        write((datetime.datetime.now().isoformat(), termTable), geneUCSCTable, False)
+
+        #Close SQL connection
+        ucscDatabase.close()
+
+        if os.path.isfile(geneUCSCTable):
+            print("Created Annotation Files at ", geneUCSCTable)
+        else:
+            print("Did Not Find Annotation Files, Aborting Process")
+            return
+
+    returning = {Species : dict(zip(UCSCSQLSelectLabels[Species],termTable))}
+    
+    if KEGGUCSCSplit[0]:
+        returning[Species][KEGGUCSCSplit[1]] = np.array([item.split("+")[1] if item!=None else item for item in returning[Species][KEGGUCSCSplit[1]]])
+    
+    return returning
 
 
+'''
+Function will download and create gene associations and restrict to required background set
+'''
+def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, BackgroundSet = [], Species = "human",
+                        LengthFilter = None, LengthFilterFunction = np.greater_equal, GOFileName = None, GOFileColumns = [2, 5], 
+                        GOURL = "http://current.geneontology.org/annotations/"):
+
+    #"http://geneontology.org/gene-associations/" --> "http://current.geneontology.org/annotations/"
+    #             "gene_association.goa_human.gz" --> "goa_human.gaf.gz, v2.0 --> v2.1
+
+    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+
+    #If the user asked us to import MathIOmicaDataDirectoryectly, import MathIOmicaDataDirectoryectly from GO website, otherwise, get it from a MathIOmicaDataDirectoryectory they specify
+    file = "goa_" + Species + ".gaf.gz" if GOFileName==None else GOFileName
+    localFile =  "\\".join([MathIOmicaDataDirectory, "goa_" + Species + ".gaf"])
+    localZipFile =  "\\".join([MathIOmicaDataDirectory, "goa_" + Species + ".gaf.gz"])
+    fileGOAssociations = ["\\".join([MathIOmicaDataDirectory, Species + item]) for item in ["GeneOntAssoc", "IdentifierAssoc"]]
+
+    '''
+    Efficient way to create a reverse dictionary from a dictionary.
+    Utilizes Pandas.Dataframe.groupby
+    Note: any entries with missing values will be removed
+    '''
+    def createReverseDictionary(inputDictionary):
+
+        keys, values = np.array(list(inputDictionary.keys())), np.array(list(inputDictionary.values()))
+
+        allEntries = []
+        for i in range(len(keys)):
+            for value in values[i]:
+                if keys[i]==keys[i] and value==value:
+                    allEntries.append([keys[i], value])
+
+        df = pd.DataFrame(np.array(allEntries))
+        dfGrouped = df.groupby(df.columns[1])
+
+        for key in list(dfGrouped.indices.keys()):
+            dfGrouped.indices[key] = df.iloc[dfGrouped.indices[key]].values.T[0]
+
+        return dfGrouped.indices
+
+    #We check if the Annotations exist, if not, attempt to download and create them
+    if not np.array(list(map(os.path.isfile, fileGOAssociations))).all():
+        print("Did Not Find Annotation Files, Attempting to Download...")
+        ImportDirectly = True
+
+    if ImportDirectly:
+        #Delete existing file
+        if os.path.isfile(localFile):
+            os.remove(localFile)
+        
+        urllib.request.urlretrieve(GOURL + file, "\\".join([localZipFile]))
+        
+        with gzip.open(localZipFile, 'rb') as fileIn:
+            with open(localFile, 'wb') as fileOut:
+                shutil.copyfileobj(fileIn, fileOut)
+        
+        #Clean up archive
+        os.remove(localZipFile)
+        
+        with open(localFile, 'r') as tempFile:
+            goData = tempFile.readlines()
+
+        #Remove comments by "!" lines
+        goData = np.array(goData[np.where(np.array([line[0]!='!' for line in goData]))[0][0]:])
+        goData = pd.DataFrame([item.strip('\n').split('\t') for item in goData]).values
+
+        #Remove all entries with missing
+        df = pd.DataFrame(goData.T[np.array(GOFileColumns)-1].T)
+        df = df[np.count_nonzero(df.values!='', axis=1)==2]
+
+        ##Mark missing values with NaN
+        #df.iloc[np.where(df.values=='')] = np.nan
+
+        dfGrouped = df.groupby(df.columns[1])
+
+        for key in list(dfGrouped.indices.keys()):
+            dfGrouped.indices[key] = df.iloc[dfGrouped.indices[key]].values.T[0]
+
+        geneOntAssoc = dfGrouped.indices
+        identifierAssoc = createReverseDictionary(geneOntAssoc)
+
+        #Save created annotations geneOntAssoc, identifierAssoc
+        write((datetime.datetime.now().isoformat(), geneOntAssoc), fileGOAssociations[0], False)
+        write((datetime.datetime.now().isoformat(), identifierAssoc), fileGOAssociations[1], False)
+        
+        os.remove(localFile)
+
+        if np.array(list(map(os.path.isfile, fileGOAssociations))).all():
+            print("Created Annotation Files at ", fileGOAssociations)
+        else:
+            print("Did Not Find Annotation Files, Aborting Process")
+            return
+    else:
+        #Otherwise we get from the user specified MathIOmicaDataDirectoryectory
+        geneOntAssoc = read(fileGOAssociations[0], False)[-1]
+        identifierAssoc = read(fileGOAssociations[1], False)[-1]
+
+    if BackgroundSet!=[]:
+        #Using provided background list to create annotation projection to limited background space, also remove entries with only one and missing value
+        keys, values = np.array(list(identifierAssoc.keys())), np.array(list(identifierAssoc.values()))
+        index = np.where([(((len(values[i])==True)*(values[i][0]!=values[i][0]))==False)*(keys[i] in BackgroundSet) for i in range(len(keys))])[0]
+        identifierAssoc = dict(zip(keys[index],values[index]))
+
+        #Create corresponding geneOntAssoc
+        geneOntAssoc = createReverseDictionary(identifierAssoc)
+
+    if LengthFilter!=None:
+        keys, values = np.array(list(geneOntAssoc.keys())), np.array(list(geneOntAssoc.values()))
+        index = np.where(LengthFilterFunction(np.array([len(value) for value in values]), LengthFilter))[0]
+        geneOntAssoc = dict(zip(keys[index],values[index]))
+
+        #Create corresponding identifierAssoc
+        identifierAssoc = createReverseDictionary(geneOntAssoc)
+
+    return {Species : {"IDToGO": identifierAssoc, "GOToID": geneOntAssoc}}
+
+
+'''
+Obtain gene dictionary - if it exists can either augment with new information or Species or create new, if not exist then create variable
+'''
+def obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions):
+    
+    if ConstantGeneDictionary!=None:
+        #ConstantGeneDictionary exists
+        if AugmentDictionary:
+            #Augment ConstantGeneDictionary
+            ConstantGeneDictionary = {**ConstantGeneDictionary, **(GetGeneDictionary(**GetGeneDictionaryOptions) if GeneDictionary==None else GeneDictionary)}
+        else:
+            #Replace ConstantGeneDictionary
+            ConstantGeneDictionary = GetGeneDictionary(**GetGeneDictionaryOptions) if GeneDictionary==None else GeneDictionary
+    else:
+        #Create/load UCSC based translation dictionary - NB global variable or use specified variable
+        ConstantGeneDictionary = GetGeneDictionary(**GetGeneDictionaryOptions) if GeneDictionary==None else GeneDictionary
+
+    return
+
+
+'''
+GOAnalysis calculates input data over-representation analysis for Gene Ontology (GO) categories.
+MultipleListCorrection==None, #Correct for multiple lists, e.g protein+RNA
+MultipleList==False, #whether input is multiple omics or single - for non-omics-object inputs
+AdditionalFilter==None, #Select[MatchQ[#[[3,1,2]],"biological_process"]&]
+'''
+def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID={"UniProt ID","Gene Symbol"}, OutputID="UniProt ID",
+                 GOAnalysisAssignerOptions={}, BackgroundSet="All", Species="human", OntologyLengthFilter=2, ReportFilter=1, ReportFilterFunction="GreaterEqualThan",
+                 pValueCutoff=0.05, TestFunction=None, HypothesisFunction=None, FilterSignificant=True, OBODictionaryVariable=None,
+                 OBOGODictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, AdditionalFilter=None, GeneDictionary=None):
+
+    HypothesisFunction = lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"]
+    TestFunction = lambda n, N, M, x: 1. - scipy.stats.hypergeom.cdf(x-1, M, n, N)
+
+    #Obtain OBO dictionary with OBOGODictionaryOptions if any. If externally defined use user definition for OBODict Variable
+    OBODict = OBOGODictionary(**OBOGODictionaryOptions) if OBODictionaryVariable==None else OBODictionaryVariable
+
+    #Obtain gene dictionary - if it exists can either augment with new information or Species or create new, if not exist then create variable
+    obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions)
+
+    #Get the right GO terms for the BackgroundSet requested and correct Species
+    goAssignment = GOAnalysisAssigner(BackgroundSet=BackgroundSet, Species=Species , LengthFilter=OntologyLengthFilter) if GOAnalysisAssignerOptions=={} else GOAnalysisAssigner(**GOAnalysisAssignerOptions)
+
+
+
+
+    #countsAll = Query[Species, "GOToID", All, Length]@goAssignment;
+    #totalGenes = Query[Species, "IDToGO", Length]@goAssignment;
+    #totalCategories = Query[Species, "GOToID", Length]@goAssignment;
+
+    ##If the input is a list
+    #if  MatchQ[Head[data], List], listToggle = True; data = Association@{"Input List" -> data}];
+
+    #if  MatchQ[Head[data], Association],
+    #    #check if association of associations
+    #    if  MatchQ[Head@FirstCase[Values[data], Except[Missing]], Association],
+    #        #clustering object
+    #        multiCorr = Switch[MultipleListCorrection, None, 1, Automatic, Max@Values@ Flatten@Query[All /* Values /* Normal, "GroupAssociations",  All, All /* Tally /* Length, -1]@data, _, MultipleListCorrection];
+
+    #        #generate an association of all members with named association
+    #        membersWithAssociations = Query[All, "GroupAssociations", All,
+    #        #Extract the translations, match the ones that intersect for different modes (e.g. RNA/Protein label (last element)must be same)
+    #        #qu☺ery the GO database in same step
+    #        (Union@#[[All, 1]] -> (Query[# /* Values /* Flatten /* Union /* 
+    #                    DeleteMissing]@(Query[Species, "IDToGO"]@goAssignment) &@Union@ Flatten[#[[All, 2]]]) & /@ 
+    #                Gather[#, ((MatchQ[#1[[1, -1]], #2[[1, -1]]]) && 
+    #                    IntersectingQ[#1[[2]], #2[[2]]]) &] &@({#, (Flatten@Values@GeneTranslation[#[[{1}]],  OutputID, ConstantGeneDictionary, InputID -> InputID, Species -> Species])} & /@ #) &) /* Association /* DeleteCases[{Missing[]} | {}]]@data;
+
+    #        #testing Category groupings
+    #        testCats = (Query[All, 
+    #            All, {
+    #                #Counts in the list
+    #                Sequence@{AssociationThread[#1 -> ConstantArray[#2, Length[#1]]],
+    #                #Counts in the Family
+    #                (Query[Species, "GOToID", #1, Length]@goAssignment), Counts@#1, Query[#1]@OBODict} &[Flatten@Values[#], Length[#]], 
+    #                GroupBy[Last -> First]@Flatten[#, 1] &@(Tuples[{{#[[1]]}, #[[2]]}] & /@  Normal[#])} & /* 
+    #                Merge[Identity] /* ({(TestFunction[#[[1]], multiCorr*#[[2]], 
+    #                multiCorr*totalGenes, #[[3]]]), {#[[1]], multiCorr*#[[2]], multiCorr*totalGenes, #[[3]]}, #[[ 4 ;;]]} & /@ # &)]@membersWithAssociations);
+
+    #        #Hypothesis Testing
+    #        ontologyResultsHCct = Query[All, Returner[#, Applier[HypothesisFunction[#, pValueCutoff, totalCategories] &, #, ListIndex -> 1], ListIndex -> 1] &]@testCats;
+    #        #Filters
+    #        #Length filter
+    #        ontologyResultsFltrd = Query[All, All, Select[ReportFilterFunction[ReportFilter][#[[2, 4]]] &]]@ ontologyResultsHCct;
+    #        returning = Query[All, All, (if  FilterSignificant, Select[#[[1, -1]] &], All]) /* SortBy[#[[1, 1]] &]]@ontologyResultsFltrd;
+    #        if  !MatchQ[AdditionalFilter, None], returning = Query[All, All, AdditionalFilter]@returning],
+    #        #Association of Lists
+    #        if  MultipleList,
+    #           #Multi Omics Associations of Lists input
+    #            multiCorr = Switch[MultipleListCorrection, None, 1, Automatic, Max@Values@Query[All, All /* Tally /* Length, -1]@data, _, MultipleListCorrection];
+    #            membersWithAssociations = Query[All,
+    #                #Extract the translations, match the ones that intersect for different modes (e.g. RNA/Protein label (last element)must be same)
+    #                #query the GO database in same step
+    #                (Union@#[[All, 1]] -> (Query[# /* Values /* Flatten /* Union /* DeleteMissing]@(Query[Species, "IDToGO"]@goAssignment) &@Union@ Flatten[#[[All, 2]]]) & /@ 
+    #                        Gather[#, ((MatchQ[#1[[1, -1]], #2[[1, -1]]]) && IntersectingQ[#1[[2]], #2[[2]]]) &] &@({#, (Flatten@
+    #                            Values@GeneTranslation[#[[{1}]], OutputID, ConstantGeneDictionary, InputID -> InputID, Species -> Species])} & /@ #) &) /* Association /* DeleteCases[{Missing[]} | {}]]@data,
+                
+    #            #Single Omics Associations of Lists Input
+    #            multiCorr = Switch[MultipleListCorrection, None, 1, _, MultipleListCorrection]
+    #            #might have put in mixed IDs correspocting to different omics types still, give option to user;
+    #            #Extract the translations, match the ones that intersect for different modes (e.g. RNA/Protein label (last element)must be same)
+    #            membersWithAssociations = Query[All,
+    #                    #query the GO database in same step
+    #                    (Union@#[[All, 1]] -> (Query[# /* Values /* Flatten /* Union /* DeleteMissing]@(Query[Species, "IDToGO"]@goAssignment) &@Union@ Flatten[#[[All, 2]]]) & /@ 
+    #                    Gather[#, (IntersectingQ[#1[[2]], #2[[2]]]) &] &@({if  ListQ[#], #, #] , (Flatten@ Values@GeneTranslation[if  ListQ[#],#[[{1}]],{#}], 
+    #                            OutputID, ConstantGeneDictionary, InputID -> InputID,  Species -> Species])} & /@ #) &)/*Association/* DeleteCases[{Missing[]}|{}]]@data];
+
+    #        testCats = (Query[All, {
+    #            #Counts in the list
+    #            #Counts in the Family
+    #            Sequence@{AssociationThread[#1 -> ConstantArray[#2, Length[#1]]], (Query[Species, "GOToID", #1, Length]@goAssignment), Counts@#1, Query[#1]@OBODict} &[Flatten@Values[#], Length[#]], 
+    #            GroupBy[Last -> First]@ Flatten[#, 1] &@(Tuples[{{#[[1]]}, #[[2]]}] & /@ Normal[#])} & /* 
+    #            Merge[Identity] /* ({TestFunction[#[[1]], multiCorr*#[[2]], multiCorr*totalGenes, #[[3]]], {#[[1]], multiCorr*#[[2]], multiCorr*totalGenes, #[[3]]}, #[[ 4 ;;]]} & /@ # &)]@membersWithAssociations);
+
+    #        ontologyResultsHCct = Query[Returner[#, Applier[HypothesisFunction[#, pValueCutoff, totalCategories] &, #, ListIndex -> 1], ListIndex -> 1] &]@testCats;
+
+    #        #Filters
+    #        #Length filter
+    #        ontologyResultsFltrd = Query[All, Select[ReportFilterFunction[ReportFilter][#[[2, 4]]] &]]@ontologyResultsHCct;
+    #        returning = Query[All, (if  FilterSignificant,Select[#[[1, -1]] &], All ]) /* SortBy[#[[1, 1]] &]]@ontologyResultsFltrd;
+    #        if  !MatchQ[AdditionalFilter, None],returning = Query[All, AdditionalFilter]@returning ];
+    #        if  listToggle, returning = Values[returning][[1]]
+    #        #If a single list was provided, return the association for Gene Ontologies
+    #]]];
+
+    return returning
+
+
+'''
+GeneTranslation(inputList,targetIDList,geneDictionary) uses geneDictionary to convert inputList IDs to different annotations as indicated by targetIDList.
+'''
+def GeneTranslation(InputList, TargetIDList, GeneDictionary, InputID = None, Species = "human"): 
+    
+    ##Generate the transformed output set
+    #if InputID==None:
+    #    returning = Query[Species, TargetIDList, Merge[Query[Species, All, Position[#]]@GeneDictionary & /@ InputList, Identity]]@GeneDictionary
+    #else:
+    #    #query of position for given list of identifiers
+    #    returning = (Query[Species, TargetIDList, # /* (AssociationThread[InputList -> ((*If[MatchQ[Head[#],List],DeleteMissing[#],#]&@*)(DeleteMissing[Flatten[Union[#]]] /. {} ->  Missing[]) & /@ #)] &)]@
+    #            GeneDictionary) &@ (Flatten[#] & /@  Query[Species /* Values /* Transpose, InputID, Position[#] & /@ InputList]@ GeneDictionary)
+
+    return returning
+
+
+'''
+KEGGAnalysisAssigner() creates KEGG: Kyoto Encyclopedia of Genes and Genomes pathway associations, 
+restricted to required background set, downloading the data if necessary.
+'''
+def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, BackgroundSet = 'All', KEGGQuery1 = "pathway", KEGGQuery2 = "hsa",
+                        LengthFilter = None, LengthFilterFunction = 'GreaterEqualThan', Labels = ["IDToPath", "PathToID"]):
+    
+    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+
+    ##if the user asked us to import directly, import directly from KEGG website, otherwise, get it from a directory they specify
+    #fileKEGGAssociations = FileNameJoin[Flatten[{MathIOmicaDataDirectory, #}]] & /@ {KEGGQuery1 <> "_" <> KEGGQuery2 <> "KEGGMemberToPathAssociation", KEGGQuery1 <> "_" <> KEGGQuery2 <> "KEGGPathToMemberAssociation"};
+
+    #if !(And @@ (FileExistsQ[#] & /@ fileKEGGAssociations)):
+    #    print("Did Not Find Annotation Files, Attempting to Download...")
+    #    ImportDirectly = True
+
+    #if ImportDirectly:
+    #    If[FileExistsQ[FileNameJoin[Flatten[{MathIOmicaDataDirectory, KEGGQuery1 <> "_" <> KEGGQuery2 <> ".tsv"}]]],
+    #        DeleteFile[FileNameJoin[Flatten[{MathIOmicaDataDirectory, KEGGQuery1 <> "_" <> KEGGQuery2 <> ".tsv"}]]]];
+
+    #    URLSave["http://rest.kegg.jp/link/" <> KEGGQuery1 <> If[ MatchQ[KEGGQuery2, ""], "", "/" <> KEGGQuery2], FileNameJoin[Flatten[{MathIOmicaDataDirectory, KEGGQuery1 <> "_" <> KEGGQuery2 <> ".tsv"}]]];
+
+    #    importedIDs = Import[FileNameJoin[Flatten[{MathIOmicaDataDirectory, KEGGQuery1 <> "_" <> KEGGQuery2 <> ".tsv"}]]];
+
+    #    #gene to pathway association
+    #    idToPath = Association@(#[[1, 1]] -> (Union@ #[[All, 2]]) & /@ Query[All /* (GatherBy[#, First] &)]@importedIDs);
+
+    #    Put[Join[Date[], {idToPath}], fileKEGGAssociations[[1]]];
+
+    #    #pathway to gene association
+    #    pathToID = Association@(#[[1, 2]] -> (Union@ #[[All, 1]]) & /@ Query[All /* (GatherBy[#, Last] &)]@importedIDs);
+
+    #    #time stamp and save associations
+    #    Put[Join[Date[], {pathToID}], fileKEGGAssociations[[2]]];
+
+    #    DeleteFile[FileNameJoin[Flatten[{MathIOmicaDataDirectory, KEGGQuery1 <> "_" <> KEGGQuery2 <> ".tsv"}]]];
+
+    #    If[ And @@ (FileExistsQ[#] & /@ fileKEGGAssociations),
+    #        Print["Created Annotation Files at ", fileKEGGAssociations],
+    #     else:
+    #        Print["Did Not Find Annotation Files, Aborting Process"]; return
+    #else:
+    #    #otherwise import the necessary associations from web
+    #    idToPath = (Get[fileKEGGAssociations[[1]]])[[-1]];
+    #    pathToID = (Get[fileKEGGAssociations[[2]]])[[-1]];
+
+    #if BackgroundSet=='All':
+    #    #using provided background list to create annotation projection to limited background space
+    #    idToPath = Query[BackgroundSet /* DeleteMissing]@idToPath;
+    #    pathToID = GroupBy[#, Last -> First, Union] &@ Flatten[#, 1] &@(Tuples[{{#[[1]]}, #[[2]]}] & /@ Normal@idToPath)
+
+    #if LengthFilter==None:
+    #    pathToID = Query[Select[(LengthFilterFunction[LengthFilter][Length[#]]) &]]@pathToID;
+    #    idToPath = GroupBy[#, Last -> First, Union] &@Flatten[#, 1] &@(Tuples[{{#[[1]]}, #[[2]]}] & /@ Normal@pathToID)
+
+    #returning = Association[KEGGQuery2 -> AssociationThread[Labels, {idToPath, pathToID}]];
+        
+    return returning
+
+
+'''
+KEGGDictionary() creates a dictionary from KEGG: Kyoto Encyclopedia of Genes and Genomes terms - typically association of pathways and members therein.
+'''
+def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQuery1 = "pathway", KEGGQuery2 = "hsa"):
+    
+    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+
+    #if the user asked us to import directly, import directly from KEGG website, otherwise, get it from a directory they specify
+    fileKEGGDict = "\\".join([MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + "_KEGGDictionary"])
+
+    if os.path.isfile(fileKEGGDict):
+        associationKEGG = None #Get[fileKEGGDict][[-1]]
+    else:
+        print("Did Not Find Annotation Files, Attempting to Download...")
+        ImportDirectly = True
+
+    if ImportDirectly:
+        queryFile = "\\".join([MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv"])
+
+        if os.path.isfile(queryFile): 
+           os.remove(queryFile)
+
+        urllib.request.urlretrieve("http://rest.kegg.jp/list/" + KEGGQuery1 + "" if KEGGQuery2=="" else "/" + KEGGQuery2, queryFile)
+
+        #importedDictionary = Import[FileNameJoin[Flatten[{MathIOmicaDataDirectory, KEGGQuery1 <> "_" <> KEGGQuery2 <> ".tsv"}]]];
+
+        #associationKEGG = AssociationThread[#[[1]] -> #[[2]] &@Transpose@importedDictionary];
+
+        #Put[Join[Date[], {associationKEGG}], fileKEGGDict];
+
+        os.remove(queryFile)
+
+        if os.path.isfile(fileKEGGDict):
+            print("Created Annotation Files at ", fileKEGGDict)
+        else:
+            print("Did Not Find Annotation Files, Aborting Process")
+            return
+
+    return associationKEGG
+
+
+'''
+KEGGAnalysis(data) calculates input data over-representation analysis for KEGG: Kyoto Encyclopedia of Genes and Genomes pathways.
+Input can be: clustering object
+MultipleListCorrection -> None, (*Correct for multiple lists, e.g protein+RNA*)
+MultipleList -> False, (*whether input is multiple omics or single - for non-omics-object inputs*)
+AdditionalFilter -> None (*Select[MatchQ[#[[3,1,2]],"biological_process"]&]*),
+AnalysisType -> "Genomic" (*options are "Genome", "Molecular","All"*),
+Species -> "human", (*Used in GeneDictionary*)
+'''
+def KEGGAnalysis(dataIn, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, AugmentDictionary = True, InputID = ["UniProt ID", "Gene Symbol"],
+                OutputID = "KEGG Gene ID", MolecularInputID = ["cpd"], MolecularOutputID = "cpd", KEGGAnalysisAssignerOptions = {}, BackgroundSet = 'All', 
+                KEGGOrganism = "hsa", KEGGMolecular = "cpd", KEGGDatabase = "pathway", PathwayLengthFilter = 2, ReportFilter = 1, 
+                ReportFilterFunction = 'GreaterEqualThan', pValueCutoff = 0.05, TestFunction = None, HypothesisFunction = None, FilterSignificant = True, 
+                KEGGDictionaryVariable = None, KEGGDictionaryOptions = {}, MultipleListCorrection = None, MultipleList = False, AdditionalFilter = None, 
+                GeneDictionary = None, Species = "human", MolecularSpecies = "compound", NonUCSC = False, MathIOmicaDataDirectory = None):
+
+    HypothesisFunction = lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"]
+    TestFunction = lambda n, N, M, x: 1. - scipy.stats.hypergeom.cdf(x-1, M, n, N)
+    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+
+    #Gene Identifier based analysis
+    if AnalysisType=="Genomic":
+        #Obtain OBO dictionary. If externally defined use user definition for OBODict Var
+        keggDict = KEGGDictionary(**KEGGDictionaryOptions) if KEGGDictionaryVariable==None else KEGGDictionaryVariable
+
+        #Obtain gene dictionary - if it exists can either augment with new information or Species or create new, if not exist then create variable
+        obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions)
+
+        #get the right KEGG terms for the BackgroundSet requested and correct Species
+        pathAssign = KEGGAnalysisAssigner(BackgroundSet=BackgroundSet, KEGGQuery1=KEGGDatabase, KEGGQuery2=KEGGOrganism, LengthFilter=PathwayLengthFilter) if KEGGAnalysisAssignerOptions=={} else KEGGAnalysisAssigner(**KEGGAnalysisAssignerOptions)
+
+    #Molecular based analysis
+    elif AnalysisType=="Molecular":
+        InputID = MolecularInputID
+        OutputID = MolecularOutputID
+        Species = MolecularSpecies
+        NonUCSC = True
+        KEGGOrganism = KEGGMolecular
+        MultipleListCorrection = None
+
+        keggDict = KEGGDictionary(**({KEGGQuery1: "pathway", KEGGQuery2: ""} if KEGGDictionaryOptions=={} else KEGGDictionaryOptions)) if KEGGDictionaryVariable==None else KEGGDictionaryVariable
+
+        #Obtain gene dictionary - if it exists can either augment with new information or Species or create new, if not exist then create variable
+        fileMolDict = "\\".join([MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary"])
+
+        if os.path.isfile(fileMolDict):
+            GeneDictionary = Get[fileMolDict]
+        else:
+            print("Could not find annotation file at " + fileMolDict + " Please either obtain an annotation file from mathiomica.org or provide a GeneDictionary option variable.")
+            return
+
+        obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions={})
+
+        #Get the right KEGG terms for the BackgroundSet requested and correct Species
+        #If no specific options for function use BackgroundSet, Species request, length request
+        pathAssign = KEGGAnalysisAssigner(BackgroundSet=BackgroundSet, KEGGQuery1=KEGGDatabase, KEGGQuery2=KEGGOrganism , LengthFilter=PathwayLengthFilter) if KEGGAnalysisAssignerOptions=={} else KEGGAnalysisAssigner(**KEGGAnalysisAssignerOptions)
+
+        returning = {
+            "Molecular" :
+            KEGGAnalysis(dataIn, GetGeneDictionaryOptions=GetGeneDictionaryOptions,AugmentDictionary=AugmentDictionary,InputID=InputID,OutputID=OutputID,MolecularInputID=MolecularInputID,MolecularOutputID=MolecularOutputID,
+                        KEGGAnalysisAssignerOptions=KEGGAnalysisAssignerOptions,BackgroundSet=BackgroundSet,KEGGOrganism=KEGGOrganism,KEGGMolecular=KEGGMolecular,KEGGDatabase=KEGGDatabase,
+                        PathwayLengthFilter=PathwayLengthFilter,ReportFilter=ReportFilter,ReportFilterFunction=ReportFilterFunction,pValueCutoff=pValueCutoff,TestFunction=TestFunction,HypothesisFunction=  HypothesisFunction,
+                        FilterSignificant=FilterSignificant,KEGGDictionaryVariable=KEGGDictionaryVariable,KEGGDictionaryOptions=KEGGDictionaryOptions,MultipleListCorrection=MultipleListCorrection,
+                        MultipleList=MultipleList,AdditionalFilter=AdditionalFilter,GeneDictionary=GeneDictionary,Species=Species,MolecularSpecies=MolecularSpecies,NonUCSC=NonUCSC,
+                        AnalysisType="Molecular" ,MathIOmicaDataDirectory=MathIOmicaDataDirectory),
+            "Genomic" :
+            KEGGAnalysis(dataIn, GetGeneDictionaryOptions=GetGeneDictionaryOptions,AugmentDictionary=AugmentDictionary,InputID=InputID,OutputID=OutputID,MolecularInputID=MolecularInputID,MolecularOutputID=MolecularOutputID,
+                        KEGGAnalysisAssignerOptions=KEGGAnalysisAssignerOptions,BackgroundSet=BackgroundSet,KEGGOrganism=KEGGOrganism,KEGGMolecular=KEGGMolecular,KEGGDatabase=KEGGDatabase,
+                        PathwayLengthFilter=PathwayLengthFilter,ReportFilter=ReportFilter,ReportFilterFunction=ReportFilterFunction,pValueCutoff=pValueCutoff,TestFunction=TestFunction,HypothesisFunction=  HypothesisFunction,
+                        FilterSignificant=FilterSignificant,KEGGDictionaryVariable=KEGGDictionaryVariable,KEGGDictionaryOptions=KEGGDictionaryOptions,MultipleListCorrection=MultipleListCorrection,
+                        MultipleList=MultipleList,AdditionalFilter=AdditionalFilter,GeneDictionary=GeneDictionary,Species=Species,MolecularSpecies=MolecularSpecies,NonUCSC=NonUCSC,
+                        AnalysisType="Genomic" ,MathIOmicaDataDirectory=MathIOmicaDataDirectory)}
+
+        return returning
+
+    #    #Non match
+    #    print("AnalysisType\[Rule]" + If[ StringQ[AnalysisType],"\"" + AnalysisType + "\"",ToString@AnalysisType] + " is not a valid  choice.")
+    #    return
+
+    #countsAll = len(pathAssign[KEGGOrganism]["PathToID"])
+    #totalMembers = len(pathAssign[KEGGOrganism]["IDToPath"])
+    #totalCategories = len(pathAssign[KEGGOrganism]["PathToID"]) #Query[KEGGOrganism, "PathToID", Length]@pathAssign;
+
+    ##If LIST entered
+    #if Head[dataIn]==List:
+    #    listToggle = True;
+    #    dataIn = {"Input List": dataIn}
+
+    #If[ MatchQ[Head[dataIn], Association],
+    #    #check if association of associations
+    #    If[ MatchQ[Head@FirstCase[Values[dataIn], Except[Missing]], Association],
+    #        #clustering object
+    #        multiCorr = Switch[MultipleListCorrection, None, 1, Automatic, Max@Values@Flatten@Query[All /* Values /* Normal, "GroupAssociations",  All, All /* Tally /* Length, -1]@dataIn, _, MultipleListCorrection];
+            
+    #        #generate an association of all members with named association
+    #        membersWithAssociations =
+    #        Query[All, "GroupAssociations", All,
+    #        #Extract the translations, match the ones that intersect for different modes (e.g. RNA/Protein label (last element)must be same)
+    #        #query the KEGG database in same step
+    #        (Union@#[[All,1]] -> (Query[# /* Values /* Flatten /* Union /* DeleteMissing]@(Query[KEGGOrganism, "IDToPath"]@pathAssign) &@Union@ Flatten[#[[All, 2]]]) & /@ 
+    #                Gather[#, ((MatchQ[#1[[1, -1]], #2[[1, -1]]]) && IntersectingQ[#1[[2]], #2[[2]]]) &] &@({#, 
+    #                If[ NonUCSC,#,If[ MissingQ[#],#,KEGGOrganism + ":" + #]] & /@ (Flatten@Values@GeneTranslation[#[[{1}]], OutputID, ConstantGeneDictionary, InputID -> InputID, Species -> Species])} & /@ #) &) /* Association /*
+    #                DeleteCases[{Missing[]} | {}]]@dataIn;
+            
+    #        #testing Category groupings
+    #        testCats = (Query[All, All, {Sequence@{AssociationThread[#1 -> ConstantArray[#2, Length[#1]]],
+    #                (Query[KEGGOrganism, "PathToID", #1,Length]@pathAssign), Counts@#1, Query[#1]@keggDict} &[Flatten@Values[#], Length[#]], 
+    #                GroupBy[Last -> First]@Flatten[#, 1] &@(Tuples[{{#[[1]]}, #[[2]]}] & /@ Normal[#])} & /* Merge[Identity] /* ({(TestFunction[#[[1]], multiCorr*#[[2]], 
+    #                    multiCorr*totalMembers, #[[3]]]), {#[[1]], multiCorr*#[[2]], multiCorr*totalMembers, #[[3]]}, #[[4 ;;]]} & /@ # &)]@membersWithAssociations);
+
+    #        #Hypothesis Testing
+    #        keggResultsHCct = Query[All, Returner[#, Applier[HypothesisFunction[#, pValueCutoff, totalCategories] &, #, ListIndex -> 1], ListIndex -> 1] &]@testCats;
+
+    #        #Filters
+    #        #Length filter
+    #        keggResultsFltrd = Query[All, All, Select[ReportFilterFunction[ReportFilter][#[[2, 4]]]&]]@keggResultsHCct;
+
+    #        returning = Query[All, All, (If[ FilterSignificant,Select[#[[1, -1]] &],All]) /* SortBy[#[[1, 1]] &]]@keggResultsFltrd;
+
+    #        if AdditionalFilter==None:
+    #            returning = Query[All, All, AdditionalFilter]@returning
+                
+    #        #Association of Lists
+    #        If[ MultipleList,
+    #            #Multi Omics Associations of Lists input
+    #            multiCorr =Switch[MultipleListCorrection, None, 1, Automatic, Max@Values@Query[All, All /* Tally /* Length, -1]@dataIn, _, MultipleListCorrection];
+
+    #            #Extract the translations, match the ones that intersect for different modes (e.g. RNA/Protein label (last element)must be same)
+    #            membersWithAssociations = Query[All,(Union@#[[All, 1]] ->(Query[# /* Values /* Flatten /* Union /* 
+    #                            DeleteMissing]@(Query[KEGGOrganism, "IDToPath"]@pathAssign) &@Union@ Flatten[#[[All, 2]]]) & /@ Gather[#, ((MatchQ[#1[[1, -1]], #2[[1, -1]]]) && IntersectingQ[#1[[2]], #2[[2]]]) &] &@({#, 
+    #                            If[ NonUCSC,#,If[ MissingQ[#],#,KEGGOrganism + ":" + #]] & /@ (Flatten@Values@GeneTranslation[#[[{1}]], 
+    #                            OutputID, ConstantGeneDictionary, InputID -> InputID, Species -> Species])} & /@ #) &) /* Association /*DeleteCases[{Missing[]} | {}]]@dataIn,
+
+    #            #Single Omics Associations of Lists Input
+    #            #might have put in mixed IDs correspocting to different omics types still, give option to user
+    #            multiCorr = Switch[MultipleListCorrection, None, 1, _, MultipleListCorrection];
+
+    #            #Extract the translations, match the ones that intersect for different modes (e.g. RNA/Protein label (last element)must be same)
+    #            membersWithAssociations = Query[All,(Union@#[[All, 1]] ->(Query[# /* Values /* Flatten /* Union /* DeleteMissing]@(Query[KEGGOrganism, "IDToPath"]@
+    #                    pathAssign) &@Union@ Flatten[#[[All, 2]]]) & /@ Gather[#, (IntersectingQ[#1[[2]], #2[[2]]]) &] &@({If[ ListQ[#],#,#], 
+    #                    If[ NonUCSC,#,If[ MissingQ[#],#,KEGGOrganism + ":" + #]] & /@ (Flatten@ Values@GeneTranslation[If[ ListQ[#],#[[{1}]],{#}], OutputID, ConstantGeneDictionary, InputID -> InputID, Species -> Species])} & /@ #) &)/*Association/* DeleteCases[{Missing[]}|{}]]@dataIn
+    #        ];
+
+    #        testCats = (Query[All, {Sequence@{AssociationThread[#1 -> ConstantArray[#2, Length[#1]]],(Query[KEGGOrganism, "PathToID", #1,Length]@pathAssign), Counts@#1, 
+    #                    Query[#1]@keggDict} &[Flatten@Values[#], Length[#]], GroupBy[Last -> First]@Flatten[#, 1] &@(Tuples[{{#[[1]]}, #[[2]]}] & /@ 
+    #                    Normal[#])} & /* Merge[Identity] /* ({TestFunction[#[[1]], multiCorr*#[[2]], multiCorr*totalMembers, #[[3]]], {#[[1]], multiCorr*#[[2]], multiCorr*totalMembers, #[[3]]}, #[[4 ;;]]} & /@ # &)]@membersWithAssociations);
+
+    #        keggResultsHCct = Query[Returner[#, Applier[HypothesisFunction[#, pValueCutoff, totalCategories] &, #, ListIndex -> 1], ListIndex -> 1] &]@testCats;
+
+    #        #Length filter
+    #        keggResultsFltrd = Query[All, Select[ReportFilterFunction[ReportFilter][#[[2, 4]]] &]]@keggResultsHCct;
+
+    #        returning = Query[All, (If[ FilterSignificant, Select[#[[1, -1]] &], All]) /* SortBy[#[[1, 1]] &]]@keggResultsFltrd;
+            
+    #        If[ !MatchQ[AdditionalFilter, None], returning = Query[All, AdditionalFilter]@returning];
+
+    #        #If a single list was provided, return the association for Gene Ontologies
+    #        If[ listToggle, returning = Values[returning][[1]]]
+    #    ]
+
+    return returning
+
+
+'''
+MassMatcher(data, accuracy) assigns putative mass identification to input data based on monoisotopic mass 
+(using MathIOmica's mass dictionary), using the accuracy in parts per million.    
+'''
+def MassMatcher(data, accuracy, MassDictionaryVariable = None, MolecularSpecies = "cpd"):
+    
+    ppm = accuracy*(10**-6)
+
+    MassDict = MassDictionary() if MassDictionaryVariable==None else MassDictionaryVariable
+        
+    returning = None
+    #returning = Keys@Query[Select[data*(1 - ppm) < # < data*(1 + ppm) &]]@MassDict[MolecularSpecies]
+
+    return returning
+
+
+'''
+MassDictionary() loads PyIOmica's current mass dictionary
+'''
+def MassDictionary():
+
+    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+
+    fileMassDict = "\\".join([MathIOmicaDataDirectory, "MathIOmicaMassDictionary" +  ".csv"])
+
+    if os.path.isfile(fileMassDict):
+        with open(fileMassDict, 'r') as tempFile:
+            fileMassDictData = tempFile.readlines()
+            fileMassDictData = np.array([item.strip('\n').replace('"','').split(",") for item in fileMassDictData])
+
+        MassDict = {fileMassDictData[0][0].split(':')[0]: dict(zip(fileMassDictData.T[0],fileMassDictData.T[1].astype(float)))}
+    else:
+        print("Could not find MathIOmica's mass dictionary at ", fileMassDict, 
+                "Please either obtain a mass dictionary file from mathiomica.org or provide a custom file at the above location.")
+
+    return MassDict
+
+
+'''
+OmicsObjectUniqueMassConverter(omicsObject, massAccuracy) assigns a unique putative mass 
+identification to each of omicsObject's inner association keys, using the massAccuracy in parts per million.
+'''
+def OmicsObjectUniqueMassConverter(omicsObject, massAccuracy, MassMatcherOptions = {}): 
+
+    #keyMapper = Association@(( #[[2]] -> If[MatchQ[#[[1]], {}], #[[2]], If[Length[#[[1]]] == 1, Flatten[{#[[1]], #[[2]]}], #[[2]]]]) & /@ (({MassMatcher[#[[1]], massAccuracy, Sequence @@ MassMatcherOptions], #} &) /@ Query[1, Keys]@omicsObject));
+   
+    #returning = Query[All, KeyMap[keyMapper]]@omicsObject;
+   
+    return returning
+
+
+'''
+EnrichmentReportExport(results) exports results from enrichment analyses to Excel spreadsheets.
+'''
+def EnrichmentReportExport(results, AppendString="", OutputDirectory=None):
+
+    #if (!MemberQ[Keys@NotebookInformation[], "FileName"]) and OutputDirectory==None):
+    #    print("Please save current notebook and try again, or select a directory by setting the OutputDirectory option.");
+    #    NotebookSave[],
+    #else:
+    #    if AppendString=="":
+    #        AppendString=(DateString[] // StringReplace[{" " -> "_", ":" -> "_"}])];
+    #        Export[FileNameJoin[{If[ OutputDirectory==None: NotebookDirectory[], OutputDirectory], #[[1]] <> "_"<>AppendString<>".xlsx"}]
+    #    else:    
+    #        #"Sheets" -> #[[2]], "Rules"] & /@ Query[Transpose@{Keys[#], Values[#]} &, Normal, Flatten[#, 2] & /@ Transpose@{Keys[#], Values[#]} &]@(results)
 
     return
 
@@ -615,46 +1354,6 @@ def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation
 
 
 
-### Utility functions #############################################################################
-'''
-A handy way to parallelize a function call
-'''
-def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
-
-    instPool = multiprocessing.Pool(processes = NumberOfAvailableCPUs)
-    return_values = instPool.map(func, list_of_tuples_of_func_params)
-    instPool.close()
-    instPool.join()
-
-    return np.vstack(return_values)
-  
-
-'''
-Pickle object into a file
-'''
-def write(data, fileName):
-
-    with gzip.open(fileName + '.pklz','wb') as temp_file:
-        pickle.dump(data, temp_file, protocol=4)
-
-    return
-
-
-'''
-Unpickle object from a file
-'''
-def read(fileName):
-
-    with gzip.open(fileName + '.pklz','rb') as temp_file:
-        data = pickle.load(temp_file)
-        return data
-
-    return
-
-###################################################################################################
-
-
-
 ### Visualization functions #######################################################################
 '''
 Make a histogram for each pandas Series (time point) in a pandas Dataframe
@@ -1041,8 +1740,9 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
         coords = [x_min + x_displacement, x_min + x_displacement + height / (12. / 8.), y_min + indVG * height + (0.5 + indVG) * y_displacement, y_min + (indVG + 1) * height + (0.5 + indVG) * y_displacement]
 
         addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, group_ac, groups_ac_colors, fig)
-
+    
     fig.savefig(saveDir + dataName + '_DendrogramHeatmap_LAG%s.png' % lag, dpi=600)
+    fig.savefig(saveDir + dataName + '_DendrogramHeatmap_LAG%s.svg' % lag)
 
     return
 
