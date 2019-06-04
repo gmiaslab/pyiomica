@@ -20,6 +20,48 @@ if __name__ == '__main__':
 
     np.random.seed(0)
 
+    testAnnotations = False
+
+    if testAnnotations:
+        #Example of a clustering object
+        dataC = pyiomica.read('cObject')
+
+        uniProtExampleIDs = ["Q6ZRT9", "Q6NZ36", "H7C361", "Q6ZRT9", "A8MQT6", "Q9BUW7", "Q6NZ67", "Q6P582", "P39019", "E9PM41", "A8MTZ0", 
+                            "A8MTZ0", "E9PRI7", "A8MTZ0", "Q9H6L5", "Q5H9J7", "Q5H9J7", "Q5H9J7", "P06454", "Q53S24", "B8ZZW7", "A0PJW6"]
+
+        ExampleDict = {'AD':["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", 
+                             "LTBR", "LYN", "MYD88", "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", "IRAK4", "PIAS4", "PLAU"]}
+
+        ExampleProtein = [["C6orf57","Protein"],["CD46","Protein"],["DHX58","Protein"],["HMGB3","RNA"],["HMGB3","Protein"],["MAP3K5","Protein"],
+                                    ["NFKB2","RNA"],["NFKB2","Protein"],["NOS2","RNA"],["PYCARD","RNA"],["PYDC1","Protein"],["SSC5D","Protein"]]
+
+        ExampleMixed = [["C6orf57","Protein"],["CD46","Protein"],["DHX58","Protein"],["HMGB3","RNA"],["HMGB3","Protein"],["MAP3K5","Protein"],
+                                    ["NFKB2","RNA"],["NFKB2","Protein"],["NOS2","RNA"],["PYCARD","RNA"],["PYDC1","Protein"],["SSC5D","Protein"]]
+
+        compoundsExample = [["cpd:C19691", 325.2075, 10.677681, "Meta"], ["cpd:C17905", 594.2002, 8.727458, "Meta"],
+                            ["cpd:C09921", 204.0784, 12.3909445, "Meta"], ["cpd:C18218", 272.2356, 13.473582, "Meta"],
+                            ["cpd:C14169", 235.1573, 12.267084, "Meta"], ["cpd:C14245", 262.2296, 13.545572, "Meta"],
+                            ["cpd:C09137", 352.2615, 14.0554285, "Meta"], ["cpd:C09674", 296.1624, 12.147417, "Meta"],
+                            ["cpd:C00449", 276.1334, 11.004139, "Meta"], ["cpd:C02999", 364.1497, 12.147243, "Meta"],
+                            ["cpd:C07915", 309.194, 7.3625283, "Meta"], ["cpd:C08760", 496.2309, 8.7241125, "Meta"],
+                            ["cpd:C14549", 276.0972, 11.078914, "Meta"], ["cpd:C20533", 601.3378, 12.75722, "Meta"],
+                            ["cpd:C20790", 212.1051, 7.127666, "Meta"], ["cpd:C09137", 352.2613, 12.869867, "Meta"],
+                            ["cpd:C17648", 400.2085, 10.843841, "Meta"], ["cpd:C07807", 240.1471, 0.48564285, "Meta"],
+                            ["cpd:C08564", 324.0948, 10.281, "Meta"], ["cpd:C19426", 338.2818, 13.758765, "Meta"],
+                            ["cpd:C02943", 468.3218, 14.263261, "Meta"], ["cpd:C04882", 1193.342, 14.707576, "Meta"]]
+
+        cObjectGO = pyiomica.GOAnalysis(dataC, MultipleListCorrection='Automatic')
+        cObjectKEGG = pyiomica.KEGGAnalysis(dataC)
+        G1S1 = pyiomica.GOAnalysis(ExampleG1S1)
+        ResultUniProtExampleIDs = pyiomica.ReactomeAnalysis(uniProtExampleIDs)
+        analysisGOExample1 = pyiomica.GOAnalysis(ExampleDict)
+        analysisGOMixed_S = pyiomica.GOAnalysis(ExampleProtein)
+        analysisGOMixed_M = pyiomica.GOAnalysis(ExampleMixed,
+        MultipleListCorrection='Automatic', MultipleList=True)
+        compoundsExampleMolecular = pyiomica.KEGGAnalysis(compoundsExample,AnalysisType='Molecular')
+        compoundsExampleGenomic = pyiomica.KEGGAnalysis(compoundsExample,AnalysisType='Genomic')
+        compoundsExampleAll = pyiomica.KEGGAnalysis(compoundsExample,AnalysisType='All')
+
     def processData(dataFileName, timesFileName, saveDir):
         data_dir = 'data/SLV/'
         dataName = 'SLV' + '_' + dataFileName.split('_')[0]
@@ -27,12 +69,10 @@ if __name__ == '__main__':
         if not os.path.exists(saveDir):
             os.makedirs(saveDir)
 
-        NumberOfCPUs = 24
+        NumberOfCPUs = 4
 
-        NumberOfRandomSamples = 10**5
+        NumberOfRandomSamples = 10 ** 5
         p_cutoff = 0.05
-
-        TestEstimate = False
 
         processRawData = False
         drawHistograms = False
@@ -42,28 +82,14 @@ if __name__ == '__main__':
         calculateSignificant = False
         DrawDendrogramHeatmap = True
 
-        if TestEstimate:
-            randomAutocorrelations = pyiomica.read(saveDir + dataName + '_randomAutocorrelations')
-            print(randomAutocorrelations.shape)
-
-            max_length = randomAutocorrelations.shape[0]
-
-            QPs = []
-
-            for i in range(10**3, max_length, 10**3):
-                sel_index = np.random.choice(list(range(max_length)), size=i)
-                QPs.append([np.quantile(randomAutocorrelations.values[sel_index].T[i], 1.-p_cutoff,interpolation='lower') for i in range(1,12)])
-        
-            QPs = np.array(QPs)
-
-            print(QPs)
-
-            np.savetxt('QPs.csv', QPs, delimiter=',', fmt='%1.16f')
-
-            exit()
-
         if processRawData:
             df_data = pyiomica.prepareDataframe(data_dir, dataFileName, timesFileName)
+
+            df_data.index = pd.MultiIndex.from_tuples([(item.split(':')[1], 
+                                                        item.split(':')[0].split('_')[0],
+                                                        ' '.join(item.split(':')[0].split('_')[1:])) for item in df_data.index.values], 
+                                                      names=['source', 'gene', 'info'])
+
             df_data = pyiomica.filterOutAllZeroSignalsDataframe(df_data)
             df_data = pyiomica.filterOutFirstPointZeroSignalsDataframe(df_data)
             df_data = pyiomica.filterOutFractionZeroSignalsDataframe(df_data, 0.75)
@@ -121,13 +147,11 @@ if __name__ == '__main__':
                  0.37888036168064276, 0.2823468480136749, 0.3295401814590595, 0.2551744666336719, 0.2912304011408658, 0.22097851418737666]
             print('Quantiles MathIOmica:', list(np.round(QM, 16)), '\n')
 
-            QP = [1.0]; QP.extend([np.quantile(randomAutocorrelations.values.T[i], 1.-p_cutoff,interpolation='lower') for i in range(1,12)])
+            QP = [1.0]
+            QP.extend([np.quantile(randomAutocorrelations.values.T[i], 1. - p_cutoff,interpolation='lower') for i in range(1,12)])
             print('Quantiles PyIOmica:', list(np.round(QP, 16)), '\n')
 
-            significant_index = np.vstack([dataAutocorrelations.values.T[lag]>QP[lag] for lag in range(dataAutocorrelations.shape[1])]).T
-
-
-
+            significant_index = np.vstack([dataAutocorrelations.values.T[lag] > QP[lag] for lag in range(dataAutocorrelations.shape[1])]).T
 
 
             spike_cutoffs = {21:(0.9974359066568781, -0.27324957752788553), 20:(0.997055978650893, -0.2819888033231614), 
@@ -144,68 +168,73 @@ if __name__ == '__main__':
 
             print(len(max_spikes))
             print(len(min_spikes))
-            
-            significant_index_spike_max = [(gene in max_spikes) for gene in df_data.index.values]
-            significant_index_spike_min = [(gene in min_spikes) for gene in df_data.index.values]
 
-            lagSignigicantIndexSpikeMax = (np.sum(significant_index.T[1:],axis=0)==0) * significant_index_spike_max
-            lagSignigicantIndexSpikeMin = (np.sum(significant_index.T[1:],axis=0)==0) * (np.array(significant_index_spike_max)==0)* significant_index_spike_min
+            significant_index_spike_max = [(gene in list(max_spikes)) for gene in df_data.index.values]
+            significant_index_spike_min = [(gene in list(min_spikes)) for gene in df_data.index.values]
 
-
+            lagSignigicantIndexSpikeMax = (np.sum(significant_index.T[1:],axis=0) == 0) * significant_index_spike_max
+            lagSignigicantIndexSpikeMin = (np.sum(significant_index.T[1:],axis=0) == 0) * (np.array(significant_index_spike_max) == 0) * significant_index_spike_min
 
 
             def getThisData(sheet_name):
-                df_processed = pd.read_excel('ProcessedData/ClustersSLVRNAH%s.xlsx'%(saveDir[-2]), sheet_name=sheet_name)
-                listThisLag = [];
+                df_processed = pd.read_excel('ProcessedData/ClustersSLVRNAH%s.xlsx' % (saveDir[-2]), sheet_name=sheet_name)
+                listThisLag = []
                 for i in range(df_processed.values.shape[1]):
                     listThisLag.extend(df_processed[df_processed.columns[i]])
-                thisLagData = np.unique(listThisLag)[np.where((np.unique(listThisLag))!='nan')]
-                thisLag = pd.DataFrame(data=thisLagData).apply(lambda val: np.frompyfunc(lambda data: data.strip('}').strip('{').strip('"').replace('", "','_') if data==data else data, 1, 1)(val), axis=0).values
+                thisLagData = np.unique(listThisLag)[np.where((np.unique(listThisLag)) != 'nan')]
+                thisLag = pd.DataFrame(data=thisLagData).apply(lambda val: np.frompyfunc(lambda data: data.strip('}').strip('{').strip('"').replace('", "','_') if data == data else data, 1, 1)(val), axis=0).values
                 return thisLag
 
             thisSpikeMax = getThisData('SpikeMax')
             thisSpikeMin = getThisData('SpikeMin')
 
             for lag in range(1,dataAutocorrelations.shape[1]):
-                lagSignigicantIndex = (np.sum(significant_index.T[1:lag],axis=0)==0) * (significant_index.T[lag])
+                lagSignigicantIndex = (np.sum(significant_index.T[1:lag],axis=0) == 0) * (significant_index.T[lag])
 
-                #dataAutocorrelations[lagSignigicantIndex].to_excel(saveDir + dataName + '_selectedAutocorrelations_LAG%s_%s.xlsx'%(lag,p_cutoff))
-                #df_data[lagSignigicantIndex].to_excel(saveDir + dataName + '_selectedTimeSeries_LAG%s_%s.xlsx'%(lag,p_cutoff))
+                dataAutocorrelations[lagSignigicantIndex].to_excel(saveDir + dataName +'_selectedAutocorrelations_LAG%s_%s.xlsx'%(lag,p_cutoff))
+                df_data[lagSignigicantIndex].to_excel(saveDir + dataName +'_selectedTimeSeries_LAG%s_%s.xlsx'%(lag,p_cutoff))
 
-                thisLag = getThisData('Lag%s'%lag)
-                print('\nLag',lag, np.array(list(set(df_data.index.values[lagSignigicantIndex]) - set(thisLag.T[0]))),
-                      np.array(list(set(thisLag.T[0]) - set(df_data.index.values[lagSignigicantIndex]))))
-                print('SD:', len(df_data.index.values[lagSignigicantIndex]), '\tGM:', len(thisLag), '\tcommon:',len(np.intersect1d(thisLag, df_data.index.values[lagSignigicantIndex])))
+                #thisLag = getThisData('Lag%s' % lag)
+                #print('\nLag',lag, np.array(list(set(df_data.index.values[lagSignigicantIndex]) - set(thisLag.T[0]))),
+                #      np.array(list(set(thisLag.T[0]) - set(df_data.index.values[lagSignigicantIndex]))))
+                #print('SD:', len(df_data.index.values[lagSignigicantIndex]), '\tGM:', len(thisLag), '\tcommon:',len(np.intersect1d(thisLag, df_data.index.values[lagSignigicantIndex])))
 
 
-            print('\nSpikeMax', np.array(list(set(thisSpikeMax.T[0]) - set(df_data.index.values[lagSignigicantIndexSpikeMax]))),
-                 np.array(list(set(df_data.index.values[lagSignigicantIndexSpikeMax]) - set(thisSpikeMax.T[0]))))
+            #print('\nSpikeMax', np.array(list(set(thisSpikeMax.T[0]) - set(df_data.index.values[lagSignigicantIndexSpikeMax]))),
+            #     np.array(list(set(df_data.index.values[lagSignigicantIndexSpikeMax]) - set(thisSpikeMax.T[0]))))
 
-            print('SD:', len(df_data.index.values[lagSignigicantIndexSpikeMax]), '\t\tGM:', len(thisSpikeMax), '\t\tcommon:',len(np.intersect1d(thisSpikeMax, df_data.index.values[lagSignigicantIndexSpikeMax])))
+            #print('SD:', len(df_data.index.values[lagSignigicantIndexSpikeMax]), '\t\tGM:', len(thisSpikeMax), '\t\tcommon:',len(np.intersect1d(thisSpikeMax, df_data.index.values[lagSignigicantIndexSpikeMax])))
 
-            print('\nSpikeMin', np.array(list(set(thisSpikeMin.T[0]) - set(df_data.index.values[lagSignigicantIndexSpikeMin]))),
-                  np.array(list(set(df_data.index.values[lagSignigicantIndexSpikeMin])  - set(thisSpikeMin.T[0]))))
-            print('SD:', len(df_data.index.values[lagSignigicantIndexSpikeMin]), '\tGM:', len(thisSpikeMin), '\tcommon:',len(np.intersect1d(thisSpikeMin, df_data.index.values[lagSignigicantIndexSpikeMin])))
+            #print('\nSpikeMin', np.array(list(set(thisSpikeMin.T[0]) - set(df_data.index.values[lagSignigicantIndexSpikeMin]))),
+            #      np.array(list(set(df_data.index.values[lagSignigicantIndexSpikeMin]) - set(thisSpikeMin.T[0]))))
+            #print('SD:', len(df_data.index.values[lagSignigicantIndexSpikeMin]), '\tGM:', len(thisSpikeMin), '\tcommon:',len(np.intersect1d(thisSpikeMin, df_data.index.values[lagSignigicantIndexSpikeMin])))
                 
             print('Done')
 
         if DrawDendrogramHeatmap:
-            for lag in range(1,11+1):
-                df_LAG_data = pd.read_excel(saveDir + dataName + '_selectedTimeSeries_LAG%s_%s.xlsx'%(lag,p_cutoff))
-                df_LAG_data = pyiomica.normalizeSignalsToUnityDataframe(df_LAG_data)
-
-                df_LAG_data_autocor = pd.read_excel(saveDir + dataName + '_selectedAutocorrelations_LAG%s_%s.xlsx'%(lag,p_cutoff))
-
-                print('Lag %s # of Time Series:'%lag, len(df_LAG_data))
-
+            for lag in range(1,11 + 1):
                 sT = timeMeasure.getStartTime()
-                print('Plotting Dendrogram with Heatmaps of Gene expression and its Autocorrelation...', end='\t', flush=True)
-                pyiomica.makeDendrogramHeatmap(df_LAG_data.values, df_LAG_data.columns, df_LAG_data_autocor.values, saveDir=saveDir, dataName=dataName, lag=lag)
-                print('Done')
+                print('Lag %s # of Time Series:' % lag, end=' ', flush=True) 
+
+                df_LAG_data = pd.read_excel(saveDir + dataName + '_selectedTimeSeries_LAG%s_%s.xlsx' % (lag,p_cutoff), index_col=[0,1,2])
+                print(len(df_LAG_data))
+
+                df_LAG_data = pyiomica.normalizeSignalsToUnityDataframe(df_LAG_data)
+                df_LAG_data_autocor = pd.read_excel(saveDir + dataName + '_selectedAutocorrelations_LAG%s_%s.xlsx' % (lag,p_cutoff), index_col=[0,1,2])
+                df_LAG_data_autocor.columns = ['Lag ' + str(column) for column in df_LAG_data_autocor.columns]
+
+                print('Creating clustering object...')
+                cObject = pyiomica.makeClusteringObject(df_LAG_data, df_LAG_data_autocor)
+
+                print('Exporting clustering object...')
+                pyiomica.exportClusteringObject(cObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_Lag_%s' % lag, includeData=True, includeAutocorr=True)
+
+                print('Plotting Dendrogram with Heatmaps of Gene expression and its Autocorrelation...')
+                pyiomica.makeDendrogramHeatmap(cObject, saveDir, dataName + '_Lag_%s' % lag)
+
                 timeMeasure.getElapsedTime(sT)
 
         return
 
-    #processData('Hourly1TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV H1/')
-    processData('Hourly2TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV H2/')
-    #processData('DailyTimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesDaily.csv', 'results SLV D1/')
+    processData('Hourly1TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV H1/')
+    #processData('Hourly2TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV H2/')

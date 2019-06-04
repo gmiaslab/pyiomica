@@ -29,6 +29,7 @@ from pyiomica import ARI
 from pyiomica import VisibilityGraph as vg
 
 import urllib.request
+import requests
 import shutil
 
 import pymysql
@@ -133,6 +134,54 @@ for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirector
 
 
 ### Annotations and Enumerations ##################################################################
+
+def ReactomeAnalysis(inputData):
+
+    uploadURL = "https://reactome.org/AnalysisService/identifiers/projection?interactors=false&pageSize=20&page=1&sortBy=ENTITIES_PVALUE&order=ASC&resource=TOTAL"
+
+    def PARAMS(item):
+
+        return {"Method": "POST", "Headers": {"accept": "application/json", "content-type": "text/plain"}, "Body": str(item)}
+
+    # POST with JSON 
+    import json
+    r = requests.post(uploadURL, data=json.dumps({"Method": "POST", "Headers": {"accept": "application/json", "content-type": "text/plain"}, "Body": str('#GBM Uniprot\nP01023\nQ99758\nO15439\nO43184')}))
+
+    # Response, status etc
+    r.text
+    r.status_code
+
+    #data = {'api_dev_key':API_KEY, 
+    #    'api_option':'paste', 
+    #    'api_paste_code':source_code, 
+    #    'api_paste_format':'python'}
+    
+    #queryReactome = requests.post(url = uploadURL, params = PARAMS(inputData[0])) 
+
+    #temp = queryReactome.text
+    
+    #queryReactome = Query[All, All, All /* (URLExecute[
+    #        HTTPRequest["https://reactome.org/AnalysisService/identifiers/projection?interactors=false&pageSize=20&page=1&sortBy=ENTITIES_PVALUE&order=ASC&resource=TOTAL", 
+    #        PARAMS(item)], "RawJSON"] &)]@inputData
+
+
+    ##downloadURL = "https://reactome.org/AnalysisService/identifiers/projection?interactors=false&pageSize=20&page=1&sortBy=ENTITIES_PVALUE&order=ASC&resource=TOTAL"
+    enrichmentReturn = None
+    #enrichmentReturn = Query[All, All, "summary", "token" /* (If[MissingQ[#], <|"Missing"|>, URLExecute[
+    #        HTTPRequest["https://reactome.org/AnalysisService/download/" <> # <> "/pathways/TOTAL/result.csv" , 
+    #        <|"Method" -> "GET", "Headers" -> {"accept" -> "application/json", "content-type" ->   "text/plain"}|>], "CSV"]] &)]@ queryReactome
+
+    return enrichmentReturn
+
+
+
+
+
+
+
+
+
+
 '''
 #Analysis for Multi-Omics or Single-Omics input list
 '''
@@ -147,7 +196,7 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
 
         listData = [[item, 'Generic'] for item in listData]
 
-    #Get uniProt IDs for each gene
+    #Get IDs for each gene
     dataForGeneTranslation = [item[0] if type(item) is list else item for item in listData]
     IDs = GeneTranslation(dataForGeneTranslation, OutputID, ConstantGeneDictionary, InputID = InputID,  Species = Species)[OutputID]
 
@@ -161,6 +210,8 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
 
         if len(gene)==4:
             geneKey, _, _, geneOmi = gene
+        elif len(gene)==3:
+            geneKey, geneOmi, _ = gene
         else:
             geneKey, geneOmi = gene
 
@@ -485,43 +536,40 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
     #Get the right GO terms for the BackgroundSet requested and correct Species
     Assignment = GOAnalysisAssigner(BackgroundSet=[], Species=Species , LengthFilter=OntologyLengthFilter) if GOAnalysisAssignerOptions=={} else GOAnalysisAssigner(**GOAnalysisAssignerOptions)
     
-    #countsAll = dict(zip(Assignment[Species]["GOToID"].keys(), [len(value) for value in list(goAssignment[Species]["GOToID"].values())]))
-    totalMembers = len(Assignment[Species]["IDToGO"].keys())
-    #totalCategories = len(Assignment[Species]["GOToID"].keys())
-
-    #If the input is a list
-    listToggle = False
-    if type(data) is list: 
-        listToggle = True
-        data = {"Input List": data}
+    #If the input is simply a list
+    listToggle = True if type(data) is list else False
+    data = {'dummy': data} if listToggle else data
 
     #Check if a clustering object
-    if type(data[list(data.keys())[0]]) is dict:
+    if "linkage" in data.keys():
         if MultipleListCorrection==None:
             multiCorr = 1
         elif MultipleListCorrection=='Automatic':
             multiCorr = 1
-            for keyClass in list(data.keys()):
-                dataClass = data[keyClass]['GroupAssociations']
-                for keySubClass in list(dataClass.keys()):
-                    multiCorr = max(max(np.unique([item.strip('"').split('_')[0] for item in dataClass[keySubClass]], return_counts=True)[1]), multiCorr)
+            for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
+                dataClass = data[keyGroup]
+                for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
+                    multiCorr = max(max(np.unique(data[keyGroup][keySubGroup]['data'].index.get_level_values('gene'), return_counts=True)[1]), multiCorr)
         else:
             multiCorr = MultipleListCorrection
 
-        #Loop through the clustering object, calculate GO for each
+        #Loop through the clustering object, calculate GO for each SubGroup
         returning = {}
-        for keyClass in list(data.keys()):
-            returning[keyClass] = {}
-            for keySubClass in list(data[keyClass]['GroupAssociations'].keys()):
-                AssignmentForwardDictionary = Assignment[Species]['IDToGO']
-                AssignmentReverseDictionary = Assignment[Species]['GOToID']
-                prefix = ''
-                infoDict = OBODict
+        for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
+            returning[keyGroup] = {}
+            for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
+                SubGroupMultiIndex = data[keyGroup][keySubGroup]['data'].index
+                SubGroupGenes = list(SubGroupMultiIndex.get_level_values('gene'))
+                SubGroupMeta = list(SubGroupMultiIndex.get_level_values('source'))
+                SubGroupData = [[SubGroupGenes[i], SubGroupMeta[i]] for i in range(len(SubGroupMultiIndex))]
 
-                returning[keyClass][keySubClass] = internalAnalysisFunction({keySubClass:data[keyClass]['GroupAssociations'][keySubClass]}, 
-                                                                     multiCorr, MultipleList,  OutputID, InputID, Species, totalMembers,
+                returning[keyGroup][keySubGroup] = internalAnalysisFunction({keySubGroup:SubGroupData},
+                                                                     multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[Species]["IDToGO"].keys()),
                                                                      pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
-                                                                     AssignmentForwardDictionary, AssignmentReverseDictionary, prefix, infoDict)[keySubClass]
+                                                                     AssignmentForwardDictionary=Assignment[Species]['IDToGO'],
+                                                                     AssignmentReverseDictionary=Assignment[Species]['GOToID'],
+                                                                     prefix='', infoDict=OBODict)[keySubGroup]
+    #The data is a dictionary of type {'Name': [data]}
     else:
         if MultipleListCorrection==None:
             multiCorr = 1
@@ -530,19 +578,14 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
         else:
             multiCorr = MultipleListCorrection
 
-        AssignmentForwardDictionary = Assignment[Species]['IDToGO']
-        AssignmentReverseDictionary = Assignment[Species]['GOToID']
-        prefix = ''
-        infoDict = OBODict
+        returning = internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[Species]["IDToGO"].keys()),
+                                            pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
+                                            AssignmentForwardDictionary=Assignment[Species]['IDToGO'],
+                                            AssignmentReverseDictionary=Assignment[Species]['GOToID'],
+                                            prefix='', infoDict=OBODict)
 
-        returning[keyClass][keySubClass] = internalAnalysisFunction({keySubClass:data[keyClass]['GroupAssociations'][keySubClass]}, 
-                                                        multiCorr, MultipleList,  OutputID, InputID, Species, totalMembers,
-                                                        pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
-                                                        AssignmentForwardDictionary, AssignmentReverseDictionary, prefix, infoDict)[keySubClass]
-
-    #If a single list was provided, return the association for Gene Ontologies
-    if listToggle:
-        returning = returning[list(data.keys())[0]]
+        #If a single list was provided, return the association for Gene Ontologies
+        returning = returning[list(data.keys())[0]] if listToggle else returning
 
     return returning
 
@@ -798,44 +841,40 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
 
         return
 
-    #countsAll = dict(zip(Assignment[KEGGOrganism]["PathToID"].keys(), [len(value) for value in list(Assignment[KEGGOrganism]["PathToID"].values())]))
-    totalMembers = len(Assignment[KEGGOrganism]["IDToPath"])
-    #totalCategories = len(Assignment[KEGGOrganism]["PathToID"])
-
-    #If the input is a list
-    listToggle = False
-    if type(data) is list: 
-        listToggle = True
-        data = {"Input List": data}
+    #If the input is simply a list
+    listToggle = True if type(data) is list else False
+    data = {'dummy': data} if listToggle else data
 
     #Check if a clustering object
-    if type(data[list(data.keys())[0]]) is dict:
+    if "linkage" in data.keys():
         if MultipleListCorrection==None:
             multiCorr = 1
         elif MultipleListCorrection=='Automatic':
             multiCorr = 1
-            for keyClass in list(data.keys()):
-                dataClass = data[keyClass]['GroupAssociations']
-                for keySubClass in list(dataClass.keys()):
-                    multiCorr = max(max(np.unique([item.strip('"').split('_')[0] for item in dataClass[keySubClass]], return_counts=True)[1]), multiCorr)
+            for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
+                dataClass = data[keyGroup]
+                for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
+                    multiCorr = max(max(np.unique(data[keyGroup][keySubGroup]['data'].index.get_level_values('gene'), return_counts=True)[1]), multiCorr)
         else:
             multiCorr = MultipleListCorrection
 
-        #Loop through the clustering object, calculate GO for each
+        #Loop through the clustering object, calculate GO for each SubGroup
         returning = {}
-        for keyClass in list(data.keys()):
-            returning[keyClass] = {}
-            for keySubClass in list(data[keyClass]['GroupAssociations'].keys()):
+        for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
+            returning[keyGroup] = {}
+            for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
+                SubGroupMultiIndex = data[keyGroup][keySubGroup]['data'].index
+                SubGroupGenes = list(SubGroupMultiIndex.get_level_values('gene'))
+                SubGroupMeta = list(SubGroupMultiIndex.get_level_values('source'))
+                SubGroupData = [[SubGroupGenes[i], SubGroupMeta[i]] for i in range(len(SubGroupMultiIndex))]
 
-                AssignmentForwardDictionary = Assignment[KEGGOrganism]['IDToPath']
-                AssignmentReverseDictionary = Assignment[KEGGOrganism]['PathToID']
-                prefix = 'hsa:' if AnalysisType=='Genomic' else ''
-                infoDict = keggDict
-
-                returning[keyClass][keySubClass] = internalAnalysisFunction({keySubClass:data[keyClass]['GroupAssociations'][keySubClass]}, 
-                                                                     multiCorr, MultipleList,  OutputID, InputID, Species, totalMembers,
-                                                                     pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
-                                                                     AssignmentForwardDictionary, AssignmentReverseDictionary, prefix, infoDict)[keySubClass]
+                returning[keyGroup][keySubGroup] = internalAnalysisFunction({keySubGroup:SubGroupData},
+                                                                             multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[KEGGOrganism]["IDToPath"]),
+                                                                             pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
+                                                                             AssignmentForwardDictionary=Assignment[KEGGOrganism]['IDToPath'],
+                                                                             AssignmentReverseDictionary=Assignment[KEGGOrganism]['PathToID'],
+                                                                             prefix='hsa:' if AnalysisType=='Genomic' else '', infoDict=keggDict)[keySubGroup]
+    #The data is a dictionary of type {'Name': [data]}
     else:
         if MultipleListCorrection==None:
             multiCorr = 1
@@ -844,18 +883,14 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
         else:
             multiCorr = MultipleListCorrection
 
-        AssignmentForwardDictionary = Assignment[KEGGOrganism]['IDToPath']
-        AssignmentReverseDictionary = Assignment[KEGGOrganism]['PathToID']
-        prefix = 'hsa:' if AnalysisType=='Genomic' else ''
-        infoDict = keggDict
+        returning = internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[KEGGOrganism]["IDToPath"]),
+                                            pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
+                                            AssignmentForwardDictionary=Assignment[KEGGOrganism]['IDToPath'],
+                                            AssignmentReverseDictionary=Assignment[KEGGOrganism]['PathToID'],
+                                            prefix='hsa:' if AnalysisType=='Genomic' else '', infoDict=keggDict)
 
-        returning = internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, Species, totalMembers,
-                                     pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
-                                     AssignmentForwardDictionary, AssignmentReverseDictionary, prefix, infoDict)
-
-    #If a single list was provided, return the association for Gene Ontologies
-    if listToggle:
-        returning = returning[list(data.keys())[0]]
+        #If a single list was provided
+        returning = returning[list(data.keys())[0]] if listToggle else returning
 
     return returning
 
@@ -1482,6 +1517,77 @@ def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation
 
     return Y, labelsClusterIndex, groups
 
+
+'''
+Make a clustering Groups-Subgroups dictionary object
+'''
+def makeClusteringObject(df_data, df_data_autocorr):
+
+    def getSubgroups(df_data):
+
+        Y = hierarchy.linkage(df_data.values, method='weighted', metric=metricCommonEuclidean, optimal_ordering=True)
+        leaves = hierarchy.dendrogram(Y, no_plot=True)['leaves']
+
+        n_clusters = get_optimal_number_clusters_from_linkage(Y)
+
+        clusters = scipy.cluster.hierarchy.fcluster(Y, t=n_clusters, criterion='maxclust')[leaves]
+
+        return {cluster:df_data.index[leaves].values[clusters==cluster] for cluster in np.unique(clusters)}, Y
+
+    ClusteringObject = {}
+
+    ClusteringObject['linkage'], labelsClusterIndex, groups = getGroupingIndex(df_data_autocorr.values, method='weighted', metric='correlation')
+
+    for group in groups:
+        signals = df_data.index[labelsClusterIndex==group].values
+
+        ClusteringObject[group], ClusteringObject[group]['linkage'] = ({1: signals}, None) if len(signals)==1 else getSubgroups(df_data.loc[signals])
+
+        for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
+            ClusteringObject[group][subgroup] = {'order':[np.where([temp==signal for temp in df_data.index.values])[0][0] for signal in list(ClusteringObject[group][subgroup])],
+                                                 'data':df_data.loc[ClusteringObject[group][subgroup]], 
+                                                 'dataAutocorr':df_data_autocorr.loc[ClusteringObject[group][subgroup]]}
+
+    return ClusteringObject
+
+
+'''
+Export a clustering Groups-Subgroups dictionary object to a SpreadSheet
+NOTE: linkage data is not exported
+'''
+def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True, includeAutocorr=True):
+
+    if not os.path.exists(saveDir):
+        os.makedirs(saveDir)
+
+    fileName = saveDir + dataName + '_GroupsSubgroups.xlsx'
+
+    writer = pd.ExcelWriter(fileName)
+
+    for group in sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage']):
+        for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
+
+            df_data = ClusteringObject[group][subgroup]['data']
+            df_dataAutocorr = ClusteringObject[group][subgroup]['dataAutocorr']
+
+            if includeData==True and includeAutocorr==True:
+                df = pd.concat((df_data,df_dataAutocorr), sort = False, axis=1)
+            elif includeData==True and includeAutocorr==False:
+                df = df_data
+            elif includeData==False and includeAutocorr==True:
+                df = df_dataAutocorr
+            else:
+                df = pd.DataFrame(index=df_data.index)
+
+            df.index.name = 'Index'
+            df.to_excel(writer, 'G%sS%s'%(group, subgroup))
+
+    writer.save()
+
+    print('Saved clustering object to:', fileName)
+
+    return fileName
+
 ###################################################################################################
 
 
@@ -1590,17 +1696,18 @@ def makeLombScarglePeriodograms(df, saveDir, dataName):
 '''
 Make Dendrogram-Heatmap plot along with VIsibility graphs
 '''
-def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, saveSubgroupsData=False):
+def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
 
-    def addAutocorrelationDendrogramAndHeatmap(Y_ac, dataAutocor, groups_ac, groups_ac_colors, fig):
+    def addAutocorrelationDendrogramAndHeatmap(ClusteringObject, groupColors, fig):
 
         axisDendro = fig.add_axes([0.68,0.1,0.17,0.8], frame_on=False)
 
-        n_clusters = len(groups_ac)
-        hierarchy.set_link_color_palette(groups_ac_colors[:n_clusters]) #gist_ncar #nipy_spectral #hsv
+        n_clusters = len(ClusteringObject.keys()) - 1
+        hierarchy.set_link_color_palette(groupColors[:n_clusters]) #gist_ncar #nipy_spectral #hsv
         origLineWidth = matplotlib.rcParams['lines.linewidth']
         matplotlib.rcParams['lines.linewidth'] = 0.5
-        Z_ac = hierarchy.dendrogram(Y_ac, orientation='left',color_threshold=Y_ac[-n_clusters + 1][2]) #len(D)/10 #truncate_mode='lastp', p= n_clusters,
+        Y_ac = ClusteringObject['linkage']
+        Z_ac = hierarchy.dendrogram(Y_ac, orientation='left',color_threshold=Y_ac[-n_clusters + 1][2])
         hierarchy.set_link_color_palette(None)
         matplotlib.rcParams['lines.linewidth'] = origLineWidth
         axisDendro.set_xticks([])
@@ -1609,7 +1716,18 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
         posA = ((axisDendro.get_xlim()[0] if n_clusters == 1 else Y_ac[-n_clusters + 1][2]) + Y_ac[-n_clusters][2]) / 2
         axisDendro.plot([posA, posA], [axisDendro.get_ylim()[0], axisDendro.get_ylim()[1]], 'k--', linewidth = 1)
 
-        clusters = np.array([scipy.cluster.hierarchy.fcluster(Y_ac, t=n_clusters, criterion='maxclust')[leaf] for leaf in Z_ac['leaves']])
+        clusters = []
+        order = []
+        tempData = None
+        for group in sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage']):
+            for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
+                subgroupData = ClusteringObject[group][subgroup]['dataAutocorr'].values
+                tempData = subgroupData if tempData is None else np.vstack((tempData, subgroupData))
+                clusters.extend([group for _ in range(subgroupData.shape[0])])
+                order.extend(ClusteringObject[group][subgroup]['order'])
+
+        tempData = tempData[np.argsort(order),:][Z_ac['leaves'],:].T[1:].T
+        clusters = np.array(clusters)
         cluster_line_positions = np.where(clusters - np.roll(clusters,1) != 0)[0]
 
         for i in range(n_clusters - 1):
@@ -1622,18 +1740,16 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
 
         axisMatrixAC = fig.add_axes([0.78 + 0.07,0.1,0.18 - 0.075,0.8])
 
-        d_ac = dataAutocor.T[1:].T[Z_ac['leaves'],:]
         cmap = plt.cm.bwr
-        imAC = axisMatrixAC.imshow(d_ac, aspect='auto', vmin=-1, vmax=1, origin='lower', cmap=cmap)
+        imAC = axisMatrixAC.imshow(tempData, aspect='auto', vmin=-1, vmax=1, origin='lower', cmap=cmap)
         for i in range(n_clusters - 1):
-            axisMatrixAC.plot([-0.5, d_ac.shape[1] - 0.5], [cluster_line_positions[i + 1] - 0.5, cluster_line_positions[i + 1] - 0.5], '--', color='black', linewidth = 1.0)
+            axisMatrixAC.plot([-0.5, tempData.shape[1] - 0.5], [cluster_line_positions[i + 1] - 0.5, cluster_line_positions[i + 1] - 0.5], '--', color='black', linewidth = 1.0)
 
-        axisMatrixAC.set_xticks([i for i in range(dataAutocor.shape[1] - 1)])
-        axisMatrixAC.set_xticklabels([i + 1 for i in range(dataAutocor.shape[1] - 1)], fontsize=6)
+        axisMatrixAC.set_xticks([i for i in range(tempData.shape[1] - 1)])
+        axisMatrixAC.set_xticklabels([i + 1 for i in range(tempData.shape[1] - 1)], fontsize=6)
         axisMatrixAC.set_yticks([])
         axisMatrixAC.set_xlabel('Lag')
         axisMatrixAC.set_title('Autocorrelation')
-
 
         axisColorAC = fig.add_axes([0.9 + 0.065,0.55,0.01,0.35])
 
@@ -1642,12 +1758,9 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
 
         return
 
-    def addGroupDendrogramAndFindSubgroups(data, method, metric, bottom, top, labelsClusterIndex_ac, group_ac, groups_ac_colors, fig):
+    def addGroupDendrogramAndShowSubgroups(ClusteringObject, groupSize, bottom, top, group, groupColors, fig):
 
-        if len(data[labelsClusterIndex_ac == group_ac])==1:
-            return 1, data[labelsClusterIndex_ac == group_ac], np.array([1]), np.array([])
-
-        Y = hierarchy.linkage(data[labelsClusterIndex_ac == group_ac], method=method, metric=metric, optimal_ordering=True)
+        Y = ClusteringObject[group]['linkage']
 
         n_clusters = get_optimal_number_clusters_from_linkage(Y)
         print("Number of subgroups:", n_clusters)
@@ -1657,7 +1770,7 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
         hierarchy.set_link_color_palette([matplotlib.colors.rgb2hex(rgb[:3]) for rgb in cm.nipy_spectral(np.linspace(0, 0.5, n_clusters + 1))]) #gist_ncar #nipy_spectral #hsv
         origLineWidth = matplotlib.rcParams['lines.linewidth']
         matplotlib.rcParams['lines.linewidth'] = 0.5
-        Z = hierarchy.dendrogram(Y, orientation='left',color_threshold=Y[-n_clusters + 1][2]) #len(D)/10 #truncate_mode='lastp', p= n_clusters,
+        Z = hierarchy.dendrogram(Y, orientation='left',color_threshold=Y[-n_clusters + 1][2])
         hierarchy.set_link_color_palette(None)
         matplotlib.rcParams['lines.linewidth'] = origLineWidth
         axisDendro.set_xticks([])
@@ -1666,7 +1779,11 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
         posA = ((axisDendro.get_xlim()[0] if n_clusters == 1 else Y[-n_clusters + 1][2]) + Y[-n_clusters][2]) / 2
         axisDendro.plot([posA, posA], [axisDendro.get_ylim()[0], axisDendro.get_ylim()[1]], 'k--', linewidth = 1)
 
-        clusters = np.array([scipy.cluster.hierarchy.fcluster(Y, t=n_clusters, criterion='maxclust')[leaf] for leaf in Z['leaves']])
+        clusters = []
+        for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
+            clusters.extend([subgroup for _ in range(ClusteringObject[group][subgroup]['data'].values.shape[0])])
+
+        clusters = np.array(clusters)
 
         cluster_line_positions = np.where(clusters - np.roll(clusters,1) != 0)[0]
 
@@ -1678,11 +1795,11 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
         axisDendro.plot([posA, axisDendro.get_xlim()[1]], [-5. + axisDendro.get_ylim()[1], -5. + axisDendro.get_ylim()[1]], '--', color='black', linewidth = 1.0)
 
         axisDendro.text(axisDendro.get_xlim()[0], 0.5 * axisDendro.get_ylim()[1], 
-                        'G%s:' % group_ac + str(len(data[labelsClusterIndex_ac == group_ac])), fontsize=14).set_path_effects([path_effects.Stroke(linewidth=1, foreground=groups_ac_colors[group_ac - 1]),path_effects.Normal()])
+                        'G%s:' % group + str(groupSize), fontsize=14).set_path_effects([path_effects.Stroke(linewidth=1, foreground=groupColors[group - 1]),path_effects.Normal()])
 
-        return n_clusters, data[labelsClusterIndex_ac == group_ac][Z['leaves'],:], clusters, cluster_line_positions
+        return n_clusters, clusters, cluster_line_positions
 
-    def addGroupHeatmapAndColorbar(data_loc, n_clusters, clusters, cluster_line_positions, bottom, top, group_ac, groups_ac_colors, fig):
+    def addGroupHeatmapAndColorbar(data_loc, n_clusters, clusters, cluster_line_positions, bottom, top, group, groupColors, fig):
 
         axisMatrix = fig.add_axes([left + 0.205, bottom, dx + 0.025 + 0.075, top - bottom])
 
@@ -1698,7 +1815,7 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
             axisMatrix.plot([-0.5, data_loc.shape[1] - 0.5], [posB - 0.5, posB - 0.5], '--', color='black', linewidth = 1.0)
 
         def add_label(pos, labelText):
-            return axisMatrix.text(-1., pos, labelText, ha='right', va='center').set_path_effects([path_effects.Stroke(linewidth=0.4, foreground=groups_ac_colors[group_ac - 1]),path_effects.Normal()])
+            return axisMatrix.text(-1., pos, labelText, ha='right', va='center').set_path_effects([path_effects.Stroke(linewidth=0.4, foreground=groupColors[group - 1]),path_effects.Normal()])
 
         order = clusters[np.sort(np.unique(clusters,return_index=True)[1])] - 1
 
@@ -1706,23 +1823,25 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
         for i in range(n_clusters - 1):
             if len(data_loc[clusters == i + 1]) >= 5.:
                 try:
-                    add_label((cluster_line_positions[np.where(order == i)[0][0]] + cluster_line_positions[np.where(order == i)[0][0] + 1]) * 0.5, 'G%sS%s:%s' % (group_ac,i + 1,len(data_loc[clusters == i + 1])))
+                    add_label((cluster_line_positions[np.where(order == i)[0][0]] + cluster_line_positions[np.where(order == i)[0][0] + 1]) * 0.5, 'G%sS%s:%s' % (group,i + 1,len(data_loc[clusters == i + 1])))
                 except:
                     print('Label printing error!')
         if len(data_loc[clusters == n_clusters]) >= 5.:
             posC = axisMatrix.get_ylim()[0] if n_clusters == 1 else cluster_line_positions[n_clusters - 1]
-            add_label((posC + axisMatrix.get_ylim()[1]) * 0.5, 'G%sS%s:%s' % (group_ac,n_clusters,len(data_loc[clusters == n_clusters])))
+            add_label((posC + axisMatrix.get_ylim()[1]) * 0.5, 'G%sS%s:%s' % (group,n_clusters,len(data_loc[clusters == n_clusters])))
 
         axisMatrix.set_xticks([])
         axisMatrix.set_yticks([])
 
-        if group_ac == 1:
+        times = ClusteringObject[group][subgroup]['data'].columns.values
+
+        if group == 1:
             axisMatrix.set_xticks(range(data_loc.shape[1]))
             axisMatrix.set_xticklabels([np.int(i) for i in np.round(times,1)], rotation=0, fontsize=6)
             axisMatrix.set_xlabel('Time (hours)')
 
-        if group_ac == groups_ac[-1]:
-            axisMatrix.set_title('Transformed gene expression (Lag%s selected)' % lag)
+        if group == sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage'])[-1]:
+            axisMatrix.set_title('Transformed gene expression')
 
         axisColor = fig.add_axes([0.635 - 0.075 - 0.1 + 0.075,current_bottom + 0.01,0.01, max(0.01,(current_top - current_bottom) - 0.02)])
         plt.colorbar(im, cax=axisColor, ticks=[np.max(im._A),np.min(im._A)])
@@ -1731,7 +1850,42 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
 
         return
 
-    def addVisibilityGraph(data, times, dataName, coords, numberOfVGs, group_ac, groups_ac_colors, fig):
+    signalsInClusteringObject = 0
+    for group in sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage']):
+        for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
+            signalsInClusteringObject += ClusteringObject[group][subgroup]['data'].shape[0]
+
+
+    fig = plt.figure(figsize=(12,8))
+
+    left = 0.02
+    bottom = 0.1
+    current_top = bottom
+    dx = 0.2
+    dy = 0.8
+
+    groupColors = ['b','g','r','c','m','y','k','b','g','r','c','m','y','k','b','g','r','c','m','y','k']
+    addAutocorrelationDendrogramAndHeatmap(ClusteringObject, groupColors, fig)
+
+    for group in sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage']):
+
+        tempData = None
+        for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
+            subgroupData = ClusteringObject[group][subgroup]['data'].values
+            tempData = subgroupData if tempData is None else np.vstack((tempData, subgroupData))
+
+        current_bottom = current_top
+        current_top += dy * float(len(tempData)) / float(signalsInClusteringObject)
+
+        if len(tempData)==1:
+            n_clusters, clusters, cluster_line_positions = 1, np.array([]), np.array([])
+        else:
+            n_clusters, clusters, cluster_line_positions = addGroupDendrogramAndShowSubgroups(ClusteringObject, len(tempData), current_bottom, current_top, group, groupColors, fig)
+
+        addGroupHeatmapAndColorbar(tempData, n_clusters, clusters, cluster_line_positions, current_bottom, current_top, group, groupColors, fig)
+
+
+    def addVisibilityGraph(data, times, dataName, coords, numberOfVGs, groups_ac_colors, fig):
 
         group = int(dataName[:dataName.find('S')].strip('G'))
 
@@ -1818,44 +1972,15 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
 
         return
 
-
-    fig = plt.figure(figsize=(12,8))
-
-    left = 0.02
-    bottom = 0.1
-    current_top = bottom
-    dx = 0.2
-    dy = 0.8
-
-    groups_ac_colors = ['b','g','r','c','m','y','k','b','g','r','c','m','y','k','b','g','r','c','m','y','k']
-
-    Y_ac, labelsClusterIndex_ac, groups_ac = getGroupingIndex(dataAutocor, method='weighted', metric='correlation')
-    addAutocorrelationDendrogramAndHeatmap(Y_ac, dataAutocor, groups_ac, groups_ac_colors, fig)
-
     data_list = []
     data_names_list = []
+    for group in sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage']):
+        for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
+            if ClusteringObject[group][subgroup]['data'].shape[0] >= 5:
+                data_list.append(ClusteringObject[group][subgroup]['data'].values)
+                data_names_list.append('G%sS%s' % (group, subgroup))
 
-    for group_ac in groups_ac:
-
-        current_bottom = current_top
-        current_top += dy * float(len(data[labelsClusterIndex_ac == group_ac])) / float(len(data))
-
-        n_clusters, data_loc, clusters, cluster_line_positions = addGroupDendrogramAndFindSubgroups(data, 'weighted', metricCommonEuclidean, current_bottom, current_top, labelsClusterIndex_ac, group_ac, groups_ac_colors, fig)
-        addGroupHeatmapAndColorbar(data_loc, n_clusters, clusters, cluster_line_positions, current_bottom, current_top, group_ac, groups_ac_colors, fig)
-
-        for subgroup in np.sort(np.unique(clusters)):
-            if saveSubgroupsData:
-                if not os.path.exists(saveDir + 'consolidatedGroupsSubgroups/'):
-                    os.makedirs(saveDir + 'consolidatedGroupsSubgroups/')
-                print('Saving L%sG%sS%s data...' % (lag, group, subgroup),len(data_loc[clusters == subgroup]))
-                write(data_loc[clusters == subgroup], saveDir + 'consolidatedGroupsSubgroups/L%sG%sS%s_data' % (lag, group,subgroup))
-                write(times, saveDir + 'consolidatedGroupsSubgroups/times')
-
-            if len(data_loc[clusters == subgroup]) >= 5:
-                data_list.append(data_loc[clusters == subgroup])
-                data_names_list.append('G%sS%s' % (group_ac, subgroup))
-
-            print('Prepared L%sG%sS%s data' % (lag, group_ac, subgroup))
+    times = ClusteringObject[group][subgroup]['data'].columns.values
 
     for indVG, (dataVG, dataNameVG) in enumerate(zip(data_list, data_names_list)):
         
@@ -1871,10 +1996,9 @@ def makeDendrogramHeatmap(data, times, dataAutocor, saveDir, dataName, lag, save
 
         coords = [x_min + x_displacement, x_min + x_displacement + height / (12. / 8.), y_min + indVG * height + (0.5 + indVG) * y_displacement, y_min + (indVG + 1) * height + (0.5 + indVG) * y_displacement]
 
-        addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, group_ac, groups_ac_colors, fig)
+        addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, groupColors, fig)
     
-    fig.savefig(saveDir + dataName + '_DendrogramHeatmap_LAG%s.png' % lag, dpi=600)
-    fig.savefig(saveDir + dataName + '_DendrogramHeatmap_LAG%s.svg' % lag)
+    fig.savefig(saveDir + dataName + '_DendrogramHeatmap.svg', dpi=600) #*.svg
 
     return
 
@@ -1989,6 +2113,7 @@ def normalizeSignalsToUnityDataframe(df):
     print('Normalizing signals to unity...')
 
     #Subtract 0-time-point value from all time-points
+
     df.iloc[:] = (df.values.T - df.values.T[0]).T
     
     where_nan = np.isnan(df.values.astype(float))
@@ -1999,7 +2124,3 @@ def normalizeSignalsToUnityDataframe(df):
     return df
 
 ###################################################################################################
-
-class metaDataFrame():
-
-    pd.DataFrame;
