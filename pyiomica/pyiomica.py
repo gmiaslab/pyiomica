@@ -1,3 +1,5 @@
+print("Loading PyIOmica (https://mathiomica.org by G. Mias Lab)")
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -12,11 +14,13 @@ import scipy
 import scipy.signal
 import scipy.stats
 import scipy.cluster.hierarchy as hierarchy
+from scipy.spatial.distance import pdist, squareform
 from scipy.interpolate import UnivariateSpline
 
 import sklearn
 from sklearn.cluster import AgglomerativeClustering
-from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import quantile_transform
+from sklearn.metrics import silhouette_score, silhouette_samples, pairwise_distances
 from sklearn.manifold import TSNE
 
 import os
@@ -35,14 +39,11 @@ import shutil
 import pymysql
 import datetime
 
-print("MathIOmica >> PyIOmica (https://mathiomica.org), by G. Mias Lab")
-
 
 ### Utility functions #############################################################################
-'''
-Creates a path of directories, unless the path already exists.
-'''
 def createDirectories(path):
+
+    '''Create a path of directories, unless the path already exists.'''
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -50,10 +51,9 @@ def createDirectories(path):
     return
 
 
-'''
-A handy way to parallelize a function call
-'''
 def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
+
+    '''A handy way to parallelize a function call'''
 
     instPool = multiprocessing.Pool(processes = NumberOfAvailableCPUs)
     return_values = instPool.map(func, list_of_tuples_of_func_params)
@@ -63,10 +63,9 @@ def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
     return np.vstack(return_values)
   
 
-'''
-Pickle object into a file
-'''
 def write(data, fileName, withPKLZextension = True):
+
+    '''Pickle object into a file'''
 
     with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'wb') as temp_file:
         pickle.dump(data, temp_file, protocol=4)
@@ -74,10 +73,9 @@ def write(data, fileName, withPKLZextension = True):
     return
 
 
-'''
-Unpickle object from a file
-'''
 def read(fileName, withPKLZextension = True):
+    
+    '''Unpickle object from a file'''
 
     with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'rb') as temp_file:
         data = pickle.load(temp_file)
@@ -86,12 +84,12 @@ def read(fileName, withPKLZextension = True):
     return
 
 
-'''
-Efficient way to create a reverse dictionary from a dictionary.
-Utilizes Pandas.Dataframe.groupby and fast Numpy arrays indexing
-Note: any entries with missing values will be removed
-'''
 def createReverseDictionary(inputDictionary):
+
+    '''Efficient way to create a reverse dictionary from a dictionary.
+    Utilizes Pandas.Dataframe.groupby and fast Numpy arrays indexing.
+    Note: any entries with missing values will be removed
+    '''
 
     keys, values = np.array(list(inputDictionary.keys())), np.array(list(inputDictionary.values()))
     df = pd.DataFrame(np.array([[keys[i], value] for i in range(len(keys)) for value in values[i]]))
@@ -106,24 +104,16 @@ def createReverseDictionary(inputDictionary):
 
 
 ### Global constants ##############################################################################
-'''
-ConstantGeneDictionary is a global gene/protein dictionary variable typically created by GetGeneDictionary.
-'''
+'''ConstantGeneDictionary is a global gene/protein dictionary variable typically created by GetGeneDictionary.'''
 ConstantGeneDictionary = None
 
-'''
-ConstantMathIOmicaDataDirectory is a global variable pointing to the MathIOmica data directory.
-'''
+'''ConstantMathIOmicaDataDirectory is a global variable pointing to the MathIOmica data directory.'''
 ConstantMathIOmicaDataDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData"])
 
-'''
-ConstantMathIOmicaExamplesDirectory is a global variable pointing to the MathIOmica example data directory.
-'''
+'''ConstantMathIOmicaExamplesDirectory is a global variable pointing to the MathIOmica example data directory.'''
 ConstantMathIOmicaExamplesDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleData"])
 
-'''
-ConstantMathIOmicaExampleVideosDirectory is a global variable pointing to the MathIOmica example videos directory.
-'''
+'''ConstantMathIOmicaExampleVideosDirectory is a global variable pointing to the MathIOmica example videos directory.'''
 ConstantMathIOmicaExampleVideosDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleVideos"])
 
 for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirectory, ConstantMathIOmicaExampleVideosDirectory]:
@@ -136,6 +126,8 @@ for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirector
 ### Annotations and Enumerations ##################################################################
 
 def ReactomeAnalysis(inputData):
+
+    '''Reactome POST-GET-style Analysis'''
 
     uploadURL = "https://reactome.org/AnalysisService/identifiers/projection?interactors=false&pageSize=20&page=1&sortBy=ENTITIES_PVALUE&order=ASC&resource=TOTAL"
 
@@ -174,27 +166,21 @@ def ReactomeAnalysis(inputData):
     return enrichmentReturn
 
 
-
-
-
-
-
-
-
-
-'''
-#Analysis for Multi-Omics or Single-Omics input list
-'''
 def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, Species, totalMembers,
-                            pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
+                            pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
                             AssignmentForwardDictionary, AssignmentReverseDictionary, prefix, infoDict):
+
+    '''Analysis for Multi-Omics or Single-Omics input list
+    The function is called internally and not intended to be used directly by user'''
     
     listData = data[list(data.keys())[0]]
 
     #If input data was a list of genes, convert it to pairs with label "Generic"
     if not type(listData[0]) is list:
-
-        listData = [[item, 'Generic'] for item in listData]
+        listData = [[item, 'Unknown'] for item in listData]
+    else:
+        if len(listData[0])==1:
+            listData = [[item[0], 'Unknown'] for item in listData]
 
     #Get IDs for each gene
     dataForGeneTranslation = [item[0] if type(item) is list else item for item in listData]
@@ -259,7 +245,11 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
 
     #Length filter
     whatIsFilteredLength = ReportFilterFunction(np.array([item[1][3] for item in list(ResultsHCct.values())]), ReportFilter)
-    whatIsFilteredSignif = np.array([item[0][2] for item in list(ResultsHCct.values())]).astype(bool)
+
+    #Significance filter
+    whatIsFilteredSignif = np.array([(item[0][2] if FilterSignificant else True) for item in list(ResultsHCct.values())]).astype(bool)
+
+    #Combined filter
     whatIsFiltered = whatIsFilteredLength * whatIsFilteredSignif
 
     returning = dict(zip(list(np.array(list(ResultsHCct.keys()))[whatIsFiltered]),list(np.array(list(ResultsHCct.values()))[whatIsFiltered])))
@@ -270,11 +260,9 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
     return {list(data.keys())[0]: returning}
 
 
-'''
-OBOGODictionary() is an Open Biomedical Ontologies (OBO) Gene Ontology (GO) vocabulary dictionary generator.
-returns: Dictionary
-'''
 def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", ImportDirectly=False, MathIOmicaDataDirectory=None, OBOFile="goBasicObo.txt"):
+    
+    '''OBOGODictionary() is an Open Biomedical Ontologies (OBO) Gene Ontology (GO) vocabulary dictionary generator.'''
 
     global ConstantMathIOmicaDataDirectory
 
@@ -317,11 +305,10 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
     return outDictionary
 
 
-'''
-GetGeneDictionary() creates an ID/accession dictionary from a UCSC search - typically of gene annotations.
-'''
 def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectLabels = None,
                     ImportDirectly = False, JavaGBs = '8', Species = "human", KEGGUCSCSplit = [True,"KEGG Gene ID"]):
+    
+    '''Create an ID/accession dictionary from a UCSC search - typically of gene annotations.'''
        
     UCSCSQLSelectLabels = {"human": ["UCSC ID", "UniProt ID", "Gene Symbol", 
         "RefSeq ID", "NCBI Protein Accession", "Ensembl ID", 
@@ -396,12 +383,11 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
     return returning
 
 
-'''
-Function will download and create gene associations and restrict to required background set
-'''
 def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, BackgroundSet = [], Species = "human",
                         LengthFilter = None, LengthFilterFunction = np.greater_equal, GOFileName = None, GOFileColumns = [2, 5], 
                         GOURL = "http://current.geneontology.org/annotations/"):
+    
+    '''Download and create gene associations and restrict to required background set.'''
 
     global ConstantMathIOmicaDataDirectory
 
@@ -490,10 +476,11 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
     return {Species : {"IDToGO": identifierAssoc, "GOToID": geneOntAssoc}}
 
 
-'''
-Obtain gene dictionary - if it exists can either augment with new information or Species or create new, if not exist then create variable
-'''
 def obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions, AugmentDictionary):
+    
+    '''Obtain gene dictionary - if it exists can either augment with new information or Species or create new, 
+    if not exist then create variable.
+    '''
 
     global ConstantGeneDictionary
     
@@ -512,18 +499,18 @@ def obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions, Augme
     return
 
 
-'''
-GOAnalysis calculates input data over-representation analysis for Gene Ontology (GO) categories.
-MultipleListCorrection==None, #Correct for multiple lists, e.g protein+RNA
-MultipleList==False, #whether input is multiple omics or single - for non-omics-object inputs
-AdditionalFilter==None, #Select[MatchQ[#[[3,1,2]],"biological_process"]&]
-'''
 def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=["UniProt ID","Gene Symbol"], OutputID="UniProt ID",
                  GOAnalysisAssignerOptions={}, BackgroundSet="All", Species="human", OntologyLengthFilter=2, ReportFilter=1, ReportFilterFunction=np.greater_equal,
                  pValueCutoff=0.05, TestFunction=lambda n, N, M, x: 1. - scipy.stats.hypergeom.cdf(x-1, M, n, N), 
                  HypothesisFunction=lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"], 
                  FilterSignificant=True, OBODictionaryVariable=None,
                  OBOGODictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, AdditionalFilter=None, GeneDictionary=None):
+
+    '''Calculate input data over-representation analysis for Gene Ontology (GO) categories.
+    MultipleListCorrection: used to correct for multiple lists, e.g protein+RNA
+    MultipleList: whether input is multiple omics or single - for non-omics-object inputs
+    AdditionalFilter: e.g #Select[MatchQ[#[[3,1,2]],"biological_process"]&]
+    '''
 
     global ConstantGeneDictionary
 
@@ -536,9 +523,17 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
     #Get the right GO terms for the BackgroundSet requested and correct Species
     Assignment = GOAnalysisAssigner(BackgroundSet=[], Species=Species , LengthFilter=OntologyLengthFilter) if GOAnalysisAssignerOptions=={} else GOAnalysisAssigner(**GOAnalysisAssignerOptions)
     
+    #The data may be a subgroup from a clustering object, i.e. a pd.DataFrame
+    if type(data) is pd.DataFrame:
+        id = list(data.index.get_level_values('id'))
+        source = list(data.index.get_level_values('source'))
+        data = [[id[i], source[i]] for i in range(len(data))]
+
     #If the input is simply a list
     listToggle = True if type(data) is list else False
     data = {'dummy': data} if listToggle else data
+
+    returning = {}
 
     #Check if a clustering object
     if "linkage" in data.keys():
@@ -549,52 +544,52 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
             for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
                 dataClass = data[keyGroup]
                 for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
-                    multiCorr = max(max(np.unique(data[keyGroup][keySubGroup]['data'].index.get_level_values('gene'), return_counts=True)[1]), multiCorr)
+                    multiCorr = max(max(np.unique(data[keyGroup][keySubGroup]['data'].index.get_level_values('id'), return_counts=True)[1]), multiCorr)
         else:
             multiCorr = MultipleListCorrection
 
         #Loop through the clustering object, calculate GO for each SubGroup
-        returning = {}
         for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
             returning[keyGroup] = {}
             for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
                 SubGroupMultiIndex = data[keyGroup][keySubGroup]['data'].index
-                SubGroupGenes = list(SubGroupMultiIndex.get_level_values('gene'))
+                SubGroupGenes = list(SubGroupMultiIndex.get_level_values('id'))
                 SubGroupMeta = list(SubGroupMultiIndex.get_level_values('source'))
-                SubGroupData = [[SubGroupGenes[i], SubGroupMeta[i]] for i in range(len(SubGroupMultiIndex))]
+                SubGroupList = [[SubGroupGenes[i], SubGroupMeta[i]] for i in range(len(SubGroupMultiIndex))]
 
-                returning[keyGroup][keySubGroup] = internalAnalysisFunction({keySubGroup:SubGroupData},
-                                                                     multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[Species]["IDToGO"].keys()),
-                                                                     pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
+                returning[keyGroup][keySubGroup] = internalAnalysisFunction({keySubGroup:SubGroupList},
+                                                                     multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[Species]["IDToGO"]),
+                                                                     pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
                                                                      AssignmentForwardDictionary=Assignment[Species]['IDToGO'],
                                                                      AssignmentReverseDictionary=Assignment[Species]['GOToID'],
                                                                      prefix='', infoDict=OBODict)[keySubGroup]
-    #The data is a dictionary of type {'Name': [data]}
-    else:
-        if MultipleListCorrection==None:
-            multiCorr = 1
-        elif MultipleList and MultipleListCorrection=='Automatic':
-            multiCorr = max(np.unique([item[0] for item in data[list(data.keys())[0]]], return_counts=True)[1])
-        else:
-            multiCorr = MultipleListCorrection
 
-        returning = internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[Species]["IDToGO"].keys()),
-                                            pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
-                                            AssignmentForwardDictionary=Assignment[Species]['IDToGO'],
-                                            AssignmentReverseDictionary=Assignment[Species]['GOToID'],
-                                            prefix='', infoDict=OBODict)
+    #The data is a dictionary of type {'Name1': [data1], 'Name2': [data2], ...}
+    else:
+        for key in list(data.keys()):
+            if MultipleListCorrection==None:
+                multiCorr = 1
+            elif MultipleList and MultipleListCorrection=='Automatic':
+                multiCorr = max(np.unique([item[0] for item in data[key]], return_counts=True)[1])
+                pass
+            else:
+                multiCorr = MultipleListCorrection
+
+            returning.update(internalAnalysisFunction({key:data[key]}, multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[Species]["IDToGO"]),
+                                                pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
+                                                AssignmentForwardDictionary=Assignment[Species]['IDToGO'],
+                                                AssignmentReverseDictionary=Assignment[Species]['GOToID'],
+                                                prefix='', infoDict=OBODict))
 
         #If a single list was provided, return the association for Gene Ontologies
-        returning = returning[list(data.keys())[0]] if listToggle else returning
+        returning = returning[key] if listToggle else returning
 
     return returning
 
 
-'''
-GeneTranslation(inputList,targetIDList,geneDictionary) uses geneDictionary to convert inputList IDs to different annotations as indicated by targetIDList.
-NOTE: There is a problem with this function!!! -> returning shape/form needs revision
-'''
 def GeneTranslation(InputList, TargetIDList, GeneDictionary, InputID = None, Species = "human"):
+
+    '''Use geneDictionary to convert inputList IDs to different annotations as indicated by targetIDList.'''
 
     if InputID!=None:
         listOfKeysToUse = []
@@ -630,12 +625,12 @@ def GeneTranslation(InputList, TargetIDList, GeneDictionary, InputID = None, Spe
     return returning
 
 
-'''
-KEGGAnalysisAssigner() creates KEGG: Kyoto Encyclopedia of Genes and Genomes pathway associations, 
-restricted to required background set, downloading the data if necessary.
-'''
 def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, BackgroundSet = [], KEGGQuery1 = "pathway", KEGGQuery2 = "hsa",
                         LengthFilter = None, LengthFilterFunction = np.greater_equal, Labels = ["IDToPath", "PathToID"]):
+
+    '''Create KEGG: Kyoto Encyclopedia of Genes and Genomes pathway associations, 
+    restricted to required background set, downloading the data if necessary.
+    '''
     
     global ConstantMathIOmicaDataDirectory
     
@@ -706,10 +701,11 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
     return {KEGGQuery2 : {Labels[0]: idToPath, Labels[1]: pathToID}}
 
 
-'''
-KEGGDictionary() creates a dictionary from KEGG: Kyoto Encyclopedia of Genes and Genomes terms - typically association of pathways and members therein.
-'''
 def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQuery1 = "pathway", KEGGQuery2 = "hsa"):
+
+    '''Create a dictionary from KEGG: Kyoto Encyclopedia of Genes and Genomes terms - 
+    typically association of pathways and members therein.
+    '''
     
     global ConstantMathIOmicaDataDirectory
     
@@ -750,15 +746,6 @@ def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQ
     return associationKEGG
 
 
-'''
-KEGGAnalysis(data) calculates input data over-representation analysis for KEGG: Kyoto Encyclopedia of Genes and Genomes pathways.
-Input can be: clustering object
-MultipleListCorrection -> None, (*Correct for multiple lists, e.g protein+RNA*)
-MultipleList -> False, (*whether input is multiple omics or single - for non-omics-object inputs*)
-AdditionalFilter -> None (*Select[MatchQ[#[[3,1,2]],"biological_process"]&]*),
-AnalysisType -> "Genomic" (*options are "Genome", "Molecular","All"*),
-Species -> "human", (*Used in GeneDictionary*)
-'''
 def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, AugmentDictionary = True, InputID = ["UniProt ID", "Gene Symbol"],
                 OutputID = "KEGG Gene ID", MolecularInputID = ["cpd"], MolecularOutputID = "cpd", KEGGAnalysisAssignerOptions = {}, BackgroundSet = [], 
                 KEGGOrganism = "hsa", KEGGMolecular = "cpd", KEGGDatabase = "pathway", PathwayLengthFilter = 2, ReportFilter = 1, 
@@ -766,6 +753,15 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
                 HypothesisFunction = lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"],
                 FilterSignificant = True, KEGGDictionaryVariable = None, KEGGDictionaryOptions = {}, MultipleListCorrection = None, MultipleList = False, AdditionalFilter = None, 
                 GeneDictionary = None, Species = "human", MolecularSpecies = "compound", NonUCSC = False, MathIOmicaDataDirectory = None):
+
+    '''Calculate input data over-representation analysis for KEGG: Kyoto Encyclopedia of Genes and Genomes pathways.
+    Input can be a list, a dictionary of lists or a clustering object.
+    MultipleListCorrection: correct for multiple lists, e.g protein+RNA
+    MultipleList: whether input is multiple omics or single - for non-omics-object inputs
+    AdditionalFilter: e.g. Select[MatchQ[#[[3,1,2]],"biological_process"]&]
+    AnalysisType: options are "Genome", "Molecular","All"
+    Species: used in GeneDictionary
+    '''
 
     argsLocal = locals().copy()
 
@@ -841,9 +837,17 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
 
         return
 
+    #The data may be a subgroup from a clustering object, i.e. a pd.DataFrame
+    if type(data) is pd.DataFrame:
+        id = list(data.index.get_level_values('id'))
+        source = list(data.index.get_level_values('source'))
+        data = [[id[i], source[i]] for i in range(len(data))]
+
     #If the input is simply a list
     listToggle = True if type(data) is list else False
     data = {'dummy': data} if listToggle else data
+
+    returning = {}
 
     #Check if a clustering object
     if "linkage" in data.keys():
@@ -854,52 +858,54 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
             for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
                 dataClass = data[keyGroup]
                 for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
-                    multiCorr = max(max(np.unique(data[keyGroup][keySubGroup]['data'].index.get_level_values('gene'), return_counts=True)[1]), multiCorr)
+                    multiCorr = max(max(np.unique(data[keyGroup][keySubGroup]['data'].index.get_level_values('id'), return_counts=True)[1]), multiCorr)
         else:
             multiCorr = MultipleListCorrection
 
         #Loop through the clustering object, calculate GO for each SubGroup
-        returning = {}
         for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
             returning[keyGroup] = {}
             for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
                 SubGroupMultiIndex = data[keyGroup][keySubGroup]['data'].index
-                SubGroupGenes = list(SubGroupMultiIndex.get_level_values('gene'))
+                SubGroupGenes = list(SubGroupMultiIndex.get_level_values('id'))
                 SubGroupMeta = list(SubGroupMultiIndex.get_level_values('source'))
-                SubGroupData = [[SubGroupGenes[i], SubGroupMeta[i]] for i in range(len(SubGroupMultiIndex))]
+                SubGroupList = [[SubGroupGenes[i], SubGroupMeta[i]] for i in range(len(SubGroupMultiIndex))]
 
-                returning[keyGroup][keySubGroup] = internalAnalysisFunction({keySubGroup:SubGroupData},
+                returning[keyGroup][keySubGroup] = internalAnalysisFunction({keySubGroup:SubGroupList},
                                                                              multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[KEGGOrganism]["IDToPath"]),
-                                                                             pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
+                                                                             pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
                                                                              AssignmentForwardDictionary=Assignment[KEGGOrganism]['IDToPath'],
                                                                              AssignmentReverseDictionary=Assignment[KEGGOrganism]['PathToID'],
                                                                              prefix='hsa:' if AnalysisType=='Genomic' else '', infoDict=keggDict)[keySubGroup]
-    #The data is a dictionary of type {'Name': [data]}
-    else:
-        if MultipleListCorrection==None:
-            multiCorr = 1
-        elif MultipleList and MultipleListCorrection=='Automatic':
-            multiCorr = max(np.unique([item[0] for item in data[list(data.keys())[0]]], return_counts=True)[1])
-        else:
-            multiCorr = MultipleListCorrection
 
-        returning = internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[KEGGOrganism]["IDToPath"]),
-                                            pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter,
-                                            AssignmentForwardDictionary=Assignment[KEGGOrganism]['IDToPath'],
-                                            AssignmentReverseDictionary=Assignment[KEGGOrganism]['PathToID'],
-                                            prefix='hsa:' if AnalysisType=='Genomic' else '', infoDict=keggDict)
+    #The data is a dictionary of type {'Name1': [data1], 'Name2': [data2], ...}
+    else:
+        for key in list(data.keys()):
+            if MultipleListCorrection==None:
+                multiCorr = 1
+            elif MultipleList and MultipleListCorrection=='Automatic':
+               multiCorr = max(np.unique([item[0] for item in data[key]], return_counts=True)[1])
+            else:
+                multiCorr = MultipleListCorrection
+
+            returning.update(internalAnalysisFunction({key:data[key]}, multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[KEGGOrganism]["IDToPath"]),
+                                                pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
+                                                AssignmentForwardDictionary=Assignment[KEGGOrganism]['IDToPath'],
+                                                AssignmentReverseDictionary=Assignment[KEGGOrganism]['PathToID'],
+                                                prefix='hsa:' if AnalysisType=='Genomic' else '', infoDict=keggDict))
 
         #If a single list was provided
-        returning = returning[list(data.keys())[0]] if listToggle else returning
+        returning = returning[key] if listToggle else returning
 
     return returning
 
 
-'''
-MassMatcher(data, accuracy) assigns putative mass identification to input data based on monoisotopic mass 
-(using MathIOmica's mass dictionary), using the accuracy in parts per million.    
-'''
 def MassMatcher(data, accuracy, MassDictionaryVariable = None, MolecularSpecies = "cpd"):
+
+    '''Assign putative mass identification to input data based on monoisotopic mass 
+    (using PyIOmica's mass dictionary).
+    The accuracy in parts per million.    
+    '''
     
     ppm = accuracy*(10**-6)
 
@@ -909,10 +915,9 @@ def MassMatcher(data, accuracy, MassDictionaryVariable = None, MolecularSpecies 
     return keys[np.where((values > data*(1 - ppm)) * (values < data*(1 + ppm)))[0]]
 
 
-'''
-MassDictionary() loads PyIOmica's current mass dictionary
-'''
 def MassDictionary(MathIOmicaDataDirectory=None):
+
+    '''Load PyIOmica's current mass dictionary'''
 
     global ConstantMathIOmicaDataDirectory
 
@@ -933,30 +938,39 @@ def MassDictionary(MathIOmicaDataDirectory=None):
     return MassDict
 
 
-'''
-OmicsObjectUniqueMassConverter(omicsObject, massAccuracy) assigns a unique putative mass 
-identification to each of omicsObject's inner association keys, using the massAccuracy in parts per million.
-'''
-def OmicsObjectUniqueMassConverter(omicsObject, massAccuracy, MassMatcherOptions = {}): 
-
-    #keyMapper = Association@(( #[[2]] -> If[MatchQ[#[[1]], {}], #[[2]], If[Length[#[[1]]] == 1, Flatten[{#[[1]], #[[2]]}], #[[2]]]]) & /@ (({MassMatcher[#[[1]], massAccuracy, Sequence @@ MassMatcherOptions], #} &) /@ Query[1, Keys]@omicsObject));
-   
-    #returning = Query[All, KeyMap[keyMapper]]@omicsObject;
-   
-    return returning
-
-
-'''
-EnrichmentReportExport(results) exports results from enrichment analyses to Excel spreadsheets.
-'''
 def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
-    saveDir = "\\".join([os.getcwd(), "Enrichment reports"]) + "\\"
+    '''Export results from enrichment analysis to Excel spreadsheets.'''
 
-    createDirectories(saveDir)
+    def FlattenDataForExport(data):
 
-    if AppendString=="":
-        AppendString=(datetime.datetime.now().isoformat().replace(' ', '_').replace(':', '_').split('.')[0])
+        returning = {}
+
+        if (type(data) is dict):
+            idata = data[list(data.keys())[0]]
+            if not type(idata) is dict:
+                returning['List'] = data
+            elif type(idata) is dict:
+                idata = idata[list(idata.keys())[0]]
+                if not type(idata) is dict:
+                    returning = data
+                elif type(idata) is dict:
+                    idata = idata[list(idata.keys())[0]]
+                    if not type(idata) is dict:
+                        #Loop through the clustering object
+                        for keyClass in list(data.keys()):
+                            for keySubClass in list(data[keyClass].keys()):
+                                returning[str(keyClass)+' '+str(keySubClass)] = data[keyClass][keySubClass]
+                    elif type(idata) is dict:
+                        for keyAnalysisType in list(data.keys()):
+                            #Loop through the clustering object
+                            for keyClass in list(data[keyAnalysisType].keys()):
+                                for keySubClass in list(data[keyAnalysisType][keyClass].keys()):
+                                    returning[str(keyAnalysisType)+' '+str(keyClass)+' '+str(keySubClass)] = data[keyAnalysisType][keyClass][keySubClass]
+        else:
+            print('Results type is not supported...')
+
+        return returning
 
     def ExportToFile(fileName, data):
 
@@ -969,34 +983,47 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
             listNon = [list(value)[2:] for value in values]
 
             dataDF = [listNum[i] + listNon[i] for i in range(len(keys))]
-            columns = ['p-Value', 'BH-corrected p-Value', 'Significant', 'Counts 1', 'Counts 2', 'Counts 3', 'Counts 4', 'Description', 'List']
+            columns = ['p-Value', 'BH-corrected p-Value', 'Significant', 'Counts 1', 'Counts 2', 'Counts 3', 'Counts 4', 'Description', 'List of gene hits']
 
-            pd.DataFrame(data=dataDF, index=keys, columns=columns).to_excel(writer, str(key))
+            df = pd.DataFrame(data=dataDF, index=keys, columns=columns)
+
+            df['Significant'] = df['Significant'].map(bool)
+
+            cleanup = lambda value: value.replace("']], ['", ' | ').replace("[", '').replace("]", '').replace("'", '').replace(", Unknown", '')
+            df['List of gene hits'] = df['List of gene hits'].map(str).apply(cleanup)
+            df['Description'] = df['Description'].map(str).apply(cleanup)
+
+            df.sort_values(by='BH-corrected p-Value', inplace=True)
+
+            df.to_excel(writer, str(key))
+
+            writer.sheets[str(key)].set_column('A:A', df.index.astype(str).map(len).max()+2)
+             
+            format = writer.book.add_format({'text_wrap': True,
+                                             'valign': 'top'})
+
+            for idx, column in enumerate(df.columns):
+                max_len = max((df[column].astype(str).map(len).max(),  # len of largest item
+                            len(str(df[column].name)))) + 1            # len of column name/header adding a little extra space
+
+                width = 50 if column=='Description' else min(180, max_len)
+
+                writer.sheets[str(key)].set_column(idx+1, idx+1, width, format)  # set column width
 
         writer.save()
 
-        print('Saved:' + fileName)
+        print('Saved:', fileName)
 
         return None
+    
+    saveDir = "\\".join([os.getcwd(), "Enrichment reports"]) + "\\" if OutputDirectory==None else OutputDirectory
 
-    if (type(data) is dict):
-        idata = data[list(data.keys())[0]]
-        if not type(idata) is dict:
-            data = {"List": {"Results":data}}
-            keyClass = list(data.keys())[0]
-            ExportToFile(saveDir + str(keyClass) + '_' + AppendString + '.xlsx', data[keyClass])
-        elif type(idata) is dict:
-            idata = idata[list(idata.keys())[0]]
-            if not type(idata) is dict:
-                keyClass = list(data.keys())[0]
-                data = {keyClass: {"Results":data[keyClass]}}
-                ExportToFile(saveDir + str(keyClass) + '_' + AppendString + '.xlsx', data[keyClass])
-            elif type(idata) is dict:
-                #Loop through the clustering object, export each class to separate file
-                for keyClass in list(data.keys()):
-                    ExportToFile(saveDir + str(keyClass) + '_' + AppendString + '.xlsx', data[keyClass])
-    else:
-        print('Results type is not supported...')
+    createDirectories(saveDir)
+
+    if AppendString=="":
+        AppendString=(datetime.datetime.now().isoformat().replace(' ', '_').replace(':', '_').split('.')[0])
+
+    ExportToFile(saveDir + AppendString + '.xlsx', FlattenDataForExport(data))
 
     return None
 
@@ -1005,12 +1032,12 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
 
 ### Core functions ################################################################################
-'''
-Equivalent of Mathematica.Chop Function
-expr: a number or a pyhton sequence of numbers
-tolerance such as default in Mathematica
-'''
 def chop(expr, tolerance=1e-10):
+
+    '''Equivalent of Mathematica.Chop Function.
+    expr: a number or a pyhton sequence of numbers
+    tolerance such as default in Mathematica
+    '''
         
     if isinstance(expr, (list, tuple, np.ndarray)):
 
@@ -1023,19 +1050,18 @@ def chop(expr, tolerance=1e-10):
     return expr_copy
 
 
-'''
-Calculates modified z-score of a 1D array based on "Median absolute deviation"
-Warning: use on 1-D arrays only!
-'''
 def modifiedZScore(subset):
 
-    '''
-    1D, 2D Median absolute deviation of a sequence of numbers or pd.Series
-    Default axis=None: multidimentional arrays are flattened
-    axis=0: use if data in columns
-    axis=1: use if data in rows
+    '''Calculate modified z-score of a 1D array based on "Median absolute deviation"
+    Note: use on 1-D arrays only.
     '''
     def medianAbsoluteDeviation(expr, axis=None):
+
+        '''1D, 2D Median absolute deviation of a sequence of numbers or pd.Series
+        Default: axis=None: multidimentional arrays are flattened
+        axis=0: use if data in columns
+        axis=1: use if data in rows
+        '''
 
         data = None
 
@@ -1071,9 +1097,7 @@ def modifiedZScore(subset):
         
         return
 
-    is_not_nan = np.abs(np.isnan(subset.values) * 1.0 - 1.0) > 0.0
-
-    values = subset[is_not_nan].values
+    values = subset[~np.isnan(subset.values)].values
 
     MedianAD = medianAbsoluteDeviation(values, axis=None)
 
@@ -1085,16 +1109,21 @@ def modifiedZScore(subset):
         print('MedianAD:', MedianAD, '\tMedian:', np.median(values))
         coefficient = 0.6744897 / MedianAD
         
-    subset.iloc[is_not_nan] = coefficient * (values - np.median(values))
+    subset.iloc[~np.isnan(subset.values)] = coefficient * (values - np.median(values))
 
     return subset
 
 
-'''
-Power transform from scipy.stats
-subset: 1D numpy array
-'''
 def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
+
+    '''Power transform from scipy.stats
+    subset: 1D numpy array
+    '''
+
+    where_negative = np.where(subset < 0)
+    if len(where_negative>0):
+        errMsg = 'Warning: negative values are present in the data. Review the sequence of the data processing steps.'
+        print(errMsg)
 
     where_positive = np.where(subset > 0)
 
@@ -1116,15 +1145,15 @@ def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
     return subset
 
 
-'''
-Lomb-Scargle core translated from MathIOmica.m
-Used to calculate the different frequency components of our spectrum: project the cosine/sine component and normalize it:
-func: Sin or Cos
-freq: frequencies (1D array of floats)
-times: input times (starting point adjusted w.r.t.dataset times), Zero-padded (is it???)
-data: input Data with the mean subtracted from it, before zero-padding (for sure???)
-'''
 def ampSquaredNormed(func, freq, times, data):
+
+    '''Lomb-Scargle core translated from MathIOmica.m
+    Calculate the different frequency components of our spectrum: project the cosine/sine component and normalize it:
+    func: Sin or Cos
+    freq: frequencies (1D array of floats)
+    times: input times (starting point adjusted w.r.t.dataset times), Zero-padded (is it???)
+    data: input Data with the mean subtracted from it, before zero-padding (for sure???)
+    '''
 
     omega_freq = 2. * (np.pi) * freq
     theta_freq = 0.5 * np.arctan2(np.sum(np.sin(4. * (np.pi) * freq * times)), np.sum(np.cos(4. * (np.pi) * freq * times) + 10 ** -20))
@@ -1135,14 +1164,14 @@ def ampSquaredNormed(func, freq, times, data):
     return chop(ampSum) / ampNorm
 
 
-'''
-Autocorrelation from MathIOmica.m
-inputTimes: times corresponding to provided data points (1D array of floats)
-inputData: data points (1D array of floats)
-inputSetTimes: a complete set of all possible N times during which data could have been collected
-'''
 def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1):
     
+    '''Autocorrelation from MathIOmica.m
+    inputTimes: times corresponding to provided data points (1D array of floats)
+    inputData: data points (1D array of floats)
+    inputSetTimes: a complete set of all possible N times during which data could have been collected
+    '''
+
     #InverseAutocovariance from MathIOmica.m
     def InverseAutocovariance(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1):
 
@@ -1197,21 +1226,20 @@ def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1
     return np.vstack((inputSetTimes[:len(values)], values))
 
 
-'''
-Wrapper of Autocorrelation function for use with Multiprocessing
-'''
 def pAutocorrelation(args):
+
+    '''Wrapper of Autocorrelation function for use with Multiprocessing.'''
 
     inputTimes, inputData, inputSetTimes = args
     
     return autocorrelation(inputTimes, inputData, inputSetTimes)
 
 
-'''
-inputData: data points (2D array of floats), rows are normalized signals
-func: np.max or np.min
-'''
 def getSpikes(inputData, func, cutoffs):
+
+    '''inputData: data points (2D array of floats), rows are normalized signals
+    func: np.max or np.min
+    '''
 
     data = inputData.copy()
     counts_non_missing = np.sum(~np.isnan(data), axis=1)
@@ -1228,12 +1256,12 @@ def getSpikes(inputData, func, cutoffs):
     return sorted(spikesIndex)
 
 
-'''
-df_data:
-p_cutoff:
-NumberOfRandomSamples:
-'''
 def getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
+
+    '''df_data:
+    p_cutoff:
+    NumberOfRandomSamples:
+    '''
 
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
 
@@ -1257,15 +1285,15 @@ def getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
     return cutoffs
 
 
-'''
-Lomb-Scargle Periodogram from MathIOmica.m
-inputTimes: times corresponding to provided data points (1D array of floats)
-inputData: data points (1D array of floats)
-inputSetTimes: a complete set of all possible N times during which data could have been collected
-
-TO DO: debug all optional parameters, such as FrequenciesOnly, NormalizeIntensities, etc.
-'''
 def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,NormalizeIntensities=False,OversamplingRate=1,PairReturn=False,UpperFrequencyFactor=1):
+
+    '''Lomb-Scargle Periodogram from MathIOmica.m
+    inputTimes: times corresponding to provided data points (1D array of floats)
+    inputData: data points (1D array of floats)
+    inputSetTimes: a complete set of all possible N times during which data could have been collected
+
+    TO DO: debug all optional parameters, such as FrequenciesOnly, NormalizeIntensities, etc.
+    '''
 
     #adjust inputTimes starting point w.r.t.dataset times
     inputTimesNormed = inputTimes - inputSetTimes[0]
@@ -1316,13 +1344,13 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
     return returning
 
 
-'''
-Calculate autocorrelation using Lomb-Scargle Autocorrelation
-NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
-df_data: pandas Series or Dataframe
-setAllInputTimes: a complete set of all possible N times during which data could have been collected
-'''
 def getAutocorrelationsOfData(params):
+
+    '''Calculate autocorrelation using Lomb-Scargle Autocorrelation.
+    NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
+    df_data: pandas Series or Dataframe
+    setAllInputTimes: a complete set of all possible N times during which data could have been collected
+    '''
 
     df, setAllInputTimes = params
 
@@ -1343,14 +1371,14 @@ def getAutocorrelationsOfData(params):
     return None
 
 
-'''
-Generate autocorrelation null-distribution from permutated data
-Calculate autocorrelation using Lomb-Scargle Autocorrelation
-NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
-df_data: pandas Series or Dataframe
-NumberOfRandomSamples: size of the distribution to generate
-'''
 def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
+
+    '''Generate autocorrelation null-distribution from permutated data.
+    Calculate autocorrelation using Lomb-Scargle Autocorrelation.
+    NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
+    df_data: pandas Series or Dataframe
+    NumberOfRandomSamples: size of the distribution to generate
+    '''
 
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
 
@@ -1366,12 +1394,12 @@ def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs
     return pd.DataFrame(data=results[1::2], columns=results[0])
 
 
-'''
-HypothesisTesting BenjaminiHochbergFDR correction from MathIOmica.m
-pValues: p-values (1D array of floats)
-SignificanceLevel: default is 0.05
-'''
 def BenjaminiHochbergFDR(pValues, SignificanceLevel=0.05):
+
+    '''HypothesisTesting BenjaminiHochbergFDR correction from MathIOmica.m
+    pValues: p-values (1D array of floats)
+    SignificanceLevel: default = 0.05
+    '''
 
     pValues = np.round(pValues,6)
       
@@ -1417,11 +1445,11 @@ def BenjaminiHochbergFDR(pValues, SignificanceLevel=0.05):
     return returning
 
 
-'''
-Metric to calculate 'euclidean' distance between vectors u and v 
-using only common non-missing points (not NaNs)
-'''
 def metricCommonEuclidean(u,v):
+
+    '''Metric to calculate 'euclidean' distance between vectors u and v 
+    using only common non-missing points (not NaNs).
+    '''
 
     where_common = (~np.isnan(u)) * (~np.isnan(v))
 
@@ -1432,11 +1460,11 @@ def metricCommonEuclidean(u,v):
 
 
 ### Clustering functions ##########################################################################
-''' 
-Get estimated number of clusters using ARI with KMeans
-return: max peak, other possible peaks
-'''
 def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_to_do, numberOfAvailableCPUs=4, plotID=None, printScores=False):
+
+    ''' Get estimated number of clusters using ARI with KMeans
+    return: max peak, other possible peaks.
+    '''
 
     def getPeakPosition(scores, makePlot=False, plotID=None):
 
@@ -1484,28 +1512,51 @@ def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_
     return getPeakPosition(scores, makePlot=True, plotID=plotID)[0]
 
 
-''' 
-Get optimal number clusters from linkage
-'''
-def get_optimal_number_clusters_from_linkage(Y):
+def get_optimal_number_clusters_from_linkage_Elbow(Y):
+
+    ''' Get optimal number clusters from linkage.
+    A point of the highest accelleration of the fusion coefficient of the given linkage.
+    '''
 
     return np.diff(np.array([[nc, Y[-nc + 1][2]] for nc in range(2,min(50,len(Y)))]).T[1], 2).argmax() + 1 if len(Y) >= 5 else 1
 
 
-''' 
-Cluster data into N groups, if N is provided, else determine N
-return: linkage matrix, cluster labels, possible cluster labels
-'''
+def get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric):
+
+    '''Determine the optimal number of cluster in data maximizing the Silhouette score.'''
+
+    max_score = 0
+    n_clusters = 1
+
+    distmatrix = squareform(pdist(data, metric=metric))
+
+    for temp_n_clusters in range(2,10):
+        print(temp_n_clusters, end='a, ', flush=True)
+        temp_clusters = scipy.cluster.hierarchy.fcluster(Y, t=temp_n_clusters, criterion='maxclust')
+
+        print(temp_n_clusters, end='b, ', flush=True)
+        temp_score = sklearn.metrics.silhouette_score(distmatrix, temp_clusters, metric=metric)
+
+        if temp_score>max_score:
+            max_score = temp_score
+            n_clusters = temp_n_clusters
+
+    return n_clusters - 1
+
+
 def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation', significance='Elbow'):
+
+    '''Cluster data into N groups, if N is provided, else determine N
+    return: linkage matrix, cluster labels, possible cluster labels.
+    '''
 
     Y = hierarchy.linkage(data, method=method, metric=metric, optimal_ordering=False)
 
     if n_groups == None:
         if significance=='Elbow':
-            n_groups = get_optimal_number_clusters_from_linkage(Y)
+            n_groups = get_optimal_number_clusters_from_linkage_Elbow(Y)
         elif significance=='Silhouette':
-            n_groups = 1
-            print('Significance %s not implemented here!'%(significance))
+            n_groups = get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric)
 
     print('n_groups:', n_groups)
 
@@ -1518,17 +1569,21 @@ def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation
     return Y, labelsClusterIndex, groups
 
 
-'''
-Make a clustering Groups-Subgroups dictionary object
-'''
-def makeClusteringObject(df_data, df_data_autocorr):
+def makeClusteringObject(df_data, df_data_autocorr, significance='Elbow'):
 
-    def getSubgroups(df_data):
+    '''Make a clustering Groups-Subgroups dictionary object.'''
 
-        Y = hierarchy.linkage(df_data.values, method='weighted', metric=metricCommonEuclidean, optimal_ordering=True)
+    def getSubgroups(df_data, metric, significance):
+
+        Y = hierarchy.linkage(df_data.values, method='weighted', metric=metric, optimal_ordering=True)
         leaves = hierarchy.dendrogram(Y, no_plot=True)['leaves']
 
-        n_clusters = get_optimal_number_clusters_from_linkage(Y)
+        if significance=='Elbow':
+            n_clusters = get_optimal_number_clusters_from_linkage_Elbow(Y)
+        elif significance=='Silhouette':
+            n_clusters = get_optimal_number_clusters_from_linkage_Silhouette(Y, df_data.values, metric)
+
+        print('n_subgroups:', n_clusters)
 
         clusters = scipy.cluster.hierarchy.fcluster(Y, t=n_clusters, criterion='maxclust')[leaves]
 
@@ -1536,12 +1591,12 @@ def makeClusteringObject(df_data, df_data_autocorr):
 
     ClusteringObject = {}
 
-    ClusteringObject['linkage'], labelsClusterIndex, groups = getGroupingIndex(df_data_autocorr.values, method='weighted', metric='correlation')
+    ClusteringObject['linkage'], labelsClusterIndex, groups = getGroupingIndex(df_data_autocorr.values, method='weighted', metric='correlation', significance=significance)
 
     for group in groups:
         signals = df_data.index[labelsClusterIndex==group].values
 
-        ClusteringObject[group], ClusteringObject[group]['linkage'] = ({1: signals}, None) if len(signals)==1 else getSubgroups(df_data.loc[signals])
+        ClusteringObject[group], ClusteringObject[group]['linkage'] = ({1: signals}, None) if len(signals)==1 else getSubgroups(df_data.loc[signals], metricCommonEuclidean, significance)
 
         for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
             ClusteringObject[group][subgroup] = {'order':[np.where([temp==signal for temp in df_data.index.values])[0][0] for signal in list(ClusteringObject[group][subgroup])],
@@ -1551,11 +1606,11 @@ def makeClusteringObject(df_data, df_data_autocorr):
     return ClusteringObject
 
 
-'''
-Export a clustering Groups-Subgroups dictionary object to a SpreadSheet
-NOTE: linkage data is not exported
-'''
 def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True, includeAutocorr=True):
+
+    '''Export a clustering Groups-Subgroups dictionary object to a SpreadSheet.
+    NOTE: linkage data is not exported.
+    '''
 
     if not os.path.exists(saveDir):
         os.makedirs(saveDir)
@@ -1593,10 +1648,9 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
 
 
 ### Visualization functions #######################################################################
-'''
-Make a histogram for each pandas Series (time point) in a pandas Dataframe
-'''
 def makeDataHistograms(df, saveDir, dataName):
+
+    '''Make a histogram for each pandas Series (time point) in a pandas Dataframe.'''
 
     if not os.path.exists(saveDir):
         os.makedirs(saveDir)
@@ -1637,12 +1691,12 @@ def makeDataHistograms(df, saveDir, dataName):
     return None
 
 
-'''
-Make a combined plot of the signal and its Lomb-Scargle periodogram
-for each pandas Series (time point) in a pandas Dataframe
-'''
 def makeLombScarglePeriodograms(df, saveDir, dataName):
         
+    '''Make a combined plot of the signal and its Lomb-Scargle periodogram
+    for each pandas Series (time point) in a pandas Dataframe.
+    '''
+
     if not os.path.exists(saveDir):
         os.makedirs(saveDir)
 
@@ -1693,10 +1747,9 @@ def makeLombScarglePeriodograms(df, saveDir, dataName):
     return None
 
 
-'''
-Make Dendrogram-Heatmap plot along with VIsibility graphs
-'''
 def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
+
+    '''Make Dendrogram-Heatmap plot along with VIsibility graphs.'''
 
     def addAutocorrelationDendrogramAndHeatmap(ClusteringObject, groupColors, fig):
 
@@ -1762,7 +1815,7 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
 
         Y = ClusteringObject[group]['linkage']
 
-        n_clusters = get_optimal_number_clusters_from_linkage(Y)
+        n_clusters = len(sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']))
         print("Number of subgroups:", n_clusters)
 
         axisDendro = fig.add_axes([left, bottom, dx + 0.005, top - bottom], frame_on=False)
@@ -1776,7 +1829,7 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
         axisDendro.set_xticks([])
         axisDendro.set_yticks([])
 
-        posA = ((axisDendro.get_xlim()[0] if n_clusters == 1 else Y[-n_clusters + 1][2]) + Y[-n_clusters][2]) / 2
+        posA = axisDendro.get_xlim()[0]/2 if n_clusters == groupSize else (Y[-n_clusters + 1][2] + Y[-n_clusters][2])/2 
         axisDendro.plot([posA, posA], [axisDendro.get_ylim()[0], axisDendro.get_ylim()[1]], 'k--', linewidth = 1)
 
         clusters = []
@@ -2009,6 +2062,8 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
 ### Dataframe functions ###########################################################################
 def prepareDataframe(dataDir, dataFileName, AlltimesFileName):
 
+    '''Make a DataFrame from CSV files.'''
+
     df = pd.read_csv(dataDir + dataFileName, delimiter=',', header=None)
 
     df = df.set_index(df[df.columns[0]]).drop(columns=[df.columns[0]])
@@ -2017,7 +2072,10 @@ def prepareDataframe(dataDir, dataFileName, AlltimesFileName):
 
     return df
 
+
 def filterOutAllZeroSignalsDataframe(df):
+
+    '''Filter out all-zero signals from a DataFrame.'''
 
     print('Filtering out all-zero signals...')
 
@@ -2030,7 +2088,10 @@ def filterOutAllZeroSignalsDataframe(df):
 
     return df
 
+
 def filterOutFractionZeroSignalsDataframe(df, max_fraction_of_allowed_zeros):
+       
+    '''Filter out fraction-zero signals from a DataFrame.'''
 
     print('Filtering out low-quality signals (with more than %s%% missing points)...' %(100.*(1.-max_fraction_of_allowed_zeros)))
 
@@ -2045,13 +2106,16 @@ def filterOutFractionZeroSignalsDataframe(df, max_fraction_of_allowed_zeros):
 
     return df
 
+
 def filterOutFirstPointZeroSignalsDataframe(df):
+
+    '''Filter out out first time point zeros signals from a DataFrame.'''
 
     print('Filtering out first time point zeros signals...')
 
     init = df.shape[0]
 
-    df = df.loc[df.iloc[:,0] > 0.0]
+    df = df.loc[~(df.iloc[:,0] == 0.0)]
 
     if (init - df.shape[0]) > 0:
         print('Removed ', init - df.shape[0], 'signals out of %s.' % init) 
@@ -2059,7 +2123,10 @@ def filterOutFirstPointZeroSignalsDataframe(df):
 
     return df
 
+
 def tagMissingValuesDataframe(df):
+
+    '''Tag missing (i.e. zero) values with NaN.'''
 
     print('Tagging missing (i.e. zero) values with NaN...')
 
@@ -2067,7 +2134,10 @@ def tagMissingValuesDataframe(df):
 
     return df
 
+
 def tagLowValuesDataframe(df, cutoff, replacement):
+
+    '''Tag low values with replacement value.'''
 
     print('Tagging low values (<=%s) with %s...'%(cutoff, replacement))
 
@@ -2075,7 +2145,10 @@ def tagLowValuesDataframe(df, cutoff, replacement):
 
     return df
 
+
 def removeConstantSignalsDataframe(df, theta_cutoff):
+
+    '''Remove constant signals.'''
 
     print('\nRemoving constant genes. Cutoff value is %s' % (theta_cutoff))
 
@@ -2088,7 +2161,10 @@ def removeConstantSignalsDataframe(df, theta_cutoff):
 
     return df
 
+
 def boxCoxTransformDataframe(df):
+
+    '''Box-cox transform data.'''
     
     print('Box-cox transforming raw data...', end='\t', flush=True)
             
@@ -2098,7 +2174,10 @@ def boxCoxTransformDataframe(df):
 
     return df
 
+
 def modifiedZScoreDataframe(df):
+
+    '''Z-score (Median-based) transform data.'''
             
     print('Z-score (Median-based) transforming box-cox transformed data...', end='\t', flush=True)
 
@@ -2108,18 +2187,101 @@ def modifiedZScoreDataframe(df):
 
     return df
 
+
 def normalizeSignalsToUnityDataframe(df):
+
+    '''Normalize signals to unity.'''
 
     print('Normalizing signals to unity...')
 
     #Subtract 0-time-point value from all time-points
-
-    df.iloc[:] = (df.values.T - df.values.T[0]).T
+    df = compareTimeSeriesToPointDataframe(df, point='first')
     
     where_nan = np.isnan(df.values.astype(float))
     df[where_nan] = 0.0
     df = df.apply(lambda data: data / np.sqrt(np.dot(data,data)),axis=1)
     df[where_nan] = np.nan
+
+    return df
+
+
+def quantileNormalizeDataframe(df):
+
+    '''Quantile Normalize signals.'''
+
+    print('Quantile normalizing signals...')
+
+    df.iloc[:] = quantile_transform(df.values)
+
+    return df
+
+
+def compareTimeSeriesToPointDataframe(df, point='first'):
+
+    '''Subtract a particular point of each time series (row) of a Dataframe.
+    point='first', 'last', 0, 1, ... , 10, or a value.
+    '''
+
+    independent = True
+
+    if point == 'first':
+        idx = 0
+    elif point == 'last':
+        idx = len(df.columns) - 1
+    elif type(point) is int:
+        idx = point
+    elif type(point) is float:
+        independent = False
+    else:
+        print("Specify a valid comparison point: 'first', 'last', 0, 1, ..., 10, or a value")
+        return
+
+    if independent:
+        df.iloc[:] = (df.values.T - df.values.T[idx]).T
+    else:
+        df.iloc[:] = (df.values.T - point).T
+
+
+    return df
+
+
+def compareTwoTimeSeriesDataframe(df1, df2, function=np.subtract, compareAllLevelsInIndex=True, mergeFunction=np.mean):
+
+    '''Create a new Dataframe based on comparison of two existing Dataframes.
+    operation=np.subtract (default), np.add, np.divide, or another <ufunc>.
+    compareAllLevelsInIndex=True (default), if False only "source" and "id" will be compared,
+    input Dataframes are merged with mergeFunction=np.mean (default), np.median, np.max, or another <ufunc>.
+    '''
+
+    if df1.index.names!=df2.index.names:
+        errMsg = 'Index of Dataframe 1 is not of the same shape as index of Dataframe 2!'
+        print(errMsg)
+        return errMsg
+
+    if compareAllLevelsInIndex:
+        df1_grouped, df2_grouped = df1, df2
+    else:
+        def aggregate(df):
+            return df.groupby(level=['source', 'id']).agg(mergeFunction)
+
+        df1_grouped, df2_grouped = aggregate(df1), aggregate(df2)
+
+    index = pd.MultiIndex.from_tuples(list(set(df1_grouped.index.values).intersection(set(df2_grouped.index.values))), 
+                                      names=df1_grouped.index.names)
+
+    return function(df1_grouped.loc[index], df2_grouped.loc[index])
+
+
+def mergeDataframes(listOfDataframes):
+
+    '''Merge a list of Dataframes (outer join).'''
+
+    if len(listOfDataframes)==0:
+        return None
+    elif len(listOfDataframes)==1:
+        return listOfDataframes[0]
+
+    df = pd.concat(listOfDataframes, sort=False, axis=0)
 
     return df
 
