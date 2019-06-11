@@ -1649,14 +1649,14 @@ def makeClusteringObject(df_data, df_data_autocorr, significance='Elbow'):
 
         clusters = scipy.cluster.hierarchy.fcluster(Y, t=n_clusters, criterion='maxclust')[leaves]
 
-        return {cluster:df_data.index[leaves].values[clusters==cluster] for cluster in np.unique(clusters)}, Y
+        return {cluster:df_data.index[leaves][clusters==cluster] for cluster in np.unique(clusters)}, Y
 
     ClusteringObject = {}
 
     ClusteringObject['linkage'], labelsClusterIndex, groups = getGroupingIndex(df_data_autocorr.values, method='weighted', metric='correlation', significance=significance)
 
     for group in groups:
-        signals = df_data.index[labelsClusterIndex==group].values
+        signals = df_data.index[labelsClusterIndex==group]
 
         ClusteringObject[group], ClusteringObject[group]['linkage'] = ({1: signals}, None) if len(signals)==1 else getSubgroups(df_data.loc[signals], metricCommonEuclidean, significance)
 
@@ -2000,7 +2000,7 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
         addGroupHeatmapAndColorbar(tempData, n_clusters, clusters, cluster_line_positions, current_bottom, current_top, group, groupColors, fig)
 
 
-    def addVisibilityGraph(data, times, dataName, coords, numberOfVGs, groups_ac_colors, fig):
+    def addVisibilityGraph(data, times, dataName, coords, numberOfVGs, groups_ac_colors, fig, printCommunities=False):
 
         group = int(dataName[:dataName.find('S')].strip('G'))
 
@@ -2053,10 +2053,12 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
         list_of_nodes.sort()
 
         communities = [list(range(list_of_nodes[i],list_of_nodes[i + 1])) for i in range(len(list_of_nodes) - 1)]
-        print(list_of_nodes)
-        print()
-        [print(community) for community in communities]
-        print()
+
+        if printCommunities:
+            print(list_of_nodes, '\n')
+            [print(community) for community in communities]
+            print()
+
         xmin, xmax = axisVG.get_xlim()
         ymin, ymax = axisVG.get_ylim()
         X, Y = np.meshgrid(np.arange(xmin, xmax, (xmax - xmin) / 100.), np.arange(ymin, ymax, (ymax - ymin) / 100.))
@@ -2347,7 +2349,6 @@ def mergeDataframes(listOfDataframes):
 
     return df
 
-###################################################################################################
 
 def hdf5_usage_information():
 
@@ -2393,3 +2394,135 @@ def hdf5_usage_information():
     print(hdf5_usage_information.__doc__)
 
     return None
+
+###################################################################################################
+
+
+
+### Data processing functions #####################################################################
+def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05,
+                             NumberOfRandomSamples=10**5, NumberOfCPUs=4, calculateAutocorrelations=False):
+
+    print('Processing', dataName)
+
+    if not os.path.exists(saveDir):
+        os.makedirs(saveDir)
+
+    if hdf5fileName is None:
+        hdf5fileName = saveDir + dataName + '.h5'
+
+    df_data = filterOutAllZeroSignalsDataframe(df_data)
+    df_data = filterOutFirstPointZeroSignalsDataframe(df_data)
+    df_data = filterOutFractionZeroSignalsDataframe(df_data, 0.75)
+    df_data = tagMissingValuesDataframe(df_data)
+    df_data = tagLowValuesDataframe(df_data, 1., 1.)
+    df_data = removeConstantSignalsDataframe(df_data, 0.)
+
+    write(df_data, saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
+
+    if not calculateAutocorrelations:
+        df_dataAutocorrelations = read(saveDir + dataName + '_dataAutocorrelations', hdf5fileName=hdf5fileName)
+        df_randomAutocorrelations = read(saveDir + dataName + '_randomAutocorrelations', hdf5fileName=hdf5fileName)
+        
+        if (df_dataAutocorrelations is None) or (df_randomAutocorrelations is None):
+            print('Autocorrelation of data and the corresponding null distribution not found. Calculating autocorrelations...')
+            calculateAutocorrelations = True
+
+    if calculateAutocorrelations:
+        df_data = read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
+
+        print('Calculating null distribution of %s samples...' %(NumberOfRandomSamples))
+        df_randomAutocorrelations = getRandomAutocorrelations(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs)
+
+        write(df_randomAutocorrelations, saveDir + dataName + '_randomAutocorrelations', hdf5fileName=hdf5fileName)
+
+        df_data = read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
+        df_data = normalizeSignalsToUnityDataframe(df_data)
+
+        print('Calculating each Time Series Autocorrelations...')
+        df_dataAutocorrelations = runCPUs(NumberOfCPUs, getAutocorrelationsOfData, [(df_data.iloc[i], df_data.columns.values) for i in range(len(df_data.index))])
+
+        df_dataAutocorrelations = pd.DataFrame(data=df_dataAutocorrelations[1::2], index=df_data.index, columns=df_dataAutocorrelations[0])
+        df_dataAutocorrelations.columns = ['Lag ' + str(column) for column in df_dataAutocorrelations.columns]
+        write(df_dataAutocorrelations, saveDir + dataName + '_dataAutocorrelations', hdf5fileName=hdf5fileName)
+
+    df_data = read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
+            
+    QP = [1.0]
+    QP.extend([np.quantile(df_randomAutocorrelations.values.T[i], 1. - p_cutoff,interpolation='lower') for i in range(1,df_dataAutocorrelations.shape[1])])
+    print('Quantiles:', list(np.round(QP, 16)), '\n')
+
+    significant_index = np.vstack([df_dataAutocorrelations.values.T[lag] > QP[lag] for lag in range(df_dataAutocorrelations.shape[1])]).T
+
+    print('Calculating spikes cutoffs...')
+    spike_cutoffs = getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=NumberOfRandomSamples)
+    print(spike_cutoffs)
+
+    df_data = normalizeSignalsToUnityDataframe(df_data)
+
+    print('Recording SpikeMax data...')
+    max_spikes = df_data.index.values[getSpikes(df_data.values, np.max, spike_cutoffs)]
+    print(len(max_spikes))
+    significant_index_spike_max = [(gene in list(max_spikes)) for gene in df_data.index.values]
+    lagSignigicantIndexSpikeMax = (np.sum(significant_index.T[1:],axis=0) == 0) * significant_index_spike_max
+    write(df_dataAutocorrelations[lagSignigicantIndexSpikeMax], saveDir + dataName +'_selectedAutocorrelations_SpikeMax', hdf5fileName=hdf5fileName)
+    write(df_data[lagSignigicantIndexSpikeMax], saveDir + dataName +'_selectedTimeSeries_SpikeMax', hdf5fileName=hdf5fileName)
+            
+    print('Recording SpikeMin data...')
+    min_spikes = df_data.index.values[getSpikes(df_data.values, np.min, spike_cutoffs)]
+    print(len(min_spikes))
+    significant_index_spike_min = [(gene in list(min_spikes)) for gene in df_data.index.values]
+    lagSignigicantIndexSpikeMin = (np.sum(significant_index.T[1:],axis=0) == 0) * (np.array(significant_index_spike_max) == 0) * significant_index_spike_min
+    write(df_dataAutocorrelations[lagSignigicantIndexSpikeMin], saveDir + dataName +'_selectedAutocorrelations_SpikeMin', hdf5fileName=hdf5fileName)
+    write(df_data[lagSignigicantIndexSpikeMin], saveDir + dataName +'_selectedTimeSeries_SpikeMin', hdf5fileName=hdf5fileName)
+
+    print('Recording Lag%s-Lag%s data...'%(1,df_dataAutocorrelations.shape[1]))
+    for lag in range(1,df_dataAutocorrelations.shape[1]):
+        lagSignigicantIndex = (np.sum(significant_index.T[1:lag],axis=0) == 0) * (significant_index.T[lag])
+        write(df_dataAutocorrelations[lagSignigicantIndex], saveDir + dataName +'_selectedAutocorrelations_LAG%s'%(lag), hdf5fileName=hdf5fileName)
+        write(df_data[lagSignigicantIndex], saveDir + dataName +'_selectedTimeSeries_LAG%s'%(lag), hdf5fileName=hdf5fileName)
+                
+    return
+
+
+def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, writeClusteringObjectToBinaries=False):
+
+    def internalDraw(className, dataName, hdf5fileName, writeToBinaries):
+
+        if hdf5fileName is None:
+            hdf5fileName = saveDir + dataName + '.h5'
+
+        print('\n\n%s of Time Series:'%(className)) 
+        df_data_selected = read(saveDir + dataName + '_selectedTimeSeries_%s'%(className), hdf5fileName=hdf5fileName)
+        df_data_autocor_selected = read(saveDir + dataName + '_selectedAutocorrelations_%s'%(className), hdf5fileName=hdf5fileName)
+
+        if (df_data_selected is None) or (df_data_autocor_selected is None):
+
+            print('Selected %s time series not found in %s.'%(className, saveDir + dataName + '.h5'))
+            print('Do time series classification first.')
+
+            return 
+
+        print('Creating clustering object.')
+        clusteringObject = makeClusteringObject(df_data_selected, df_data_autocor_selected, significance='Elbow') #Silhouette
+
+        print('Exporting clustering object.')
+        if writeToBinaries:
+            write(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/' + dataName + '_%s'%(className) + '_GroupsSubgroups')
+
+        exportClusteringObject(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_%s'%(className))
+
+        print('Plotting Dendrogram with Heatmaps.')
+        makeDendrogramHeatmap(clusteringObject, saveDir, dataName + '_%s'%(className))
+
+        return
+
+    for lag in range(1,numberOfLagsToDraw + 1):
+        internalDraw('LAG%s'%(lag), dataName, hdf5fileName, writeToBinaries=writeClusteringObjectToBinaries)
+            
+    internalDraw('SpikeMax', dataName, hdf5fileName, writeToBinaries=writeClusteringObjectToBinaries)
+    internalDraw('SpikeMin', dataName, hdf5fileName, writeToBinaries=writeClusteringObjectToBinaries)
+
+    return
+
+###################################################################################################
