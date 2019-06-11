@@ -35,6 +35,7 @@ from pyiomica import VisibilityGraph as vg
 import urllib.request
 import requests
 import shutil
+import h5py
 
 import pymysql
 import datetime
@@ -45,6 +46,9 @@ def createDirectories(path):
 
     '''Create a path of directories, unless the path already exists.'''
 
+    if path=='':
+        return
+
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -53,7 +57,7 @@ def createDirectories(path):
 
 def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
 
-    '''A handy way to parallelize a function call'''
+    '''Parallelize function call.'''
 
     instPool = multiprocessing.Pool(processes = NumberOfAvailableCPUs)
     return_values = instPool.map(func, list_of_tuples_of_func_params)
@@ -63,25 +67,83 @@ def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
     return np.vstack(return_values)
   
 
-def write(data, fileName, withPKLZextension = True):
+def write(data, fileName, withPKLZextension = True, hdf5fileName = None):
 
-    '''Pickle object into a file'''
+    '''Write object into a file. Pandas and Numpy objects are recorded in HDF5 format
+    when 'hdf5fileName' is provided otherwise pickled into a new file.
+    '''
 
-    with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'wb') as temp_file:
-        pickle.dump(data, temp_file, protocol=4)
+    if hdf5fileName!=None and type(data) in [pd.DataFrame, pd.Series]:
+        createDirectories("/".join(hdf5fileName.split("/")[:-1]))
+        key=fileName.split("/")[-1]
+        
+        pd.DataFrame(data=data.values.copy().astype(float), 
+                     index=data.index, 
+                     columns=data.columns).to_hdf(hdf5fileName, key=key, mode='a', complevel=6, complib='zlib')
+
+        hdf5file = h5py.File(hdf5fileName, 'a')
+        hdf5file[key].attrs['gtype'] = 'pd'
+    elif hdf5fileName!=None and type(data) is np.ndarray:
+        createDirectories(hdf5fileName)
+        hdf5file = h5py.File(hdf5fileName, 'a')
+        key = 'arrays/' + fileName.split("/")[-1]
+        data = data.astype(float)
+        if not key in hdf5file:
+            hdf5file.create_dataset(key, data=data, maxshape=tuple([None]*len(data.shape)), dtype=data.dtype,
+                                    compression='gzip', compression_opts=6)
+        else:
+            dataset = hdf5file[key]
+            if dataset.shape!=data.shape:
+                dataset_example.resize(data.shape)
+            dataset[...] = data
+        hdf5file[key].attrs['gtype'] = 'np'
+    else:
+        if hdf5fileName!=None:
+            print('HDF5 format is not supported for data type:', type(data))
+            print('Recording data to a pickle file.')
+
+        createDirectories("/".join(fileName.split("/")[:-1]))
+
+        with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'wb') as temp_file:
+            pickle.dump(data, temp_file, protocol=4)
 
     return
 
 
-def read(fileName, withPKLZextension = True):
+def read(fileName, withPKLZextension = True, hdf5fileName = None):
     
-    '''Unpickle object from a file'''
+    '''Read object from a file. Pandas and Numpy objects are read from HDF5 file when
+    provided, otherwise attempt to read from PKLZ file.
+    '''
 
-    with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'rb') as temp_file:
-        data = pickle.load(temp_file)
-        return data
+    if hdf5fileName!=None:
+        if not os.path.isfile(hdf5fileName):
+            print(hdf5fileName, 'not found.')
+            return None
 
-    return
+        hdf5file = h5py.File(hdf5fileName, 'r')
+        
+        key = fileName.split("/")[-1]
+        if key in hdf5file:
+            if hdf5file[key].attrs['gtype']=='pd':
+                return pd.read_hdf(hdf5fileName, key=key, mode='r')
+
+        key = 'arrays/' + fileName.split("/")[-1]
+        if key in hdf5file:
+            if hdf5file[key].attrs['gtype']=='np':
+                return hdf5file[key].value
+        
+        searchPickled = print(fileName.split("/")[-1], 'not found in', hdf5fileName)
+
+    if hdf5fileName==None or ('searchPickled' in locals()):  
+        if not os.path.isfile(fileName):
+            print(fileName + '.pklz', 'not found.')
+            return None
+
+        with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'rb') as temp_file:
+            data = pickle.load(temp_file)
+
+    return data
 
 
 def createReverseDictionary(inputDictionary):
@@ -2286,3 +2348,48 @@ def mergeDataframes(listOfDataframes):
     return df
 
 ###################################################################################################
+
+def hdf5_usage_information():
+
+    '''Store/export any lagge datasets in hdf5 format via 'pandas' or 'h5py'
+
+    # mode='w' creates/recreates file from scratch
+    # mode='a' creates (if no file exists) or appends to the existing file, and reads it
+    # mode='r' is read only
+
+    # Save data to file using 'pandas': 
+    df_example = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['a', 'b', 'c'])
+    df_example.to_hdf('data.h5', key='my_df1', mode='a')
+    or
+    series_example = pd.Series([1, 2, 3, 4])
+    series_example.to_hdf('data.h5', key='my_series', mode='a')
+
+    # Create groups and datasets using 'h5py' and 'numpy' arrays:
+    tempFile = h5py.File('data.h5', 'a')
+    tempArray = np.array([[1,2,3,4,5],[6,7,8,9,10]]).astype(float)
+    if not 'arrays/my_array' in tempFile:
+        dataset_example = tempFile.create_dataset('arrays/my_array', data=tempArray, maxshape=(None,2), dtype=tempArray.dtype, 
+                                                    chunks=True) #auto-chunked, else use e.g. chunks=(100, 2)
+                                                    #compression='gzip', compression_opts=6
+    else:
+        dataset_example = tempFile['arrays/my_array']
+
+    group_example = tempFile.create_group('more_data/additional')
+
+    # Modify values by slicing the dataset or replacing etire one using [...]
+    dataset_example[:] = np.array([[10,2,3,4,1],[60,7,8,9,1]])
+
+    # New shapes cannot be broadcasted, the dataset needs to be resized explicitly
+    dataset_example.resize(dataset_example.shape[0]+10, axis=0) #add more rows (initiated with zeros)
+
+
+    # Read data from h5 file:
+    df_example = pd.read_hdf('data.h5', 'my_df1')
+
+    tempFile = h5py.File('data.h5', 'r')
+    array_example = tempFile['arrays/my_array'].value
+    '''
+
+    print(hdf5_usage_information.__doc__)
+
+    return None

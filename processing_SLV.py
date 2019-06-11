@@ -8,6 +8,9 @@ import pandas as pd
 
 if __name__ == '__main__':
 
+    #df_example = pyiomica.read('df_example', hdf5fileName='hdf5Files/first.h5')
+    
+
     np.random.seed(0)
 
     NumberOfCPUs = 4
@@ -21,38 +24,41 @@ if __name__ == '__main__':
     testReactomeAnalysis = False #version Alpha 0.001
 
     if processData:
-        preProcessData = False
+        preProcessData = True
         drawHistograms = False
         drawSamplePeriodograms = False
-        calculateNullDistributionsAutocorrelations = False
-        calculateAutocorrelations = False
-        calculateSignificant = False
+        calculateNullDistributionsAutocorrelations = True
+        calculateAutocorrelations = True
+        calculateSignificant = True
         DrawDendrogramHeatmap = True
 
     EnrichmentOutputDirectory = 'EnrichmentOutputDirectory/'
     
-    def processDataTempFunction(data_dir, dataFileName, timesFileName, saveDir):
+    def processDataTempFunction(data_dir, dataFileName, timesFileName, saveDir, Delta=False):
 
         if not os.path.exists(saveDir):
             os.makedirs(saveDir)
 
-        dataName = 'SLV_Delta'
-        #dataName = 'SLV' + '_' + dataFileName.split('_')[0]
+        if Delta:
+            dataName = 'SLV_Delta'
+        else:
+            dataName = 'SLV' + '_' + dataFileName.split('_')[0]
+
         print('Processing', dataName)
 
         if preProcessData:
-            if False:
+            if Delta:
+                df_dataH1 = pyiomica.read('results SLV H1/SLV_Hourly1TimeSeries_df_data_transformed')
+                df_dataH2 = pyiomica.read('results SLV H2/SLV_Hourly2TimeSeries_df_data_transformed')
+                df_data = pyiomica.compareTwoTimeSeriesDataframe(df_dataH1, df_dataH2, function=np.subtract, compareAllLevelsInIndex=False, mergeFunction=np.median)
+                df_data[np.isnan(df_data)] = 0.0
+            else:
                 df_data = pyiomica.prepareDataframe(data_dir, dataFileName, timesFileName)
 
                 df_data.index = pd.MultiIndex.from_tuples([(item.split(':')[1], 
                                                             item.split(':')[0].split('_')[0],
                                                             (' '.join(item.split(':')[0].split('_')[1:]),)) for item in df_data.index.values], 
                                                           names=['source', 'id', 'metadata'])
-            else:
-                df_dataH1 = pyiomica.read('results SLV H1/SLV_Hourly1TimeSeries_df_data_transformed')
-                df_dataH2 = pyiomica.read('results SLV H2/SLV_Hourly2TimeSeries_df_data_transformed')
-                df_data = pyiomica.compareTwoTimeSeriesDataframe(df_dataH1, df_dataH2, function=np.subtract, compareAllLevelsInIndex=False, mergeFunction=np.median)
-                df_data[np.isnan(df_data)] = 0.0
 
             df_data = pyiomica.filterOutAllZeroSignalsDataframe(df_data)
             df_data = pyiomica.filterOutFirstPointZeroSignalsDataframe(df_data)
@@ -60,8 +66,6 @@ if __name__ == '__main__':
             df_data = pyiomica.tagMissingValuesDataframe(df_data)
             df_data = pyiomica.tagLowValuesDataframe(df_data, 1., 1.)
             df_data = pyiomica.removeConstantSignalsDataframe(df_data, 0.)
-
-            np.sum(~np.isnan(df_data), axis=1)
 
             if drawHistograms:
                 sT = timeMeasure.getStartTime()
@@ -77,10 +81,10 @@ if __name__ == '__main__':
                 print('Done')
                 timeMeasure.getElapsedTime(sT)
 
-            pyiomica.write(df_data, saveDir + dataName + '_df_data_transformed')
+            pyiomica.write(df_data, saveDir + dataName + '_df_data_transformed', hdf5fileName=saveDir + dataName+'.h5')
 
         if calculateNullDistributionsAutocorrelations:
-            df_data = pyiomica.read(saveDir + dataName + '_df_data_transformed')
+            df_data = pyiomica.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=saveDir + dataName+'.h5')
 
             sT = timeMeasure.getStartTime()
             print('Calculating null distribution of %s samples...' % (NumberOfRandomSamples), end='\t', flush=True)
@@ -88,10 +92,10 @@ if __name__ == '__main__':
             print('Done')
             timeMeasure.getElapsedTime(sT)
 
-            pyiomica.write(randomAutocorrelations, saveDir + dataName + '_randomAutocorrelations')
+            pyiomica.write(randomAutocorrelations, saveDir + dataName + '_randomAutocorrelations', hdf5fileName=saveDir + dataName+'.h5')
 
         if calculateAutocorrelations:
-            df_data = pyiomica.read(saveDir + dataName + '_df_data_transformed')
+            df_data = pyiomica.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=saveDir + dataName+'.h5')
             df_data = pyiomica.normalizeSignalsToUnityDataframe(df_data)
 
             sT = timeMeasure.getStartTime()
@@ -101,47 +105,37 @@ if __name__ == '__main__':
             timeMeasure.getElapsedTime(sT)
 
             dataAutocorrelations = pd.DataFrame(data=dataAutocorrelations[1::2], index=df_data.index, columns=dataAutocorrelations[0])
-            pyiomica.write(dataAutocorrelations, saveDir + dataName + '_dataAutocorrelations')
+            pyiomica.write(dataAutocorrelations, saveDir + dataName + '_dataAutocorrelations', hdf5fileName=saveDir + dataName+'.h5')
 
         if calculateSignificant:
-            dataAutocorrelations = pyiomica.read(saveDir + dataName + '_dataAutocorrelations')
-            randomAutocorrelations = pyiomica.read(saveDir + dataName + '_randomAutocorrelations')
+            dataAutocorrelations = pyiomica.read(saveDir + dataName + '_dataAutocorrelations', hdf5fileName=saveDir + dataName+'.h5')
+            randomAutocorrelations = pyiomica.read(saveDir + dataName + '_randomAutocorrelations', hdf5fileName=saveDir + dataName+'.h5')
 
-            df_data = pyiomica.read(saveDir + dataName + '_df_data_transformed')
+            df_data = pyiomica.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=saveDir + dataName+'.h5')
             
-            #QM = [1.0,-0.006244847659959638, 0.5734236884110672, 0.20792126175804138, 0.4493948421905076, 0.28343882235267753,
-            #     0.37888036168064276, 0.2823468480136749, 0.3295401814590595, 0.2551744666336719, 0.2912304011408658, 0.22097851418737666]
-            #print('Quantiles MathIOmica:', list(np.round(QM, 16)), '\n')
-
             QP = [1.0]
             QP.extend([np.quantile(randomAutocorrelations.values.T[i], 1. - p_cutoff,interpolation='lower') for i in range(1,dataAutocorrelations.shape[1])])
             print('Quantiles PyIOmica:', list(np.round(QP, 16)), '\n')
 
             significant_index = np.vstack([dataAutocorrelations.values.T[lag] > QP[lag] for lag in range(dataAutocorrelations.shape[1])]).T
-
-
-            #spike_cutoffs = {21:(0.9974359066568781, -0.27324957752788553), 20:(0.997055978650893, -0.2819888033231614), 
-            #                22:(0.9977278664058562, -0.26381407888037633), 19:(0.9972552653042678, -0.2918064323591995), 23:(0.9979375307710489, -0.25487050078876056), 
-            #                18:(0.9975598037852295, -0.3033004215269215), 24:(0.9974537417128844, -0.23810906765712997)}
-
             spike_cutoffs = pyiomica.getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=NumberOfRandomSamples)
-
             print(spike_cutoffs)
 
             df_data = pyiomica.normalizeSignalsToUnityDataframe(df_data)
 
             max_spikes = df_data.index.values[pyiomica.getSpikes(df_data.values, np.max, spike_cutoffs)]
-            min_spikes = df_data.index.values[pyiomica.getSpikes(df_data.values, np.min, spike_cutoffs)]
-
             print(len(max_spikes))
-            print(len(min_spikes))
-
             significant_index_spike_max = [(gene in list(max_spikes)) for gene in df_data.index.values]
-            significant_index_spike_min = [(gene in list(min_spikes)) for gene in df_data.index.values]
-
             lagSignigicantIndexSpikeMax = (np.sum(significant_index.T[1:],axis=0) == 0) * significant_index_spike_max
+            pyiomica.write(dataAutocorrelations[lagSignigicantIndexSpikeMax], saveDir + dataName +'_selectedAutocorrelations_SpikeMax', hdf5fileName=saveDir + dataName+'.h5')
+            pyiomica.write(df_data[lagSignigicantIndexSpikeMax], saveDir + dataName +'_selectedTimeSeries_SpikeMax', hdf5fileName=saveDir + dataName+'.h5')
+            
+            min_spikes = df_data.index.values[pyiomica.getSpikes(df_data.values, np.min, spike_cutoffs)]
+            print(len(min_spikes))
+            significant_index_spike_min = [(gene in list(min_spikes)) for gene in df_data.index.values]
             lagSignigicantIndexSpikeMin = (np.sum(significant_index.T[1:],axis=0) == 0) * (np.array(significant_index_spike_max) == 0) * significant_index_spike_min
-
+            pyiomica.write(dataAutocorrelations[lagSignigicantIndexSpikeMin], saveDir + dataName +'_selectedAutocorrelations_SpikeMin', hdf5fileName=saveDir + dataName+'.h5')
+            pyiomica.write(df_data[lagSignigicantIndexSpikeMin], saveDir + dataName +'_selectedTimeSeries_SpikeMin', hdf5fileName=saveDir + dataName+'.h5')
 
             def getThisData(sheet_name):
                 df_processed = pd.read_excel('ProcessedData/ClustersSLVRNAH%s.xlsx' % (saveDir[-2]), sheet_name=sheet_name)
@@ -157,9 +151,8 @@ if __name__ == '__main__':
 
             for lag in range(1,dataAutocorrelations.shape[1]):
                 lagSignigicantIndex = (np.sum(significant_index.T[1:lag],axis=0) == 0) * (significant_index.T[lag])
-
-                dataAutocorrelations[lagSignigicantIndex].to_excel(saveDir + dataName +'_selectedAutocorrelations_LAG%s_%s.xlsx'%(lag,p_cutoff))
-                df_data[lagSignigicantIndex].to_excel(saveDir + dataName +'_selectedTimeSeries_LAG%s_%s.xlsx'%(lag,p_cutoff))
+                pyiomica.write(dataAutocorrelations[lagSignigicantIndex], saveDir + dataName +'_selectedAutocorrelations_LAG%s'%(lag), hdf5fileName=saveDir + dataName+'.h5')
+                pyiomica.write(df_data[lagSignigicantIndex], saveDir + dataName +'_selectedTimeSeries_LAG%s'%(lag), hdf5fileName=saveDir + dataName+'.h5')
 
                 #thisLag = getThisData('Lag%s' % lag)
                 #print('\nLag',lag, np.array(list(set(df_data.index.values[lagSignigicantIndex]) - set(thisLag.T[0]))),
@@ -179,43 +172,51 @@ if __name__ == '__main__':
             print('Done')
 
         if DrawDendrogramHeatmap:
-            for lag in range(1,11 + 1):
+
+            def draw(tempName):
+
                 sT = timeMeasure.getStartTime()
                 print('Lag %s # of Time Series:' % lag, end=' ', flush=True) 
 
-                df_LAG_data = pd.read_excel(saveDir + dataName + '_selectedTimeSeries_LAG%s_%s.xlsx' % (lag,p_cutoff), index_col=[0,1,2])
-                print(len(df_LAG_data))
+                df_data_selected = pyiomica.read(saveDir + dataName + '_selectedTimeSeries_%s' %(tempName), hdf5fileName=saveDir + dataName+'.h5')
+                print(len(df_data_selected))
 
-                df_LAG_data_autocor = pd.read_excel(saveDir + dataName + '_selectedAutocorrelations_LAG%s_%s.xlsx' % (lag,p_cutoff), index_col=[0,1,2])
-                df_LAG_data_autocor.columns = ['Lag ' + str(column) for column in df_LAG_data_autocor.columns]
+                df_data_autocor_selected = pyiomica.read(saveDir + dataName + '_selectedAutocorrelations_%s' %(tempName), hdf5fileName=saveDir + dataName+'.h5')
+                df_data_autocor_selected.columns = ['Lag ' + str(column) for column in df_data_autocor_selected.columns]
 
+                df_data_selected = df_data_selected.groupby(level=['source', 'id']).mean()
+                df_data_autocor_selected = df_data_autocor_selected.groupby(level=['source', 'id']).mean()
 
-                df_LAG_data = df_LAG_data.groupby(level=['source', 'id']).mean()
-                df_LAG_data_autocor = df_LAG_data_autocor.groupby(level=['source', 'id']).mean()
-
-                df_LAG_data = pyiomica.normalizeSignalsToUnityDataframe(df_LAG_data)
+                df_data_selected = pyiomica.normalizeSignalsToUnityDataframe(df_data_selected)
 
                 print('Creating clustering object...')
-                cObject = pyiomica.makeClusteringObject(df_LAG_data, df_LAG_data_autocor, significance='Elbow') #Silhouette
+                cObject = pyiomica.makeClusteringObject(df_data_selected, df_data_autocor_selected, significance='Elbow') #Silhouette
 
-                print('Exporting clustering object...')
-                pyiomica.exportClusteringObject(cObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_Lag_%s' % lag, includeData=True, includeAutocorr=True)
+                #print('Exporting clustering object...')
+                #pyiomica.exportClusteringObject(cObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_%s' % tempName, includeData=True, includeAutocorr=True)
 
                 #pyiomica.write(cObject, 'ExampleClusteringObject')
 
                 print('Plotting Dendrogram with Heatmaps of Gene expression and its Autocorrelation...')
-                pyiomica.makeDendrogramHeatmap(cObject, saveDir, dataName + '_Lag_%s' % lag)
+                pyiomica.makeDendrogramHeatmap(cObject, saveDir, dataName + '_%s' % tempName)
 
                 timeMeasure.getElapsedTime(sT)
+
+                return
+
+            for lag in range(1,11 + 1):
+                draw('LAG%s'%(lag))
+
+            draw('SpikeMax')
+            draw('SpikeMin')
 
         return
 
     if processData:
-        processDataTempFunction('data/SLV/', 'Hourly2TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV Delta/')
-
-        #processDataTempFunction('data/SLV/', 'Hourly2TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV H2/')
-        #processDataTempFunction('data/SLV/', 'Hourly1TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV H1/')
-        #processDataTempFunction('data/SLV/', 'DailyTimeSeries_SLV_KallistoNormedGeneGencodeGC.csv',   'TimesDaily.csv',  'results SLV D1/')
+        processDataTempFunction('data/SLV/', 'Hourly2TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV H2/')
+        processDataTempFunction('data/SLV/', 'Hourly1TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV H1/')
+        processDataTempFunction('data/SLV/', 'DailyTimeSeries_SLV_KallistoNormedGeneGencodeGC.csv',   'TimesDaily.csv',  'results SLV D1/')
+        processDataTempFunction('data/SLV/', 'Hourly2TimeSeries_SLV_KallistoNormedGeneGencodeGC.csv', 'TimesHourly.csv', 'results SLV Delta/', Delta=True)
 
     if testGOAnalysis:
 
