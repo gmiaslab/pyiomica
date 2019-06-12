@@ -36,10 +36,9 @@ import urllib.request
 import requests
 import shutil
 import h5py
-
 import pymysql
 import datetime
-
+import json
 
 ### Utility functions #############################################################################
 def createDirectories(path):
@@ -67,11 +66,19 @@ def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
     return np.vstack(return_values)
   
 
-def write(data, fileName, withPKLZextension = True, hdf5fileName = None):
+def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = False):
 
     '''Write object into a file. Pandas and Numpy objects are recorded in HDF5 format
     when 'hdf5fileName' is provided otherwise pickled into a new file.
     '''
+
+    if jsonFormat:
+        createDirectories("/".join(fileName.split("/")[:-1]))
+
+        with gzip.GzipFile(fileName, 'w') as tempFile:
+            tempFile.write(json.dumps(data).encode('utf-8'))  
+
+        return
 
     if hdf5fileName!=None and type(data) in [pd.DataFrame, pd.Series]:
         createDirectories("/".join(hdf5fileName.split("/")[:-1]))
@@ -110,11 +117,19 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None):
     return
 
 
-def read(fileName, withPKLZextension = True, hdf5fileName = None):
+def read(fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = False):
     
     '''Read object from a file. Pandas and Numpy objects are read from HDF5 file when
     provided, otherwise attempt to read from PKLZ file.
     '''
+    
+    if jsonFormat:
+        createDirectories("/".join(fileName.split("/")[:-1]))
+
+        with gzip.GzipFile(fileName, 'r') as tempFile:
+            data = json.loads(tempFile.read().decode('utf-8'))
+
+        return data
 
     if hdf5fileName!=None:
         if not os.path.isfile(hdf5fileName):
@@ -159,7 +174,7 @@ def createReverseDictionary(inputDictionary):
     keys, values = list(dfGrouped.indices.keys()), list(dfGrouped.indices.values())
     GOs = df.values.T[0]
 
-    return dict(zip(keys, [GOs[value] for value in values]))
+    return dict(zip(keys, [GOs[value].tolist() for value in values]))
 
 ###################################################################################################
 
@@ -330,15 +345,19 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
 
     MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
     fileGOOBO = "\\".join([MathIOmicaDataDirectory, OBOFile])
+    fileGOOBOgz = fileGOOBO + '.gz'
 
     #import the GO OBO file: we check if the OBO file Exist, if not, attempt to download and create it
-    if not os.path.isfile(fileGOOBO):
+    if not os.path.isfile(fileGOOBOgz):
         print("Did Not Find Annotation Files, Attempting to Download...")
         ImportDirectly = True
 
+    if os.path.isfile(fileGOOBO):
+        os.remove(fileGOOBO)
+
     if ImportDirectly:
-        if os.path.isfile(fileGOOBO):
-            os.remove(fileGOOBO)
+        if os.path.isfile(fileGOOBOgz):
+            os.remove(fileGOOBOgz)
 
         urllib.request.urlretrieve(FileURL.strip('"'), fileGOOBO)
 
@@ -348,8 +367,18 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
             print("Did Not Find Annotation Files, Aborting Process")
             return
 
-    with open(fileGOOBO, 'r') as tempFile:
+        with open(fileGOOBO, 'rb') as fileIn:
+            with gzip.open(fileGOOBOgz, 'wb') as fileOut:
+                shutil.copyfileobj(fileIn, fileOut)
+
+        print("Compressed local file with GZIP.")
+
+        os.remove(fileGOOBO)
+
+    with gzip.open(fileGOOBOgz, 'r') as tempFile:
         inputFile = tempFile.readlines()
+
+    inputFile = [item.decode() for item in inputFile]
 
     #Find keys "accessions (id):" and "name:" and "namespace" but extract their corresponding values in a list and map them to their corresponding [Term] positions, 
     #Once the "accessions (id):" and its corresponding "name:" in a list, make an association between them,
@@ -392,14 +421,15 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
 
     MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory
 
-    geneUCSCTable = "\\".join([MathIOmicaDataDirectory, Species + "GeneUCSCTable"])
+    geneUCSCTable = "\\".join([MathIOmicaDataDirectory, Species + "GeneUCSCTable"]) + '.json.gz'
        
     #If the user asked us to import directly, import directly with SQL, otherwise, get it from a directory they specify
     if not os.path.isfile(geneUCSCTable):
         print("Did Not Find Gene Translation Files, Attempting to Download from UCSC...")
         ImportDirectly = True
     else:
-        termTable = read(geneUCSCTable, False)[1]
+        termTable = read(geneUCSCTable, jsonFormat=True)[1]
+        termTable = np.array(termTable)
 
     if ImportDirectly:
         #Connect to the database from UCSC
@@ -426,7 +456,7 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
         termTable[np.where(termTable=="")] = None
 
         #Get all the terms we are going to need, import with SQL the combined tables,and export with a time stamp
-        write((datetime.datetime.now().isoformat(), termTable), geneUCSCTable, False)
+        write((datetime.datetime.now().isoformat(), termTable.tolist()), geneUCSCTable, jsonFormat=True)
 
         #Close SQL connection
         ucscDatabase.close()
@@ -459,7 +489,7 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
     file = "goa_" + Species + ".gaf.gz" if GOFileName==None else GOFileName
     localFile =  "\\".join([MathIOmicaDataDirectory, "goa_" + Species + ".gaf"])
     localZipFile =  "\\".join([MathIOmicaDataDirectory, "goa_" + Species + ".gaf.gz"])
-    fileGOAssociations = ["\\".join([MathIOmicaDataDirectory, Species + item]) for item in ["GeneOntAssoc", "IdentifierAssoc"]]
+    fileGOAssociations = ["\\".join([MathIOmicaDataDirectory, Species + item]) for item in ["GeneOntAssoc.json.gz", "IdentifierAssoc.json.gz"]]
 
     #We check if the Annotations exist, if not, attempt to download and create them
     if not np.array(list(map(os.path.isfile, fileGOAssociations))).all():
@@ -498,13 +528,13 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
 
         keys, values = list(dfGrouped.indices.keys()), list(dfGrouped.indices.values())
         IDs = df.values.T[0]
-        geneOntAssoc = dict(zip(keys, [np.unique(IDs[value]) for value in values]))
+        geneOntAssoc = dict(zip(keys, [np.unique(IDs[value]).tolist() for value in values]))
 
         identifierAssoc = createReverseDictionary(geneOntAssoc)
 
         #Save created annotations geneOntAssoc, identifierAssoc
-        write((datetime.datetime.now().isoformat(), geneOntAssoc), fileGOAssociations[0], False)
-        write((datetime.datetime.now().isoformat(), identifierAssoc), fileGOAssociations[1], False)
+        write((datetime.datetime.now().isoformat(), geneOntAssoc), fileGOAssociations[0], jsonFormat=True)
+        write((datetime.datetime.now().isoformat(), identifierAssoc), fileGOAssociations[1], jsonFormat=True)
         
         os.remove(localFile)
 
@@ -515,8 +545,8 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
             return
     else:
         #Otherwise we get from the user specified MathIOmicaDataDirectoryectory
-        geneOntAssoc = read(fileGOAssociations[0], False)[-1]
-        identifierAssoc = read(fileGOAssociations[1], False)[-1]
+        geneOntAssoc = read(fileGOAssociations[0], jsonFormat=True)[-1]
+        identifierAssoc = read(fileGOAssociations[1], jsonFormat=True)[-1]
 
     if BackgroundSet!=[]:
         #Using provided background list to create annotation projection to limited background space, also remove entries with only one and missing value
@@ -671,7 +701,7 @@ def GeneTranslation(InputList, TargetIDList, GeneDictionary, InputID = None, Spe
         for key in listOfKeysToUse:
             returning[TargetID][key] = []
             for item in InputList:
-                allEntries = GeneDictionary[Species][TargetID][np.where(GeneDictionary[Species][key]==item)[0]]
+                allEntries = np.array(GeneDictionary[Species][TargetID])[np.where(np.array(GeneDictionary[Species][key])==item)[0]]
                 returning[TargetID][key].append(list(np.unique(allEntries[np.where(allEntries!=None)[0]]) if InputID!=None else allEntries))
                 
         #Merge all found lists into one list
@@ -699,7 +729,8 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
     MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
 
     ##if the user asked us to import directly, import directly from KEGG website, otherwise, get it from a directory they specify
-    fileAssociations = ["\\".join([MathIOmicaDataDirectory, item]) for item in [KEGGQuery1 + "_" + KEGGQuery2 + "KEGGMemberToPathAssociation", KEGGQuery1 + "_" + KEGGQuery2 + "KEGGPathToMemberAssociation"]]
+    fileAssociations = ["\\".join([MathIOmicaDataDirectory, item]) for item in [KEGGQuery1 + "_" + KEGGQuery2 + "KEGGMemberToPathAssociation.json.gz", 
+                                                                                KEGGQuery1 + "_" + KEGGQuery2 + "KEGGPathToMemberAssociation.json.gz"]]
 
     if not np.array(list(map(os.path.isfile, fileAssociations))).all():
         print("Did Not Find Annotation Files, Attempting to Download...")
@@ -725,11 +756,11 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
         dfGrouped = df.groupby(df.columns[1])
         keys, values = list(dfGrouped.indices.keys()), list(dfGrouped.indices.values())
         IDs = df.values.T[0]
-        pathToID = dict(zip(keys, [np.unique(IDs[value]) for value in values]))
+        pathToID = dict(zip(keys, [np.unique(IDs[value]).tolist() for value in values]))
         idToPath = createReverseDictionary(pathToID)
 
-        write((datetime.datetime.now().isoformat(), idToPath), fileAssociations[0], False)
-        write((datetime.datetime.now().isoformat(), pathToID), fileAssociations[1], False)
+        write((datetime.datetime.now().isoformat(), idToPath), fileAssociations[0], jsonFormat=True)
+        write((datetime.datetime.now().isoformat(), pathToID), fileAssociations[1], jsonFormat=True)
 
         os.remove(localFile)
 
@@ -740,8 +771,8 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
             return
     else:
         #otherwise import the necessary associations from MathIOmicaDataDirectoryectory
-        idToPath = read(fileAssociations[0], False)[1]
-        pathToID = read(fileAssociations[1], False)[1]
+        idToPath = read(fileAssociations[0], jsonFormat=True)[1]
+        pathToID = read(fileAssociations[1], jsonFormat=True)[1]
 
     if BackgroundSet!=[]:
         #Using provided background list to create annotation projection to limited background space
@@ -774,10 +805,10 @@ def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQ
     MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
 
     #if the user asked us to import directly, import directly from KEGG website, otherwise, get it from a directory they specify
-    fileKEGGDict = "\\".join([MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + "_KEGGDictionary_Py"])
+    fileKEGGDict = "\\".join([MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + "_KEGGDictionary.json.gz"])
 
     if os.path.isfile(fileKEGGDict):
-        associationKEGG = read(fileKEGGDict, False)[1]
+        associationKEGG = read(fileKEGGDict, jsonFormat=True)[1]
     else:
         print("Did Not Find Annotation Files, Attempting to Download...")
         ImportDirectly = True
@@ -797,7 +828,7 @@ def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQ
         
         associationKEGG = dict([line.strip('\n').split('\t') for line in tempLines])
 
-        write((datetime.datetime.now().isoformat(), associationKEGG), fileKEGGDict, False)
+        write((datetime.datetime.now().isoformat(), associationKEGG), fileKEGGDict, jsonFormat=True)
 
         if os.path.isfile(fileKEGGDict):
             print("Created Annotation Files at ", fileKEGGDict)
@@ -856,10 +887,10 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
         keggDict = KEGGDictionary(**({"KEGGQuery1": "pathway", "KEGGQuery2": ""} if KEGGDictionaryOptions=={} else KEGGDictionaryOptions)) if KEGGDictionaryVariable==None else KEGGDictionaryVariable
 
         #Obtain gene dictionary - if it exists can either augment with new information or Species or create new, if not exist then create variable
-        fileMolDict = "\\".join([MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary_Py"])
+        fileMolDict = "\\".join([MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary.json.gz"])
 
         if os.path.isfile(fileMolDict):
-            GeneDictionary = read(fileMolDict, False)[1]
+            GeneDictionary = read(fileMolDict, jsonFormat=True)[1]
         else:
             fileCSV = "\\".join([MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary.csv"])
 
@@ -870,13 +901,13 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
                     tempLines = tempFile.readlines()
             
                 tempData = np.array([line.strip('\n').replace('"', '').split(',') for line in tempLines]).T
-                tempData = {'compound': {'pumchem': tempData[0], 'cpd': tempData[1]}}
-                write((datetime.datetime.now().isoformat(), tempData), fileMolDict, False)
+                tempData = {'compound': {'pumchem': tempData[0].tolist(), 'cpd': tempData[1].tolist()}}
+                write((datetime.datetime.now().isoformat(), tempData), fileMolDict, jsonFormat=True)
             else:
                 print("Could not find annotation file at " + fileMolDict + " Please either obtain an annotation file from mathiomica.org or provide a GeneDictionary option variable.")
                 return
 
-            GeneDictionary = read(fileMolDict, False)[1]
+            GeneDictionary = read(fileMolDict, jsonFormat=True)[1]
 
         obtainConstantGeneDictionary(GeneDictionary, {}, AugmentDictionary)
 
@@ -981,11 +1012,7 @@ def MassDictionary(MathIOmicaDataDirectory=None):
 
     '''Load PyIOmica's current mass dictionary'''
 
-    global ConstantMathIOmicaDataDirectory
-
-    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
-
-    fileMassDict = "\\".join([MathIOmicaDataDirectory, "MathIOmicaMassDictionary" +  ".csv"])
+    fileMassDict = "\\".join(["AdditionalData", "MathIOmicaMassDictionary" +  ".csv"])
 
     if os.path.isfile(fileMassDict):
         with open(fileMassDict, 'r') as tempFile:
@@ -1045,7 +1072,7 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
             listNon = [list(value)[2:] for value in values]
 
             dataDF = [listNum[i] + listNon[i] for i in range(len(keys))]
-            columns = ['p-Value', 'BH-corrected p-Value', 'Significant', 'Counts 1', 'Counts 2', 'Counts 3', 'Counts 4', 'Description', 'List of gene hits']
+            columns = ['p-Value', 'BH-corrected p-Value', 'Significant', 'Counts in list', 'Counts in family', 'Total members', 'Counts in members', 'Description', 'List of gene hits']
 
             df = pd.DataFrame(data=dataDF, index=keys, columns=columns)
 

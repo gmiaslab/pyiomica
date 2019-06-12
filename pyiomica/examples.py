@@ -40,10 +40,11 @@ def testGOAnalysis(EnrichmentOutputDirectory):
     #Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
     ExampleClusteringObject = pyiomica.read('ExampleClusteringObject')
 
-    #We calculate the GOAnalysis for each group in each class:
-    ExampleClusteringObjectGO = pyiomica.GOAnalysis(ExampleClusteringObject, MultipleListCorrection='Automatic')
+    if not ExampleClusteringObject is None:
+        #We calculate the GOAnalysis for each group in each class:
+        ExampleClusteringObjectGO = pyiomica.GOAnalysis(ExampleClusteringObject, MultipleListCorrection='Automatic')
 
-    pyiomica.ExportEnrichmentReport(ExampleClusteringObjectGO, AppendString='ExampleClusteringObjectGO', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
+        pyiomica.ExportEnrichmentReport(ExampleClusteringObjectGO, AppendString='ExampleClusteringObjectGO', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
 
     return
 
@@ -93,14 +94,6 @@ def testKEGGAnalysis(EnrichmentOutputDirectory):
 
     pyiomica.ExportEnrichmentReport(analysisKEGGMixedMulti, AppendString='analysisKEGGMixedMulti', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
-    #Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
-    ExampleClusteringObject = pyiomica.read('ExampleClusteringObject')
-
-    #We calculate the KEGGAnalysis for each group in each class:
-    ExampleClusteringObject = pyiomica.KEGGAnalysis(ExampleClusteringObject)
-
-    pyiomica.ExportEnrichmentReport(ExampleClusteringObject, AppendString='ExampleClusteringObject', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
-
     #We can carry out a "Molecular" analysis for compound data. We consider the following metabolomics data, which has labels "Meta" 
     #and additional mass and retention time information in the form {identifier,mass, retention time, label}:
     compoundsExample = [["cpd:C19691", 325.2075, 10.677681, "Meta"], ["cpd:C17905", 594.2002, 8.727458, "Meta"],["cpd:C09921", 204.0784, 12.3909445, "Meta"], 
@@ -135,6 +128,15 @@ def testKEGGAnalysis(EnrichmentOutputDirectory):
     multiOmicsDataKEGG = pyiomica.KEGGAnalysis(multiOmicsData, AnalysisType='All', MultipleList=True, MultipleListCorrection='Automatic') 
 
     pyiomica.ExportEnrichmentReport(multiOmicsDataKEGG, AppendString='multiOmicsDataKEGG', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+
+    #Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
+    ExampleClusteringObject = pyiomica.read('ExampleClusteringObject')
+
+    if not ExampleClusteringObject is None:
+        #We calculate the KEGGAnalysis for each group in each class:
+        ExampleClusteringObject = pyiomica.KEGGAnalysis(ExampleClusteringObject)
+
+        pyiomica.ExportEnrichmentReport(ExampleClusteringObject, AppendString='ExampleClusteringObject', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     return
 

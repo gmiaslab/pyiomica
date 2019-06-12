@@ -5,11 +5,13 @@ import os
 import numpy as np
 import pandas as pd
 
+import json
+
 np.random.seed(0)
 
 if __name__ == '__main__':
 
-    if False:
+    if True:
         examples.testGOAnalysis('EnrichmentOutputDirectory/')
         examples.testKEGGAnalysis('EnrichmentOutputDirectory/')
 
