@@ -1836,6 +1836,104 @@ def makeLombScarglePeriodograms(df, saveDir, dataName):
     return None
 
 
+def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95], 
+                       numberOfVGs=1, groups_ac_colors=['b'], fig=None, printCommunities=False, 
+                       fontsize=None, nodesize=None, level=0.55, commLineWidth=0.5, lineWidth=1.0,
+                       withLabel=True, withTitle=False):
+
+    group = int(dataName[:dataName.find('S')].strip('G'))
+
+    if fontsize is None:
+        fontsize = 4. * (8. + 5.) / (numberOfVGs + 5.)
+    
+    if nodesize is None:
+        nodesize = 30. * (8. + 5.) / (numberOfVGs + 5.)
+
+    (x1,x2,y1,y2) = coords
+
+    def imputeWithMedian(data):
+
+        data[np.isnan(data)] = np.median(data[np.isnan(data) == False])
+
+        return data
+
+    if len(data.shape)>1:
+        data = pd.DataFrame(data=data).apply(imputeWithMedian, axis=1).apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
+
+    axisVG = fig.add_axes([x1,y1,x2 - x1,y2 - y1])
+    graph_nx = nx.from_numpy_matrix(vg.getAdjecencyMatrixOfVisibilityGraph(data, times))
+    cmap = matplotlib.colors.LinearSegmentedColormap.from_list('GR', [(0, 1, 0), (1, 0, 0)], N=1000)
+
+    pos = nx.circular_layout(graph_nx)
+    keys = np.array(list(pos.keys())[::-1])
+    values = np.array(list(pos.values()))
+    keys = np.roll(keys, np.argmax(values.T[1]) - np.argmin(keys))
+    pos = dict(zip(keys, values))
+
+    shortest_path = nx.shortest_path(graph_nx, source=min(keys), target=max(keys))
+    shortest_path_edges = [(shortest_path[i],shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
+
+    nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color='y', edge_color='y', node_size=nodesize * 1.7, width=3.0*lineWidth, nodelist=shortest_path, edgelist=shortest_path_edges, with_labels=False)
+    nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color=data, cmap=cmap, alpha=1.0, font_size=fontsize,  width=lineWidth, font_color='b', node_size=nodesize)
+
+
+    def find_and_remove_node(graph_nx):
+        bc = nx.betweenness_centrality(graph_nx)
+        node_to_remove = list(bc.keys())[np.argmax(list(bc.values()))]
+        graph_nx.remove_node(node_to_remove)
+        return graph_nx, node_to_remove
+
+    list_of_nodes = []
+    graph_nx_inv = nx.from_numpy_matrix(vg.getAdjecencyMatrixOfVisibilityGraph(-data, times))
+    for i in range(6):
+        graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
+        list_of_nodes.append(node)
+        
+    if not 0 in list_of_nodes:
+        list_of_nodes.append(0)
+
+    list_of_nodes.append(list(graph_nx.nodes)[-1] + 1)
+    list_of_nodes.sort()
+
+    communities = [list(range(list_of_nodes[i],list_of_nodes[i + 1])) for i in range(len(list_of_nodes) - 1)]
+
+    if printCommunities:
+        print(list_of_nodes, '\n')
+        [print(community) for community in communities]
+        print()
+
+    xmin, xmax = axisVG.get_xlim()
+    ymin, ymax = axisVG.get_ylim()
+    X, Y = np.meshgrid(np.arange(xmin, xmax, (xmax - xmin) / 100.), np.arange(ymin, ymax, (ymax - ymin) / 100.))
+
+    for icommunity, community in enumerate(communities):
+        nX, nY = tuple(np.array([pos[node] for node in community]).T)
+        Z = np.exp(X ** 2 - Y ** 2) * 0.
+        for i in range(len(community)):
+            Z += np.exp(-35. * (X - nX[i]) ** 2 - 35. * (Y - nY[i]) ** 2)
+        CS = axisVG.contour(X, Y, Z, [level], linewidths=commLineWidth, alpha=0.8, colors=groups_ac_colors[group - 1])
+        #axisVG.clabel(CS, inline=True,fontsize=4,colors=group_colors[group-1], fmt ={level:'C%s'%icommunity})
+
+    axisVG.spines['left'].set_visible(False)
+    axisVG.spines['right'].set_visible(False)
+    axisVG.spines['top'].set_visible(False)
+    axisVG.spines['bottom'].set_visible(False)
+    axisVG.set_xticklabels([])
+    axisVG.set_yticklabels([])
+    axisVG.set_xticks([])
+    axisVG.set_yticks([])
+
+    if withLabel:
+        axisVG.text(axisVG.get_xlim()[1], (axisVG.get_ylim()[1] + axisVG.get_ylim()[0]) * 0.5, dataName, ha='left', va='center',
+                    fontsize=8).set_path_effects([path_effects.Stroke(linewidth=0.4, foreground=groups_ac_colors[group - 1]),path_effects.Normal()])
+
+    if withTitle:
+        titleText = dataName + ' (size: ' + str(data.shape[0]) + ')' + ' min=%s max=%s' % (np.round(min(data),2), np.round(max(data),2))
+        axisVG.set_title(titleText, fontsize=10)
+
+    return
+
+
 def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
 
     '''Make Dendrogram-Heatmap plot along with VIsibility graphs.'''
@@ -2025,96 +2123,6 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
             n_clusters, clusters, cluster_line_positions = addGroupDendrogramAndShowSubgroups(ClusteringObject, len(tempData), current_bottom, current_top, group, groupColors, fig)
 
         addGroupHeatmapAndColorbar(tempData, n_clusters, clusters, cluster_line_positions, current_bottom, current_top, group, groupColors, fig)
-
-
-    def addVisibilityGraph(data, times, dataName, coords, numberOfVGs, groups_ac_colors, fig, printCommunities=False):
-
-        group = int(dataName[:dataName.find('S')].strip('G'))
-
-        fontsize = 4. * (8. + 5.) / (numberOfVGs + 5.)
-        nodesize = 30. * (8. + 5.) / (numberOfVGs + 5.)
-
-        (x1,x2,y1,y2) = coords
-
-        def imputeWithMedian(data):
-
-            data[np.isnan(data)] = np.median(data[np.isnan(data) == False])
-
-            return data
-
-        data = pd.DataFrame(data=data).apply(imputeWithMedian, axis=1).apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
-
-        axisVG = fig.add_axes([x1,y1,x2 - x1,y2 - y1])
-        graph_nx = nx.from_numpy_matrix(vg.getAdjecencyMatrixOfVisibilityGraph(data, times))
-        cmap = matplotlib.colors.LinearSegmentedColormap.from_list('GR', [(0, 1, 0), (1, 0, 0)], N=1000)
-
-        pos = nx.circular_layout(graph_nx)
-        keys = np.array(list(pos.keys())[::-1])
-        values = np.array(list(pos.values()))
-        keys = np.roll(keys, np.argmax(values.T[1]) - np.argmin(keys))
-        pos = dict(zip(keys, values))
-
-        shortest_path = nx.shortest_path(graph_nx, source=min(keys), target=max(keys))
-        shortest_path_edges = [(shortest_path[i],shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-
-        nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color='y', edge_color='y', node_size=nodesize * 1.7, width=3.0, nodelist=shortest_path, edgelist=shortest_path_edges, with_labels=False)
-        nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color=data, cmap=cmap, alpha=1.0, font_size=fontsize,  width=1.0, font_color='b', node_size=nodesize)
-
-
-        def find_and_remove_node(graph_nx):
-            bc = nx.betweenness_centrality(graph_nx)
-            node_to_remove = list(bc.keys())[np.argmax(list(bc.values()))]
-            graph_nx.remove_node(node_to_remove)
-            return graph_nx, node_to_remove
-
-        list_of_nodes = []
-        graph_nx_inv = nx.from_numpy_matrix(vg.getAdjecencyMatrixOfVisibilityGraph(-data, times))
-        for i in range(6):
-            graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
-            list_of_nodes.append(node)
-        
-        if not 0 in list_of_nodes:
-            list_of_nodes.append(0)
-
-        list_of_nodes.append(list(graph_nx.nodes)[-1] + 1)
-        list_of_nodes.sort()
-
-        communities = [list(range(list_of_nodes[i],list_of_nodes[i + 1])) for i in range(len(list_of_nodes) - 1)]
-
-        if printCommunities:
-            print(list_of_nodes, '\n')
-            [print(community) for community in communities]
-            print()
-
-        xmin, xmax = axisVG.get_xlim()
-        ymin, ymax = axisVG.get_ylim()
-        X, Y = np.meshgrid(np.arange(xmin, xmax, (xmax - xmin) / 100.), np.arange(ymin, ymax, (ymax - ymin) / 100.))
-
-        for icommunity, community in enumerate(communities):
-            nX, nY = tuple(np.array([pos[node] for node in community]).T)
-            Z = np.exp(X ** 2 - Y ** 2) * 0.
-            for i in range(len(community)):
-                Z += np.exp(-35. * (X - nX[i]) ** 2 - 35. * (Y - nY[i]) ** 2)
-            level = 0.55
-            CS = axisVG.contour(X, Y, Z, [level], linewidths=0.5, alpha=0.8, colors=groups_ac_colors[group - 1])
-            #axisVG.clabel(CS, inline=True,fontsize=4,colors=group_colors[group-1], fmt ={level:'C%s'%icommunity})
-
-
-        axisVG.spines['left'].set_visible(False)
-        axisVG.spines['right'].set_visible(False)
-        axisVG.spines['top'].set_visible(False)
-        axisVG.spines['bottom'].set_visible(False)
-        axisVG.set_xticklabels([])
-        axisVG.set_yticklabels([])
-        axisVG.set_xticks([])
-        axisVG.set_yticks([])
-
-        axisVG.text(axisVG.get_xlim()[1], (axisVG.get_ylim()[1] + axisVG.get_ylim()[0]) * 0.5, dataName, ha='left', va='center', fontsize=8).set_path_effects([path_effects.Stroke(linewidth=0.4, foreground=groups_ac_colors[group - 1]),path_effects.Normal()])
-
-        titleText = dataName + ' (size: ' + str(data.shape[0]) + ')' + ' min=%s max=%s' % (np.round(min(data),2), np.round(max(data),2))
-        #axisVG.set_title(titleText, fontsize=10)
-
-        return
 
     data_list = []
     data_names_list = []
@@ -2551,5 +2559,23 @@ def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, h
     internalDraw('SpikeMin', dataName, hdf5fileName, writeToBinaries=writeClusteringObjectToBinaries)
 
     return
+
+
+def timeSeriesFrequencyClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
+
+    '''Lomb-Scargle periodogram based classification.'''
+
+    for gene in df_data.index.values:
+        subset = df_data.iloc[geneIndex]
+        subset = subset[subset > 0.]
+
+        periodogram = LombScargle(subset.index.values, subset.values, df.columns.values, OversamplingRate=100)
+
+
+
+
+
+    return
+
 
 ###################################################################################################
