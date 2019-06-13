@@ -1433,6 +1433,15 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
     return returning
 
 
+def pLombScargle(args):
+
+    '''Wrapper of LombScargle function for use with Multiprocessing.'''
+
+    inputTimes, inputData, inputSetTimes = args
+    
+    return LombScargle(inputTimes, inputData, inputSetTimes)
+
+
 def getAutocorrelationsOfData(params):
 
     '''Calculate autocorrelation using Lomb-Scargle Autocorrelation.
@@ -1481,6 +1490,25 @@ def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs
     results = runCPUs(NumberOfCPUs, pAutocorrelation, [(df_data_random.iloc[i].index.values, df_data_random.iloc[i].values, df_data.columns.values) for i in range(df_data_random.shape[0])])
     
     return pd.DataFrame(data=results[1::2], columns=results[0])
+
+
+def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
+
+    '''Generate periodograms null-distribution from permutated data.
+    Calculate periodograms using Lomb-Scargle function.
+    NumberOfRandomSamples: size of the distribution to generate
+    '''
+
+    data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
+
+    df_data_random = pd.DataFrame(data=data, index=range(NumberOfRandomSamples), columns=df_data.columns)
+    df_data_random = filterOutFractionZeroSignalsDataframe(df_data_random, 0.75)
+    df_data_random = normalizeSignalsToUnityDataframe(df_data_random)
+    df_data_random = removeConstantSignalsDataframe(df_data_random, 0.)
+
+    print('\nCalculating periodograms of %s random samples (sampled with replacement)...'%(df_data_random.shape[0]))
+
+    return getLobmScarglePeriodogramOfDataframe(df_data_random, NumberOfCPUs=NumberOfCPUs)
 
 
 def BenjaminiHochbergFDR(pValues, SignificanceLevel=0.05):
@@ -1934,11 +1962,11 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
     return
 
 
-def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
+def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True):
 
     '''Make Dendrogram-Heatmap plot along with VIsibility graphs.'''
 
-    def addAutocorrelationDendrogramAndHeatmap(ClusteringObject, groupColors, fig):
+    def addAutocorrelationDendrogramAndHeatmap(ClusteringObject, groupColors, fig, AutocorrNotPeriodogr=AutocorrNotPeriodogr):
 
         axisDendro = fig.add_axes([0.68,0.1,0.17,0.8], frame_on=False)
 
@@ -1974,14 +2002,14 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
             posB = cluster_line_positions[i + 1] * (axisDendro.get_ylim()[1] / len(Z_ac['leaves'])) - 5. * 0
             axisDendro.plot([posA, axisDendro.get_xlim()[1]], [posB, posB], '--', color='black', linewidth = 1.0)
         
-        axisDendro.plot([posA, axisDendro.get_xlim()[1]], [5., 5.], '--', color='black', linewidth = 1.0)
-        axisDendro.plot([posA, axisDendro.get_xlim()[1]], [-5. + axisDendro.get_ylim()[1], -5. + axisDendro.get_ylim()[1]], '--', color='black', linewidth = 1.0)
+        axisDendro.plot([posA, axisDendro.get_xlim()[1]], [0., 0.], '--', color='k', linewidth = 1.0)
+        axisDendro.plot([posA, axisDendro.get_xlim()[1]], [-0. + axisDendro.get_ylim()[1], -0. + axisDendro.get_ylim()[1]], '--', color='k', linewidth = 1.0)
 
 
         axisMatrixAC = fig.add_axes([0.78 + 0.07,0.1,0.18 - 0.075,0.8])
 
         cmap = plt.cm.bwr
-        imAC = axisMatrixAC.imshow(tempData, aspect='auto', vmin=-1, vmax=1, origin='lower', cmap=cmap)
+        imAC = axisMatrixAC.imshow(tempData, aspect='auto', vmin=np.min(tempData), vmax=np.max(tempData), origin='lower', cmap=cmap)
         for i in range(n_clusters - 1):
             axisMatrixAC.plot([-0.5, tempData.shape[1] - 0.5], [cluster_line_positions[i + 1] - 0.5, cluster_line_positions[i + 1] - 0.5], '--', color='black', linewidth = 1.0)
 
@@ -1989,12 +2017,12 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
         axisMatrixAC.set_xticklabels([i + 1 for i in range(tempData.shape[1] - 1)], fontsize=6)
         axisMatrixAC.set_yticks([])
         axisMatrixAC.set_xlabel('Lag')
-        axisMatrixAC.set_title('Autocorrelation')
+        axisMatrixAC.set_title('Autocorrelation' if AutocorrNotPeriodogr else 'Periodogram')
 
         axisColorAC = fig.add_axes([0.9 + 0.065,0.55,0.01,0.35])
 
         axisColorAC.tick_params(labelsize=6)
-        plt.colorbar(imAC, cax=axisColorAC, ticks=[-1.0,1.0])
+        plt.colorbar(imAC, cax=axisColorAC, ticks=[np.round(np.min(tempData),2),np.round(np.max(tempData),2)])
 
         return
 
@@ -2031,8 +2059,8 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
             posB = cluster_line_positions[i + 1] * (axisDendro.get_ylim()[1] / len(Z['leaves'])) - 5. * 0
             axisDendro.plot([posA, axisDendro.get_xlim()[1]], [posB, posB], '--', color='black', linewidth = 1.0)
         
-        axisDendro.plot([posA, axisDendro.get_xlim()[1]], [5., 5.], '--', color='black', linewidth = 1.0)
-        axisDendro.plot([posA, axisDendro.get_xlim()[1]], [-5. + axisDendro.get_ylim()[1], -5. + axisDendro.get_ylim()[1]], '--', color='black', linewidth = 1.0)
+        axisDendro.plot([posA, axisDendro.get_xlim()[1]], [0., 0.], '--', color='k', linewidth = 1.0)
+        axisDendro.plot([posA, axisDendro.get_xlim()[1]], [-0. + axisDendro.get_ylim()[1], -0. + axisDendro.get_ylim()[1]], '--', color='k', linewidth = 1.0)
 
         axisDendro.text(axisDendro.get_xlim()[0], 0.5 * axisDendro.get_ylim()[1], 
                         'G%s:' % group + str(groupSize), fontsize=14).set_path_effects([path_effects.Stroke(linewidth=1, foreground=groupColors[group - 1]),path_effects.Normal()])
@@ -2104,7 +2132,8 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName):
     dx = 0.2
     dy = 0.8
 
-    groupColors = ['b','g','r','c','m','y','k','b','g','r','c','m','y','k','b','g','r','c','m','y','k']
+    groupColors = ['b','g','r','c','m','y','k']
+    [groupColors.extend(groupColors) for _ in range(10)]
     addAutocorrelationDendrogramAndHeatmap(ClusteringObject, groupColors, fig)
 
     for group in sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage']):
@@ -2385,6 +2414,34 @@ def mergeDataframes(listOfDataframes):
     return df
 
 
+def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True):
+
+    if parallel:
+
+        results = runCPUs(NumberOfCPUs, pLombScargle, [(series.index[~np.isnan(series)].values, series[~np.isnan(series)].values, df_data.columns.values) for index, series in df_data.iterrows()])
+
+        df_periodograms = pd.DataFrame(data=results[1::2], index=df_data.index, columns=results[0])
+
+    else:
+        frequencies = None
+        intensities = []
+
+        for index, series in df_data.iterrows():
+            values = series[~np.isnan(series)].values
+            times = series.index[~np.isnan(series)].values
+
+            tempFrequencies, tempIntensities = LombScargle(times, values, series.index.values, OversamplingRate=1)
+
+            if frequencies is None:
+                frequencies = tempFrequencies
+
+            intensities.append(tempIntensities)
+
+        df_periodograms = pd.DataFrame(data=np.vstack(intensities), index=df_data.index, columns=frequencies)
+
+    return df_periodograms
+
+
 def hdf5_usage_information():
 
     '''Store/export any lagge datasets in hdf5 format via 'pandas' or 'h5py'
@@ -2436,7 +2493,8 @@ def hdf5_usage_information():
 
 ### Data processing functions #####################################################################
 def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05,
-                             NumberOfRandomSamples=10**5, NumberOfCPUs=4, calculateAutocorrelations=False):
+                             NumberOfRandomSamples=10**5, NumberOfCPUs=4, frequencyBasedClassification=False, 
+                             calculateAutocorrelations=False, calculatePeriodograms=False):
 
     print('Processing', dataName)
 
@@ -2455,18 +2513,45 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
 
     write(df_data, saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
 
-    if not calculateAutocorrelations:
-        df_dataAutocorrelations = read(saveDir + dataName + '_dataAutocorrelations', hdf5fileName=hdf5fileName)
-        df_randomAutocorrelations = read(saveDir + dataName + '_randomAutocorrelations', hdf5fileName=hdf5fileName)
+    if frequencyBasedClassification:
+        calculateAutocorrelations = False
+        if not calculatePeriodograms:
+            df_dataPeriodograms = read(saveDir + dataName + '_dataPeriodograms', hdf5fileName=hdf5fileName)
+            df_randomPeriodograms = read(saveDir + dataName + '_randomPeriodograms', hdf5fileName=hdf5fileName)
         
-        if (df_dataAutocorrelations is None) or (df_randomAutocorrelations is None):
-            print('Autocorrelation of data and the corresponding null distribution not found. Calculating autocorrelations...')
-            calculateAutocorrelations = True
+            if (df_dataPeriodograms is None) or (df_randomPeriodograms is None):
+                print('Periodograms of data and the corresponding null distribution not found. Calculating...')
+                calculatePeriodograms = True
+    else:
+        calculatePeriodograms = False
+        if not calculateAutocorrelations:
+            df_dataAutocorrelations = read(saveDir + dataName + '_dataAutocorrelations', hdf5fileName=hdf5fileName)
+            df_randomAutocorrelations = read(saveDir + dataName + '_randomAutocorrelations', hdf5fileName=hdf5fileName)
+        
+            if (df_dataAutocorrelations is None) or (df_randomAutocorrelations is None):
+                print('Autocorrelation of data and the corresponding null distribution not found. Calculating...')
+                calculateAutocorrelations = True
+
+    if calculatePeriodograms:
+        df_data = read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
+
+        print('Calculating null distribution (periodogram) of %s samples...' %(NumberOfRandomSamples))
+        df_randomPeriodograms = getRandomPeriodograms(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs)
+
+        write(df_randomPeriodograms, saveDir + dataName + '_randomPeriodograms', hdf5fileName=hdf5fileName)
+
+        df_data = read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
+        df_data = normalizeSignalsToUnityDataframe(df_data)
+
+        print('Calculating each Time Series Periodogram...')
+        df_dataPeriodograms = getLobmScarglePeriodogramOfDataframe(df_data)
+
+        write(df_dataPeriodograms, saveDir + dataName + '_dataPeriodograms', hdf5fileName=hdf5fileName)
 
     if calculateAutocorrelations:
         df_data = read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
 
-        print('Calculating null distribution of %s samples...' %(NumberOfRandomSamples))
+        print('Calculating null distribution (autocorrelation) of %s samples...' %(NumberOfRandomSamples))
         df_randomAutocorrelations = getRandomAutocorrelations(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs)
 
         write(df_randomAutocorrelations, saveDir + dataName + '_randomAutocorrelations', hdf5fileName=hdf5fileName)
@@ -2482,12 +2567,21 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
         write(df_dataAutocorrelations, saveDir + dataName + '_dataAutocorrelations', hdf5fileName=hdf5fileName)
 
     df_data = read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
+
+    if frequencyBasedClassification:
+        df_classifier = df_dataPeriodograms
+        df_randomClassifier = df_randomPeriodograms
+        info = 'Periodograms'
+    else:
+        df_classifier = df_dataAutocorrelations
+        df_randomClassifier = df_randomAutocorrelations
+        info = 'Autocorrelations'
             
     QP = [1.0]
-    QP.extend([np.quantile(df_randomAutocorrelations.values.T[i], 1. - p_cutoff,interpolation='lower') for i in range(1,df_dataAutocorrelations.shape[1])])
+    QP.extend([np.quantile(df_randomClassifier.values.T[i], 1. - p_cutoff,interpolation='lower') for i in range(1,df_classifier.shape[1])])
     print('Quantiles:', list(np.round(QP, 16)), '\n')
 
-    significant_index = np.vstack([df_dataAutocorrelations.values.T[lag] > QP[lag] for lag in range(df_dataAutocorrelations.shape[1])]).T
+    significant_index = np.vstack([df_classifier.values.T[lag] > QP[lag] for lag in range(df_classifier.shape[1])]).T
 
     print('Calculating spikes cutoffs...')
     spike_cutoffs = getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=NumberOfRandomSamples)
@@ -2500,38 +2594,39 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
     print(len(max_spikes))
     significant_index_spike_max = [(gene in list(max_spikes)) for gene in df_data.index.values]
     lagSignigicantIndexSpikeMax = (np.sum(significant_index.T[1:],axis=0) == 0) * significant_index_spike_max
-    write(df_dataAutocorrelations[lagSignigicantIndexSpikeMax], saveDir + dataName +'_selectedAutocorrelations_SpikeMax', hdf5fileName=hdf5fileName)
-    write(df_data[lagSignigicantIndexSpikeMax], saveDir + dataName +'_selectedTimeSeries_SpikeMax', hdf5fileName=hdf5fileName)
+    write(df_classifier[lagSignigicantIndexSpikeMax], saveDir + dataName +'_selected%s_SpikeMax'%(info), hdf5fileName=hdf5fileName)
+    write(df_data[lagSignigicantIndexSpikeMax], saveDir + dataName +'_selectedTimeSeries%s_SpikeMax'%(info), hdf5fileName=hdf5fileName)
             
     print('Recording SpikeMin data...')
     min_spikes = df_data.index.values[getSpikes(df_data.values, np.min, spike_cutoffs)]
     print(len(min_spikes))
     significant_index_spike_min = [(gene in list(min_spikes)) for gene in df_data.index.values]
     lagSignigicantIndexSpikeMin = (np.sum(significant_index.T[1:],axis=0) == 0) * (np.array(significant_index_spike_max) == 0) * significant_index_spike_min
-    write(df_dataAutocorrelations[lagSignigicantIndexSpikeMin], saveDir + dataName +'_selectedAutocorrelations_SpikeMin', hdf5fileName=hdf5fileName)
-    write(df_data[lagSignigicantIndexSpikeMin], saveDir + dataName +'_selectedTimeSeries_SpikeMin', hdf5fileName=hdf5fileName)
+    write(df_classifier[lagSignigicantIndexSpikeMin], saveDir + dataName +'_selected%s_SpikeMin'%(info), hdf5fileName=hdf5fileName)
+    write(df_data[lagSignigicantIndexSpikeMin], saveDir + dataName +'_selectedTimeSeries%s_SpikeMin'%(info), hdf5fileName=hdf5fileName)
 
-    print('Recording Lag%s-Lag%s data...'%(1,df_dataAutocorrelations.shape[1]))
-    for lag in range(1,df_dataAutocorrelations.shape[1]):
+    print('Recording Lag%s-Lag%s data...'%(1,df_classifier.shape[1]))
+    for lag in range(1,df_classifier.shape[1]):
         lagSignigicantIndex = (np.sum(significant_index.T[1:lag],axis=0) == 0) * (significant_index.T[lag])
-        write(df_dataAutocorrelations[lagSignigicantIndex], saveDir + dataName +'_selectedAutocorrelations_LAG%s'%(lag), hdf5fileName=hdf5fileName)
-        write(df_data[lagSignigicantIndex], saveDir + dataName +'_selectedTimeSeries_LAG%s'%(lag), hdf5fileName=hdf5fileName)
+        write(df_classifier[lagSignigicantIndex], saveDir + dataName +'_selected%s_LAG%s'%(info,lag), hdf5fileName=hdf5fileName)
+        write(df_data[lagSignigicantIndex], saveDir + dataName +'_selectedTimeSeries%s_LAG%s'%(info,lag), hdf5fileName=hdf5fileName)
                 
     return
 
 
-def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, writeClusteringObjectToBinaries=False):
+def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=False, AutocorrNotPeriodogr=True):
 
-    def internalDraw(className, dataName, hdf5fileName, writeToBinaries):
+    info = 'Autocorrelations' if AutocorrNotPeriodogr else 'Periodograms'
 
-        if hdf5fileName is None:
-            hdf5fileName = saveDir + dataName + '.h5'
+    if hdf5fileName is None:
+        hdf5fileName = saveDir + dataName + '.h5'
 
+    def internalDraw(className):
         print('\n\n%s of Time Series:'%(className)) 
-        df_data_selected = read(saveDir + dataName + '_selectedTimeSeries_%s'%(className), hdf5fileName=hdf5fileName)
-        df_data_autocor_selected = read(saveDir + dataName + '_selectedAutocorrelations_%s'%(className), hdf5fileName=hdf5fileName)
+        df_data_selected = read(saveDir + dataName + '_selectedTimeSeries%s_%s'%(info,className), hdf5fileName=hdf5fileName)
+        df_classifier_selected = read(saveDir + dataName + '_selected%s_%s'%(info,className), hdf5fileName=hdf5fileName)
 
-        if (df_data_selected is None) or (df_data_autocor_selected is None):
+        if (df_data_selected is None) or (df_classifier_selected is None):
 
             print('Selected %s time series not found in %s.'%(className, saveDir + dataName + '.h5'))
             print('Do time series classification first.')
@@ -2539,43 +2634,26 @@ def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, h
             return 
 
         print('Creating clustering object.')
-        clusteringObject = makeClusteringObject(df_data_selected, df_data_autocor_selected, significance='Elbow') #Silhouette
+        clusteringObject = makeClusteringObject(df_data_selected, df_classifier_selected, significance='Elbow') #Silhouette
 
         print('Exporting clustering object.')
-        if writeToBinaries:
+        if writeClusteringObjectToBinaries:
             write(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/' + dataName + '_%s'%(className) + '_GroupsSubgroups')
-
-        exportClusteringObject(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_%s'%(className))
+        
+        if exportClusteringObjects:
+            exportClusteringObject(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_%s'%(className))
 
         print('Plotting Dendrogram with Heatmaps.')
-        makeDendrogramHeatmap(clusteringObject, saveDir, dataName + '_%s'%(className))
+        makeDendrogramHeatmap(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=AutocorrNotPeriodogr)
 
         return
 
     for lag in range(1,numberOfLagsToDraw + 1):
-        internalDraw('LAG%s'%(lag), dataName, hdf5fileName, writeToBinaries=writeClusteringObjectToBinaries)
+        internalDraw('LAG%s'%(lag))
             
-    internalDraw('SpikeMax', dataName, hdf5fileName, writeToBinaries=writeClusteringObjectToBinaries)
-    internalDraw('SpikeMin', dataName, hdf5fileName, writeToBinaries=writeClusteringObjectToBinaries)
+    internalDraw('SpikeMax')
+    internalDraw('SpikeMin')
 
     return
-
-
-def timeSeriesFrequencyClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
-
-    '''Lomb-Scargle periodogram based classification.'''
-
-    for gene in df_data.index.values:
-        subset = df_data.iloc[geneIndex]
-        subset = subset[subset > 0.]
-
-        periodogram = LombScargle(subset.index.values, subset.values, df.columns.values, OversamplingRate=100)
-
-
-
-
-
-    return
-
 
 ###################################################################################################

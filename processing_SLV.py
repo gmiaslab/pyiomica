@@ -6,6 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 np.random.seed(0)
@@ -22,7 +23,7 @@ if __name__ == '__main__':
 
     ####### Demo on Time Series Classification ####################################################################################################################################
 
-    if False:
+    if True:
         def processDataTempFunction(data_dir, dataFileName, timesFileName, saveDir, Delta=False):
 
             if Delta:
@@ -39,9 +40,11 @@ if __name__ == '__main__':
                                                                 (' '.join(item.split(':')[0].split('_')[1:]),)) for item in df_data.index.values], 
                                                               names=['source', 'id', 'metadata'])
         
-            pyiomica.timeSeriesClassification(df_data, dataName, saveDir, NumberOfRandomSamples = 10**5, NumberOfCPUs = 4, p_cutoff = 0.05)
+            pyiomica.timeSeriesClassification(df_data, dataName, saveDir, NumberOfRandomSamples = 10**5, NumberOfCPUs = 4, p_cutoff = 0.05, frequencyBasedClassification=False)
+            pyiomica.timeSeriesClassification(df_data, dataName, saveDir, NumberOfRandomSamples = 10**5, NumberOfCPUs = 4, p_cutoff = 0.05, frequencyBasedClassification=True)
 
-            pyiomica.visualizeTimeSeriesClassification(dataName, saveDir)
+            pyiomica.visualizeTimeSeriesClassification(dataName, saveDir, AutocorrNotPeriodogr=True)
+            pyiomica.visualizeTimeSeriesClassification(dataName, saveDir, AutocorrNotPeriodogr=False)
 
             return
 
@@ -54,7 +57,7 @@ if __name__ == '__main__':
 
     ####### Demo on Visibility Graph ##############################################################################################################################################
 
-    if True:
+    if False:
         exampleData = np.random.rand(30)
         exampleTimes = list(range(len(exampleData)))
 
@@ -66,3 +69,4 @@ if __name__ == '__main__':
         fig.savefig(saveName)
         
         webbrowser.open("file:///" + os.getcwd() + '\\' + saveName, new=2)
+    
