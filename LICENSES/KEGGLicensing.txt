@@ -1,0 +1,31 @@
+PyIOmica utilizes the KEGG API to perform pathway analyses and retrieve data from KEGG. Usage of these utilities assumes the user's compliance with KEGG policies.  Please consult http://www.genome.jp/kegg/legal.html.
+
+The text of the relevant information at http://www.genome.jp/kegg/legal.html is reproduced below for your reference (accessed 6/16/2019):
+
+"KEGG: Kyoto Encyclopedia of Genes and Genomes
+
+Copyright and Disclaimer
+
+KEGG is an original database product, copyright Kanehisa Laboratories. Although best efforts are always applied when developing KEGG products, Kanehisa Laboratories makes no warrant nor assumes any legal responsibility for the accuracy or usefulness of KEGG or any information contained therein.
+KEGG website
+
+Academic users may freely use the KEGG website at https://www.kegg.jp/ or its mirror site at GenomeNet https://www.genome.jp/kegg/. Academic users may also freely link to the KEGG website. Non-academic users may use the KEGG website as end users for non-commercial purposes, but any other use requires a license agreement (see below).
+KEGG ftp site
+
+Academic users may subscribe to the KEGG ftp site managed by NPO Bioinformatics Japan for downloading the entire KEGG data set.
+Academic license
+
+Academic users who utilize KEGG for providing free academic services are requested to obtain a KEGG FTP subscription for organizational use, which includes a proper license agreement.
+Commercial license
+
+Non-academic users and Academic users intending to use KEGG for commercial purposes are requested to obtain a license agreement through Pathway Solutions.
+KEGG API subscription
+
+In order to promote wider usage of KEGG in real-world applications, the KEGG API subscription is available for KEGG-based business providers.
+Copyright permission for academic publications
+
+Copyright permision of KEGG pathway maps, etc. in academic publications may be obtained through the copyright permission request form.
+
+
+Last updated: September 22, 2017
+"

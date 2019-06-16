@@ -1,0 +1,8 @@
+PyIOmica utilizes information obtained from the  HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
+through accessing an https://github.com/HUPO-PSI/psi-ms-CV/blob/master/psi-ms.obo file information.
+Additionally examples files have been obtained from http://www.psidev.info/mzml_1_0_0%20.
+
+This work is licensed under the Creative Commons Attribution 3.0 Unported License.
+To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/ 
+or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View,
+California, 94041, USA.

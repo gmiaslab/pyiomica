@@ -1,0 +1,47 @@
+PyIOmica utilizes information obtained through accessing the Gene Ontology Consortium online site to perform Gene Ontology (GO) analysis and annotations. Usage of these utilities assumes the user's compliance with policies of The Gene Ontology Consortium.  Please consult http://geneontology.org/page/go-citation-policy and http://geneontology.org/page/use-and-license.
+
+***The text of relevant information at http://geneontology.org/page/use-and-license is reproduced below for your reference (accessed 6/16/2019)***
+
+"Use and License
+
+Gene Ontology Consortium data and data products are licensed under the Creative Commons Attribution 4.0 Unported License. A human-readable version and explanation is available at the Creative Commons website. For information about how to properly credit data use, please review the Creative Commons FAQ or contact the GO Helpdesk.
+
+That said, the GOC wishes the users and consumers of GO data publicly display the date(s) and/or version number(s) of the relevant GO files, data, or software version. The GO is evolving and changes regularly--this information is critical to downstream consumers and users.
+
+GOC software and tools are under their own licenses; please see their respective homepages for further details."
+
+***The text of relevant information at http://geneontology.org/page/go-citation-policy is reproduced below for your reference (accessed 6/16/19)***
+
+"We ask that whenever using the GO and/or annotations in a publication, please cite the two papers below (the original paper describing GO, and our most recent update paper):
+
+Ashburner et al. Gene ontology: tool for the unification of biology. Nat Genet. May 2000;25(1):25-9. [abstract | full text]
+The Gene Ontology Consortium. The Gene Ontology Resource: 20 years and still GOing strong. Nucleic Acids Res. Jan 2019;47(D1):D330-D338. [abstract | full text]
+If you used a specific software/analysis tool in your research, in addition to the two publications above, please also cite the tool used according to the following list:
+
+GO Enrichment Analysis: Mi H, Huang X, Muruganujan A, Tang H, Mills C, Kang D, Thomas PD. PANTHER version 14: more genomes, a new PANTHER GO-slim and improvements in enrichment analysis tools. Nucleic Acids Res. Jan 2019;47(D1):D419-D426. [abstract | full text]
+AmiGO: Carbon S, Ireland A, Mungall CJ, Shu S, Marshall B, Lewis S, AmiGO Hub, Web Presence Working Group. AmiGO: online access to ontology and annotation data. Bioinformatics. Jan 2009;25(2):288-289. [abstract | full text]
+OBO-Edit: Day-Richter J, Harris MA, Haendel M, Gene Ontology OBO-Edit Working Group, Lewis S. OBO-Edit–an ontology editor for biologists. Bioinformatics. Aug 2007;23(16):2198-200. [abstract | full text]
+If you produce tools and/or services that use GO data, the user should be provided with the GO release date and DOI along with the results (e.g. “2019-01-01” and “doi:10.5281/zenodo.2529950”).
+
+Citing data from downloads
+If you wish to cite data provided by the Gene Ontology project, either from AmiGO or the files downloaded from the GO website, please state the release date and/or version number of the data, preferably both; e.g. “2019-01-01” or “10.5281/zenodo.2529950”. Both annotation and ontology data may change over time, and to reproduce the results of an analysis, it is important that the same initial GO data is used.
+
+Citing data from AmiGO
+The data release can be found in the page footer on the right-hand side. To cite the annotations of individual database groups please see the GO publications list.
+
+GO logo
+If you intend to use the logo on your website, please include a link to the GO home page, http://geneontology.org. Please contact the GO Helpdesk if you need a larger or higher resolution version. The logo is subject to our use and license.
+
+The GO logo is available in four sizes. For reuse, please do not hotlink images, but download them instead (e.g. right click the appropriate image and size, then select “Save Link As”):
+
+Mini (and favicon)	Small	Regular	Large
+mini logo	small logo	regular logo	full logo
+fav icon	 mini icon	small icon	regular icon
+
+License
+Gene Ontology Consortium data and data products are licensed under the Creative Commons Attribution 4.0 Unported License. A human-readable version and explanation is available at the Creative Commons website. For information about how to properly credit data use, please review the Creative Commons FAQ or contact the GO Helpdesk.
+
+GOC software and tools are under their own licenses; please see their respective homepages for further details.
+
+Website disclaimer
+All information on this website is copyright © 1999–2019 Gene Ontology Consortium. Permission to use the information contained in this database was given by the researchers and institutes who contributed or published the information. Users of the data are solely responsible for compliance with any copyright restrictions. Documents from this server are provided “AS-IS” without any warranty, expressed or implied."
