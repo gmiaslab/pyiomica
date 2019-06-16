@@ -1,11 +1,52 @@
-# pyiomica
+# PyIOmica (pyiomica)
+This repository contains PyIOmica, a Python package that provides bioinformatics utilities for analyzing (dynamic) omics datasets. PyIOmica extends MathIOmica usage to Python and implements new visualizations and computational tools for graph analyses.
 
-Translated to Python 3.7 MathIOmica package.
+** PyIOmica Versions**
+* 1.0.0 
 
-## Getting Started
+# PyIOmica Installation Instructions
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes...
+## A. INSTALLATION 
+  
+  ### Pre-Installation Requirements
+     To install PyIOmica on any platform you need:
+     1. Python version 3.7 or higher
+     2. Recommended: 16GB of RAM or higher
+  
+  ### Installation Instructions
+     1. To install the current release from PyPI (Python Package Index) use pip:
 
-## Usage
+```bash
+pip install pyiomica
+```
 
-...
+Alternatively, you can install directly from github using:
+```bash
+pip install git+https://github.com/gmiaslab/pyiomica/
+```
+
+## B. RUNNING PyIOmica
+After installation you can run:
+
+```python
+>>> import pyiomica
+```
+
+
+## C. DOCUMENTATION
+  Documentation for PyIOmica is built-in and is available ...
+
+
+## D. ADDITIONAL INFORMATION
+  * PyIOmica is a multi-omics analysis framework distributed as a Python package that aims to assist in bioinformatics.
+  * The most current version of the package is maintained at
+     https://github.com/gmiaslab/pyiomica
+  * News are distributed via twitter (@mathiomica) and on the website mathiomica.org
+
+## E. LICENSING
+  PyIOmica is released under an MIT License. Please also consult the folder LICENSES distributed with PyIOmica regarding Licensing information for use of external associated content.
+
+## F. OTHER CONTACT INFORMATION
+  * G. Mias Lab (https://georgemias.org)
+  * e-mail: mathiomica@gmail.com
+  * twitter: @mathiomica
