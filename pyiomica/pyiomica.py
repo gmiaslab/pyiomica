@@ -185,13 +185,13 @@ def createReverseDictionary(inputDictionary):
 ConstantGeneDictionary = None
 
 '''ConstantMathIOmicaDataDirectory is a global variable pointing to the MathIOmica data directory.'''
-ConstantMathIOmicaDataDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData"])
+ConstantMathIOmicaDataDirectory = os.path.join(os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData")
 
 '''ConstantMathIOmicaExamplesDirectory is a global variable pointing to the MathIOmica example data directory.'''
-ConstantMathIOmicaExamplesDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleData"])
+ConstantMathIOmicaExamplesDirectory = os.path.join(os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleData")
 
 '''ConstantMathIOmicaExampleVideosDirectory is a global variable pointing to the MathIOmica example videos directory.'''
-ConstantMathIOmicaExampleVideosDirectory = "\\".join([os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleVideos"])
+ConstantMathIOmicaExampleVideosDirectory = os.path.join(os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleVideos")
 
 for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirectory, ConstantMathIOmicaExampleVideosDirectory]:
     createDirectories(path)
@@ -344,7 +344,7 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
     global ConstantMathIOmicaDataDirectory
 
     MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
-    fileGOOBO = "\\".join([MathIOmicaDataDirectory, OBOFile])
+    fileGOOBO = os.path.join(MathIOmicaDataDirectory, OBOFile)
     fileGOOBOgz = fileGOOBO + '.gz'
 
     #import the GO OBO file: we check if the OBO file Exist, if not, attempt to download and create it
@@ -421,7 +421,7 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
 
     MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory
 
-    geneUCSCTable = "\\".join([MathIOmicaDataDirectory, Species + "GeneUCSCTable"]) + '.json.gz'
+    geneUCSCTable = os.path.join(MathIOmicaDataDirectory, Species + "GeneUCSCTable" + ".json.gz")
        
     #If the user asked us to import directly, import directly with SQL, otherwise, get it from a directory they specify
     if not os.path.isfile(geneUCSCTable):
@@ -487,9 +487,9 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
 
     #If the user asked us to import MathIOmicaDataDirectoryectly, import MathIOmicaDataDirectoryectly from GO website, otherwise, get it from a MathIOmicaDataDirectoryectory they specify
     file = "goa_" + Species + ".gaf.gz" if GOFileName==None else GOFileName
-    localFile =  "\\".join([MathIOmicaDataDirectory, "goa_" + Species + ".gaf"])
-    localZipFile =  "\\".join([MathIOmicaDataDirectory, "goa_" + Species + ".gaf.gz"])
-    fileGOAssociations = ["\\".join([MathIOmicaDataDirectory, Species + item]) for item in ["GeneOntAssoc.json.gz", "IdentifierAssoc.json.gz"]]
+    localFile =  os.path.join(MathIOmicaDataDirectory, "goa_" + Species + ".gaf")
+    localZipFile =  os.path.join(MathIOmicaDataDirectory, "goa_" + Species + ".gaf.gz")
+    fileGOAssociations = [os.path.join(MathIOmicaDataDirectory, Species + item + ".json.gz") for item in ["GeneOntAssoc", "IdentifierAssoc"]]
 
     #We check if the Annotations exist, if not, attempt to download and create them
     if not np.array(list(map(os.path.isfile, fileGOAssociations))).all():
@@ -729,7 +729,7 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
     MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
 
     ##if the user asked us to import directly, import directly from KEGG website, otherwise, get it from a directory they specify
-    fileAssociations = ["\\".join([MathIOmicaDataDirectory, item]) for item in [KEGGQuery1 + "_" + KEGGQuery2 + "KEGGMemberToPathAssociation.json.gz", 
+    fileAssociations = [os.path.join(MathIOmicaDataDirectory, item) for item in [KEGGQuery1 + "_" + KEGGQuery2 + "KEGGMemberToPathAssociation.json.gz", 
                                                                                 KEGGQuery1 + "_" + KEGGQuery2 + "KEGGPathToMemberAssociation.json.gz"]]
 
     if not np.array(list(map(os.path.isfile, fileAssociations))).all():
@@ -737,7 +737,7 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
         ImportDirectly = True
 
     if ImportDirectly:
-        localFile = "\\".join([MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv"])
+        localFile = os.path.join(MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv")
         #Delete existing file
         if os.path.isfile(localFile):
             os.remove(localFile)
@@ -805,7 +805,7 @@ def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQ
     MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
 
     #if the user asked us to import directly, import directly from KEGG website, otherwise, get it from a directory they specify
-    fileKEGGDict = "\\".join([MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + "_KEGGDictionary.json.gz"])
+    fileKEGGDict = os.path.join(MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + "_KEGGDictionary.json.gz")
 
     if os.path.isfile(fileKEGGDict):
         associationKEGG = read(fileKEGGDict, jsonFormat=True)[1]
@@ -814,7 +814,7 @@ def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQ
         ImportDirectly = True
 
     if ImportDirectly:
-        queryFile = "\\".join([MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv"])
+        queryFile = os.path.join(MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv")
 
         if os.path.isfile(queryFile): 
            os.remove(queryFile)
@@ -887,12 +887,12 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
         keggDict = KEGGDictionary(**({"KEGGQuery1": "pathway", "KEGGQuery2": ""} if KEGGDictionaryOptions=={} else KEGGDictionaryOptions)) if KEGGDictionaryVariable==None else KEGGDictionaryVariable
 
         #Obtain gene dictionary - if it exists can either augment with new information or Species or create new, if not exist then create variable
-        fileMolDict = "\\".join([MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary.json.gz"])
+        fileMolDict = os.path.join(MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary.json.gz")
 
         if os.path.isfile(fileMolDict):
             GeneDictionary = read(fileMolDict, jsonFormat=True)[1]
         else:
-            fileCSV = "\\".join([MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary.csv"])
+            fileCSV = os.path.join(MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary.csv")
 
             print('Attempting to read:', fileCSV)
 
@@ -1012,7 +1012,7 @@ def MassDictionary(MathIOmicaDataDirectory=None):
 
     '''Load PyIOmica's current mass dictionary'''
 
-    fileMassDict = "\\".join(["AdditionalData", "MathIOmicaMassDictionary" +  ".csv"])
+    fileMassDict = os.path.join("AdditionalData", "MathIOmicaMassDictionary" +  ".csv")
 
     if os.path.isfile(fileMassDict):
         with open(fileMassDict, 'r') as tempFile:
@@ -1036,6 +1036,10 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
         returning = {}
 
         if (type(data) is dict):
+            if len(data)==0:
+                print('The result is empty.')
+                returning['List'] = data
+                return 
             idata = data[list(data.keys())[0]]
             if not type(idata) is dict:
                 returning['List'] = data
@@ -1105,7 +1109,7 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
         return None
     
-    saveDir = "\\".join([os.getcwd(), "Enrichment reports"]) + "\\" if OutputDirectory==None else OutputDirectory
+    saveDir = os.path.join(os.getcwd(), "Enrichment reports") if OutputDirectory==None else OutputDirectory
 
     createDirectories(saveDir)
 
