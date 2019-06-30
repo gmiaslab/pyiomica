@@ -37,8 +37,17 @@ setup(
         'Topic :: Utilities',
         ],
     install_requires=[
-        'pandas>=0.23.3',
-        'numpy>=1.15.3',
-        'scipy>=1.1.0'],
+        'h5py>=2.9.0',
+        'matplotlib>=3.1.0',
+        'networkx>=2.3',
+        'numba>=0.44.1',
+        'numpy>=1.16.4',
+        'openpyxl>=2.6.2',
+        'pandas>=0.24.2',
+        'pymysql>=0.9.3',
+        'requests>=2.22.0',
+        'scikit-learn>=0.21.2',
+        'scipy>=1.2.1',
+        'xlsxwriter>=1.1.8'],
     zip_safe=False
 )
