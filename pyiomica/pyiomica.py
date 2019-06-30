@@ -1432,7 +1432,7 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
     returning = np.vstack((freq, periodogram))
 
     if PairReturn:
-        returning = np.ranspose(returning)
+        returning = np.transpose(returning)
 
     return returning
 
