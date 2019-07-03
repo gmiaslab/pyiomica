@@ -1,3 +1,13 @@
+"""
+PyIomica is a general omics package with multiple tools for analyzing omics data.
+
+Usage:
+    from pyiomica import pyiomica
+Notes:
+    For additional information visit: https://github.com/gmiaslab/pyiomica and https://mathiomica.org by G. Mias Lab
+"""
+
+
 print("Loading PyIOmica (https://mathiomica.org by G. Mias Lab)")
 
 import matplotlib
@@ -43,7 +53,18 @@ import json
 ### Utility functions #############################################################################
 def createDirectories(path):
 
-    '''Create a path of directories, unless the path already exists.'''
+    '''Create a path of directories, unless the path already exists.
+    
+    Args:
+        path: path directory
+    
+    Returns:
+        A path of directories
+
+    Usage:
+        createDirectories("/pathToFolder1/pathToSubFolder2")
+    
+    '''
 
     if path=='':
         return
