@@ -53,31 +53,43 @@ import json
 ### Utility functions #############################################################################
 def createDirectories(path):
 
-    '''Create a path of directories, unless the path already exists.
+    """Create a path of directories, unless the path already exists.
     
     Args:
         path: path directory
     
     Returns:
-        A path of directories
+        None
 
     Usage:
         createDirectories("/pathToFolder1/pathToSubFolder2")
     
-    '''
+    """
 
     if path=='':
-        return
+        return None
 
     if not os.path.exists(path):
         os.makedirs(path)
 
-    return
+    return None
 
 
 def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
 
-    '''Parallelize function call.'''
+    """Parallelize function call with multiprocessing.Pool.
+        
+    Args:
+        NumberOfAvailableCPUs: number of processes to create
+        func: function to apply, must take at most one argument
+        list_of_tuples_of_func_params: function parameters
+    
+    Returns:
+        Results of func in a numpy array
+
+    Usage:
+        results = runCPUs(4, pAutocorrelation, [(times[i], data[i], allTimes) for i in range(10)])
+    """
 
     instPool = multiprocessing.Pool(processes = NumberOfAvailableCPUs)
     return_values = instPool.map(func, list_of_tuples_of_func_params)
@@ -89,9 +101,22 @@ def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
 
 def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = False):
 
-    '''Write object into a file. Pandas and Numpy objects are recorded in HDF5 format
+    """Write object into a file. Pandas and Numpy objects are recorded in HDF5 format
     when 'hdf5fileName' is provided otherwise pickled into a new file.
-    '''
+
+    Args:
+        data: data object to write into a file
+        fileName: path of directories ending with the file name
+        withPKLZextension: add ".pklz" to a pickle file
+        hdf5fileName: path of directories ending with the file name. If None then data is pickled.
+        jsonFormat: save data into compressed json file 
+    
+    Returns:
+        None
+
+    Usage:
+        write(exampeDataFrame, '/dir1/exampeDataFrame', hdf5fileName='/dir2/data.h5')
+    """
 
     if jsonFormat:
         createDirectories("/".join(fileName.split("/")[:-1]))
@@ -99,7 +124,7 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFor
         with gzip.GzipFile(fileName, 'w') as tempFile:
             tempFile.write(json.dumps(data).encode('utf-8'))  
 
-        return
+        return None
 
     if hdf5fileName!=None and type(data) in [pd.DataFrame, pd.Series]:
         createDirectories("/".join(hdf5fileName.split("/")[:-1]))
@@ -135,15 +160,28 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFor
         with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'wb') as temp_file:
             pickle.dump(data, temp_file, protocol=4)
 
-    return
+    return None
 
 
 def read(fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = False):
+
+    """Read object from a file recorded by function "write". Pandas and Numpy objects are
+    read from HDF5 file when provided, otherwise attempt to read from PKLZ file.
+
+    Args:
+        fileName: path of directories ending with the file name
+        withPKLZextension: add ".pklz" to a pickle file
+        hdf5fileName: path of directories ending with the file name. If None then data is pickled.
+        jsonFormat: save data into compressed json file 
     
-    '''Read object from a file. Pandas and Numpy objects are read from HDF5 file when
-    provided, otherwise attempt to read from PKLZ file.
-    '''
-    
+    Returns:
+        data: data object to write into a file
+
+    Usage:
+        exampeDataFrame = read('/dir1/exampeDataFrame', hdf5fileName='/dir2/data.h5')
+    """
+
+   
     if jsonFormat:
         createDirectories("/".join(fileName.split("/")[:-1]))
 
@@ -184,10 +222,18 @@ def read(fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = F
 
 def createReverseDictionary(inputDictionary):
 
-    '''Efficient way to create a reverse dictionary from a dictionary.
-    Utilizes Pandas.Dataframe.groupby and fast Numpy arrays indexing.
-    Note: any entries with missing values will be removed
-    '''
+    """Efficient way to create a reverse dictionary from a dictionary.
+    Utilizes Pandas.Dataframe.groupby and Numpy arrays indexing.
+    
+    Args: 
+        inputDictionary: a dictionary to reverse
+
+    Returns:
+        Reversed dictionary
+
+    Usage:
+        revDict = createReverseDictionary(Dict)
+    """
 
     keys, values = np.array(list(inputDictionary.keys())), np.array(list(inputDictionary.values()))
     df = pd.DataFrame(np.array([[keys[i], value] for i in range(len(keys)) for value in values[i]]))
@@ -202,16 +248,16 @@ def createReverseDictionary(inputDictionary):
 
 
 ### Global constants ##############################################################################
-'''ConstantGeneDictionary is a global gene/protein dictionary variable typically created by GetGeneDictionary.'''
+"""ConstantGeneDictionary is a global gene/protein dictionary variable typically created by GetGeneDictionary."""
 ConstantGeneDictionary = None
 
-'''ConstantMathIOmicaDataDirectory is a global variable pointing to the MathIOmica data directory.'''
+"""ConstantMathIOmicaDataDirectory is a global variable pointing to the MathIOmica data directory."""
 ConstantMathIOmicaDataDirectory = os.path.join(os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData")
 
-'''ConstantMathIOmicaExamplesDirectory is a global variable pointing to the MathIOmica example data directory.'''
+"""ConstantMathIOmicaExamplesDirectory is a global variable pointing to the MathIOmica example data directory."""
 ConstantMathIOmicaExamplesDirectory = os.path.join(os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleData")
 
-'''ConstantMathIOmicaExampleVideosDirectory is a global variable pointing to the MathIOmica example videos directory.'''
+"""ConstantMathIOmicaExampleVideosDirectory is a global variable pointing to the MathIOmica example videos directory."""
 ConstantMathIOmicaExampleVideosDirectory = os.path.join(os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleVideos")
 
 for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirectory, ConstantMathIOmicaExampleVideosDirectory]:
@@ -225,7 +271,17 @@ for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirector
 
 def ReactomeAnalysis(inputData):
 
-    '''Reactome POST-GET-style Analysis'''
+    """Reactome POST-GET-style Analysis.
+    
+    Args: 
+        arg1: text
+
+    Returns:
+        enrichmentReturn
+
+    Usage:
+        text
+    """
 
     uploadURL = "https://reactome.org/AnalysisService/identifiers/projection?interactors=false&pageSize=20&page=1&sortBy=ENTITIES_PVALUE&order=ASC&resource=TOTAL"
 
@@ -268,8 +324,8 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
                             pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
                             AssignmentForwardDictionary, AssignmentReverseDictionary, prefix, infoDict):
 
-    '''Analysis for Multi-Omics or Single-Omics input list
-    The function is called internally and not intended to be used directly by user'''
+    """Analysis for Multi-Omics or Single-Omics input list
+    The function is called internally and not intended to be used directly by user."""
     
     listData = data[list(data.keys())[0]]
 
@@ -359,8 +415,21 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
 
 
 def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", ImportDirectly=False, MathIOmicaDataDirectory=None, OBOFile="goBasicObo.txt"):
+
+    """Generate Open Biomedical Ontologies (OBO) Gene Ontology (GO) vocabulary dictionary.
     
-    '''OBOGODictionary() is an Open Biomedical Ontologies (OBO) Gene Ontology (GO) vocabulary dictionary generator.'''
+    Args: 
+        FileURL: URL to GO terms definitions
+        ImportDirectly: import from URL regardles is the file already exists
+        MathIOmicaDataDirectory: path of directories to data storage
+        OBOFile: name of file to store data in (file will be zipped)
+
+    Returns:
+        Dictionary of definitions
+
+    Usage:
+        OBODict = OBOGODictionary()
+    """
 
     global ConstantMathIOmicaDataDirectory
 
@@ -418,9 +487,24 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
 
 
 def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectLabels = None,
-                    ImportDirectly = False, JavaGBs = '8', Species = "human", KEGGUCSCSplit = [True,"KEGG Gene ID"]):
+                    ImportDirectly = False, Species = "human", KEGGUCSCSplit = [True,"KEGG Gene ID"]):
     
-    '''Create an ID/accession dictionary from a UCSC search - typically of gene annotations.'''
+    """Create an ID/accession dictionary from a UCSC search - typically of gene annotations.
+    
+    Args: 
+        geneUCSCTable: path to a geneUCSCTable file
+        UCSCSQLString: query for UCSC SQL server
+        UCSCSQLSelectLabels: labels from geneUCSCTable to save
+        ImportDirectly: import from URL regardles is the file already exists
+        Species: species to laod
+        KEGGUCSCSplit: return KEGGUCSCSplit key only
+
+    Returns:
+        Dictionary
+
+    Usage:
+        geneDict = GetGeneDictionary()
+    """
        
     UCSCSQLSelectLabels = {"human": ["UCSC ID", "UniProt ID", "Gene Symbol", 
         "RefSeq ID", "NCBI Protein Accession", "Ensembl ID", 
@@ -442,7 +526,8 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
 
     MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory
 
-    geneUCSCTable = os.path.join(MathIOmicaDataDirectory, Species + "GeneUCSCTable" + ".json.gz")
+    if geneUCSCTable is None:
+        geneUCSCTable = os.path.join(MathIOmicaDataDirectory, Species + "GeneUCSCTable" + ".json.gz")
        
     #If the user asked us to import directly, import directly with SQL, otherwise, get it from a directory they specify
     if not os.path.isfile(geneUCSCTable):
@@ -500,7 +585,25 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
                         LengthFilter = None, LengthFilterFunction = np.greater_equal, GOFileName = None, GOFileColumns = [2, 5], 
                         GOURL = "http://current.geneontology.org/annotations/"):
     
-    '''Download and create gene associations and restrict to required background set.'''
+    """Download and create gene associations and restrict to required background set.
+
+    Args: 
+        MathIOmicaDataDirectory: path to a geneUCSCTable file
+        ImportDirectly: import from URL regardles is the file already exists
+        BackgroundSet: background list to create annotation projection to limited background space
+        Species: species
+        LengthFilterFunction: function to apply as a filter
+        LengthFilter: argument for LengthFilterFunction
+        GOFileName: GO file name
+        GOFileColumns: columns to use in the GO file
+        GOURL: URL to GO annotations
+
+    Returns:
+        IDToGO and GOToID dictionary
+
+    Usage:
+        GOassignment = GOAnalysisAssigner()
+    """
 
     global ConstantMathIOmicaDataDirectory
 
@@ -591,9 +694,20 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
 
 def obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions, AugmentDictionary):
     
-    '''Obtain gene dictionary - if it exists can either augment with new information or Species or create new, 
+    """Obtain gene dictionary - if it exists can either augment with new information or Species or create new, 
     if not exist then create variable.
-    '''
+
+    Args:
+        GeneDictionary: preferred gene dictionary
+        GetGeneDictionaryOptions: options to pass to function GetGeneDictionary
+        AugmentDictionary: modify the dictionary, otherwise owerwrite
+
+    Returns:
+        None
+
+    Usage:
+        obtainConstantGeneDictionary(None, {}, False)
+    """
 
     global ConstantGeneDictionary
     
@@ -609,7 +723,7 @@ def obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions, Augme
         #Create/load UCSC based translation dictionary - NB global variable or use specified variable
         ConstantGeneDictionary = GetGeneDictionary(**GetGeneDictionaryOptions) if GeneDictionary==None else GeneDictionary
 
-    return
+    return None
 
 
 def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=["UniProt ID","Gene Symbol"], OutputID="UniProt ID",
@@ -619,11 +733,38 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
                  FilterSignificant=True, OBODictionaryVariable=None,
                  OBOGODictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, AdditionalFilter=None, GeneDictionary=None):
 
-    '''Calculate input data over-representation analysis for Gene Ontology (GO) categories.
-    MultipleListCorrection: used to correct for multiple lists, e.g protein+RNA
-    MultipleList: whether input is multiple omics or single - for non-omics-object inputs
-    AdditionalFilter: e.g #Select[MatchQ[#[[3,1,2]],"biological_process"]&]
-    '''
+    """Calculate input data over-representation analysis for Gene Ontology (GO) categories.
+
+    Args:
+        data: data to analyze
+        GetGeneDictionaryOptions: options to pass to function GetGeneDictionary
+        AugmentDictionary: modify the dictionary, otherwise owerwrite
+        InputID: possible input IDs
+        OutputID: output ID
+        GOAnalysisAssignerOptions: options to pass to function GOAnalysisAssigner
+        BackgroundSet: background list to create annotation projection to limited background space
+        Species: species
+        OntologyLengthFilter: function to apply as a filter
+        ReportFilter: report length filter function argumnet
+        ReportFilterFunction: report length filter function 
+        HypothesisFunction: hypothesis function
+        FilterSignificant: keep only significant entries
+        OBODictionaryVariable: OBO dictionary
+        OBOGODictionaryOptions: OBO dictionary options
+        MultipleListCorrection: used to correct for multiple lists, e.g protein+RNA
+        MultipleList: whether input is multiple omics or single - for non-omics-object inputs
+        AdditionalFilter: not implemented yet
+        GeneDictionary: preferred gene dictionary
+
+    Returns:
+        Enrichment dictionary
+
+    Usage:
+        goExample1 = GOAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", 
+                                "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", 
+                                "LYN", "MYD88", "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", 
+                                "IRAK4", "PIAS4", "PLAU"])
+    """
 
     global ConstantGeneDictionary
 
@@ -702,7 +843,22 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
 
 def GeneTranslation(InputList, TargetIDList, GeneDictionary, InputID = None, Species = "human"):
 
-    '''Use geneDictionary to convert inputList IDs to different annotations as indicated by targetIDList.'''
+    """Use geneDictionary to convert inputList IDs to different annotations as indicated by targetIDList.
+    
+    Args:
+        InputList: list of names
+        TargetIDList: target ID list
+        GeneDictionary: gene dictionary
+        InputID: input ID list
+        Species: species
+    
+    Returns:
+        Dictionary
+
+    Usage:
+        GenDict = GeneTranslation(data, "UniProt ID", ConstantGeneDictionary, InputID = ["UniProt ID","Gene Symbol"],  Species = "human")
+    
+    """
 
     if InputID!=None:
         listOfKeysToUse = []
@@ -741,9 +897,25 @@ def GeneTranslation(InputList, TargetIDList, GeneDictionary, InputID = None, Spe
 def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, BackgroundSet = [], KEGGQuery1 = "pathway", KEGGQuery2 = "hsa",
                         LengthFilter = None, LengthFilterFunction = np.greater_equal, Labels = ["IDToPath", "PathToID"]):
 
-    '''Create KEGG: Kyoto Encyclopedia of Genes and Genomes pathway associations, 
+    """Create KEGG: Kyoto Encyclopedia of Genes and Genomes pathway associations, 
     restricted to required background set, downloading the data if necessary.
-    '''
+
+    Args: 
+        MathIOmicaDataDirectory: path to a geneUCSCTable file
+        ImportDirectly: import from URL regardles is the file already exists
+        BackgroundSet: background list to create annotation projection to limited background space
+        KEGGQuery1: KEGGQuery1
+        KEGGQuery2: KEGGQuery2
+        LengthFilterFunction: function to apply as a filter
+        LengthFilter: argument for LengthFilterFunction
+        Labels: labels
+
+    Returns:
+        IDToPath and PathToID dictionary
+
+    Usage:
+        KEGGassignment = KEGGAnalysisAssigner()
+    """
     
     global ConstantMathIOmicaDataDirectory
     
@@ -817,9 +989,21 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
 
 def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQuery1 = "pathway", KEGGQuery2 = "hsa"):
 
-    '''Create a dictionary from KEGG: Kyoto Encyclopedia of Genes and Genomes terms - 
+    """Create a dictionary from KEGG: Kyoto Encyclopedia of Genes and Genomes terms - 
     typically association of pathways and members therein.
-    '''
+    
+    Args: 
+        MathIOmicaDataDirectory: path of directories to data storage
+        ImportDirectly: import from URL regardles is the file already exists
+        KEGGQuery1: KEGGQuery1
+        KEGGQuery2: KEGGQuery2
+
+    Returns:
+        Dictionary of definitions
+
+    Usage:
+        KEGGDict = KEGGDictionary()
+    """
     
     global ConstantMathIOmicaDataDirectory
     
@@ -868,14 +1052,47 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
                 FilterSignificant = True, KEGGDictionaryVariable = None, KEGGDictionaryOptions = {}, MultipleListCorrection = None, MultipleList = False, AdditionalFilter = None, 
                 GeneDictionary = None, Species = "human", MolecularSpecies = "compound", NonUCSC = False, MathIOmicaDataDirectory = None):
 
-    '''Calculate input data over-representation analysis for KEGG: Kyoto Encyclopedia of Genes and Genomes pathways.
+    """Calculate input data over-representation analysis for KEGG: Kyoto Encyclopedia of Genes and Genomes pathways.
     Input can be a list, a dictionary of lists or a clustering object.
-    MultipleListCorrection: correct for multiple lists, e.g protein+RNA
-    MultipleList: whether input is multiple omics or single - for non-omics-object inputs
-    AdditionalFilter: e.g. Select[MatchQ[#[[3,1,2]],"biological_process"]&]
-    AnalysisType: options are "Genome", "Molecular","All"
-    Species: used in GeneDictionary
-    '''
+
+    Args:
+        data: data to analyze
+        AnalysisType: analysis type, "Genomic", "Molecular" or "All"
+        GetGeneDictionaryOptions: options to pass to function GetGeneDictionary
+        AugmentDictionary: modify the dictionary, otherwise owerwrite
+        InputID: possible input IDs
+        OutputID: output ID
+        MolecularInputID: molecular input ID
+        KEGGAnalysisAssignerOptions: options to pass to function KEGGAnalysisAssigner
+        BackgroundSet: background list to create annotation projection to limited background space
+        KEGGOrganism: KEGG organism
+        KEGGMolecular: species
+        KEGGDatabase: species
+        PathwayLengthFilter: 
+        ReportFilter: report length filter function argumnet
+        ReportFilterFunction: report length filter function 
+        pValueCutoff: 
+        TestFunction: 
+        HypothesisFunction: hypothesis function
+        FilterSignificant: keep only significant entries
+        KEGGDictionaryVariable: OBO dictionary
+        KEGGDictionaryOptions: OBO dictionary options
+        MultipleListCorrection: used to correct for multiple lists, e.g protein+RNA
+        MultipleList: whether input is multiple omics or single - for non-omics-object inputs
+        AdditionalFilter: not implemented yet
+        GeneDictionary: preferred gene dictionary
+        Species: used in GeneDictionary
+        MolecularSpecies: molecular species
+        NonUCSC: 
+        MathIOmicaDataDirectory: 
+
+    Returns:
+        Enrichment dictionary
+
+    Usage:
+        keggExample1 = KEGGAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", "LYN", "MYD88", 
+                                            "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", "IRAK4", "PIAS4", "PLAU", "POLR3B", "NME1", "CTPS1", "POLR3A"])
+    """
 
     argsLocal = locals().copy()
 
@@ -1016,10 +1233,21 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
 
 def MassMatcher(data, accuracy, MassDictionaryVariable = None, MolecularSpecies = "cpd"):
 
-    '''Assign putative mass identification to input data based on monoisotopic mass 
-    (using PyIOmica's mass dictionary).
-    The accuracy in parts per million.    
-    '''
+    """Assign putative mass identification to input data based on monoisotopic mass 
+    (using PyIOmica's mass dictionary). The accuracy in parts per million. 
+    
+    Args: 
+        data: input data
+        accuracy: accuracy
+        MassDictionaryVariable: mass dictionary
+        MolecularSpecies: molecular species
+
+    Returns:
+        List of IDs 
+
+    Usage:
+       result = MassMatcher(18.010565, 2)
+    """
     
     ppm = accuracy*(10**-6)
 
@@ -1031,7 +1259,17 @@ def MassMatcher(data, accuracy, MassDictionaryVariable = None, MolecularSpecies 
 
 def MassDictionary(MathIOmicaDataDirectory=None):
 
-    '''Load PyIOmica's current mass dictionary'''
+    """Load PyIOmica's current mass dictionary.
+    
+    Args:
+        MathIOmicaDataDirectory: path of directories to data storage
+
+    Returns:
+        Mass dictionary
+
+    Usage:
+        MassDict = MassDictionary()
+    """
 
     fileMassDict = os.path.join("AdditionalData", "MathIOmicaMassDictionary" +  ".csv")
 
@@ -1050,7 +1288,19 @@ def MassDictionary(MathIOmicaDataDirectory=None):
 
 def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
-    '''Export results from enrichment analysis to Excel spreadsheets.'''
+    """Export results from enrichment analysis to Excel spreadsheets.
+    
+    Args:
+        data: enrichment results
+        AppendString: custom report name, if empty then time stamp will be used
+        OutputDirectory: path of directories where the report will be saved
+
+    Returns:
+        None
+
+    Usage:
+        ExportEnrichmentReport(goExample1, AppendString='goExample1', OutputDirectory=None)
+    """
 
     def FlattenDataForExport(data):
 
@@ -1148,10 +1398,18 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 ### Core functions ################################################################################
 def chop(expr, tolerance=1e-10):
 
-    '''Equivalent of Mathematica.Chop Function.
-    expr: a number or a pyhton sequence of numbers
-    tolerance such as default in Mathematica
-    '''
+    """Equivalent of Mathematica.Chop Function.
+
+    Args:
+        expr: a number or a pyhton sequence of numbers
+        tolerance: default is the same as in Mathematica
+
+    Returns:
+        Chopped data
+
+    Usage
+        data = chop(data)
+    """
         
     if isinstance(expr, (list, tuple, np.ndarray)):
 
@@ -1166,16 +1424,33 @@ def chop(expr, tolerance=1e-10):
 
 def modifiedZScore(subset):
 
-    '''Calculate modified z-score of a 1D array based on "Median absolute deviation"
-    Note: use on 1-D arrays only.
-    '''
+    """Calculate modified z-score of a 1D array based on "Median absolute deviation".
+    Use on 1-D arrays only.
+
+    Args:
+        subset: data to transform
+
+    Returns:
+        Transformed subset
+
+    Usage:
+        data = modifiedZScore(data)
+    """
+
     def medianAbsoluteDeviation(expr, axis=None):
 
-        '''1D, 2D Median absolute deviation of a sequence of numbers or pd.Series
-        Default: axis=None: multidimentional arrays are flattened
-        axis=0: use if data in columns
-        axis=1: use if data in rows
-        '''
+        """1D, 2D Median absolute deviation of a sequence of numbers or pd.Series.
+
+        Args:
+            expr: data for analysis
+            axis: default is None: multidimentional arrays are flattened, 0: use if data in columns, 1: use if data in rows
+
+        Returns:
+            Median absolute deviation (M.A.D.)
+
+        Usage:
+            MedianAD = medianAbsoluteDeviation(data, axis=None)
+        """
 
         data = None
 
@@ -1209,7 +1484,7 @@ def modifiedZScore(subset):
 
             print('Unsupported data type: ', type(expr))
         
-        return
+        return None
 
     values = subset[~np.isnan(subset.values)].values
 
@@ -1230,9 +1505,9 @@ def modifiedZScore(subset):
 
 def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
 
-    '''Power transform from scipy.stats
+    """Power transform from scipy.stats
     subset: 1D numpy array
-    '''
+    """
 
     where_negative = np.where(subset < 0)
     if len(where_negative>0):
@@ -1261,13 +1536,13 @@ def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
 
 def ampSquaredNormed(func, freq, times, data):
 
-    '''Lomb-Scargle core translated from MathIOmica.m
+    """Lomb-Scargle core translated from MathIOmica.m
     Calculate the different frequency components of our spectrum: project the cosine/sine component and normalize it:
     func: Sin or Cos
     freq: frequencies (1D array of floats)
     times: input times (starting point adjusted w.r.t.dataset times), Zero-padded (is it???)
     data: input Data with the mean subtracted from it, before zero-padding (for sure???)
-    '''
+    """
 
     omega_freq = 2. * (np.pi) * freq
     theta_freq = 0.5 * np.arctan2(np.sum(np.sin(4. * (np.pi) * freq * times)), np.sum(np.cos(4. * (np.pi) * freq * times) + 10 ** -20))
@@ -1280,11 +1555,11 @@ def ampSquaredNormed(func, freq, times, data):
 
 def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1):
     
-    '''Autocorrelation from MathIOmica.m
+    """Autocorrelation from MathIOmica.m
     inputTimes: times corresponding to provided data points (1D array of floats)
     inputData: data points (1D array of floats)
     inputSetTimes: a complete set of all possible N times during which data could have been collected
-    '''
+    """
 
     #InverseAutocovariance from MathIOmica.m
     def InverseAutocovariance(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1):
@@ -1342,7 +1617,7 @@ def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1
 
 def pAutocorrelation(args):
 
-    '''Wrapper of Autocorrelation function for use with Multiprocessing.'''
+    """Wrapper of Autocorrelation function for use with Multiprocessing."""
 
     inputTimes, inputData, inputSetTimes = args
     
@@ -1351,9 +1626,9 @@ def pAutocorrelation(args):
 
 def getSpikes(inputData, func, cutoffs):
 
-    '''inputData: data points (2D array of floats), rows are normalized signals
+    """inputData: data points (2D array of floats), rows are normalized signals
     func: np.max or np.min
-    '''
+    """
 
     data = inputData.copy()
     counts_non_missing = np.sum(~np.isnan(data), axis=1)
@@ -1372,10 +1647,10 @@ def getSpikes(inputData, func, cutoffs):
 
 def getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
 
-    '''df_data:
+    """df_data:
     p_cutoff:
     NumberOfRandomSamples:
-    '''
+    """
 
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
 
@@ -1401,13 +1676,13 @@ def getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
 
 def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,NormalizeIntensities=False,OversamplingRate=1,PairReturn=False,UpperFrequencyFactor=1):
 
-    '''Lomb-Scargle Periodogram from MathIOmica.m
+    """Lomb-Scargle Periodogram from MathIOmica.m
     inputTimes: times corresponding to provided data points (1D array of floats)
     inputData: data points (1D array of floats)
     inputSetTimes: a complete set of all possible N times during which data could have been collected
 
     TO DO: debug all optional parameters, such as FrequenciesOnly, NormalizeIntensities, etc.
-    '''
+    """
 
     #adjust inputTimes starting point w.r.t.dataset times
     inputTimesNormed = inputTimes - inputSetTimes[0]
@@ -1460,7 +1735,7 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
 
 def pLombScargle(args):
 
-    '''Wrapper of LombScargle function for use with Multiprocessing.'''
+    """Wrapper of LombScargle function for use with Multiprocessing."""
 
     inputTimes, inputData, inputSetTimes = args
     
@@ -1469,11 +1744,11 @@ def pLombScargle(args):
 
 def getAutocorrelationsOfData(params):
 
-    '''Calculate autocorrelation using Lomb-Scargle Autocorrelation.
+    """Calculate autocorrelation using Lomb-Scargle Autocorrelation.
     NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
     df_data: pandas Series or Dataframe
     setAllInputTimes: a complete set of all possible N times during which data could have been collected
-    '''
+    """
 
     df, setAllInputTimes = params
 
@@ -1496,12 +1771,12 @@ def getAutocorrelationsOfData(params):
 
 def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
 
-    '''Generate autocorrelation null-distribution from permutated data.
+    """Generate autocorrelation null-distribution from permutated data.
     Calculate autocorrelation using Lomb-Scargle Autocorrelation.
     NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
     df_data: pandas Series or Dataframe
     NumberOfRandomSamples: size of the distribution to generate
-    '''
+    """
 
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
 
@@ -1519,10 +1794,10 @@ def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs
 
 def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
 
-    '''Generate periodograms null-distribution from permutated data.
+    """Generate periodograms null-distribution from permutated data.
     Calculate periodograms using Lomb-Scargle function.
     NumberOfRandomSamples: size of the distribution to generate
-    '''
+    """
 
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
 
@@ -1538,10 +1813,10 @@ def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
 
 def BenjaminiHochbergFDR(pValues, SignificanceLevel=0.05):
 
-    '''HypothesisTesting BenjaminiHochbergFDR correction from MathIOmica.m
+    """HypothesisTesting BenjaminiHochbergFDR correction from MathIOmica.m
     pValues: p-values (1D array of floats)
     SignificanceLevel: default = 0.05
-    '''
+    """
 
     pValues = np.round(pValues,6)
       
@@ -1589,9 +1864,9 @@ def BenjaminiHochbergFDR(pValues, SignificanceLevel=0.05):
 
 def metricCommonEuclidean(u,v):
 
-    '''Metric to calculate 'euclidean' distance between vectors u and v 
+    """Metric to calculate 'euclidean' distance between vectors u and v 
     using only common non-missing points (not NaNs).
-    '''
+    """
 
     where_common = (~np.isnan(u)) * (~np.isnan(v))
 
@@ -1604,9 +1879,23 @@ def metricCommonEuclidean(u,v):
 ### Clustering functions ##########################################################################
 def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_to_do, numberOfAvailableCPUs=4, plotID=None, printScores=False):
 
-    ''' Get estimated number of clusters using ARI with KMeans
-    return: max peak, other possible peaks.
-    '''
+    """ Get estimated number of clusters using ARI with KMeans
+
+    Args:
+        data: data to analyze
+        cluster_num_min: minimum possible number of clusters
+        cluster_num_max: maximum possible number of clusters
+        trials_to_do: number of trials to do in ARI function
+        numberOfAvailableCPUs: number of processes to run in parallel
+        plotID: label for the plot of peaks
+        printScores: print all scores
+
+    Returns: 
+        Largest peak, other possible peaks.
+
+    Usage:
+        n_clusters = getEstimatedNumberOfClusters(data, 1, 20, 25)
+    """
 
     def getPeakPosition(scores, makePlot=False, plotID=None):
 
@@ -1656,16 +1945,37 @@ def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_
 
 def get_optimal_number_clusters_from_linkage_Elbow(Y):
 
-    ''' Get optimal number clusters from linkage.
+    """ Get optimal number clusters from linkage.
     A point of the highest accelleration of the fusion coefficient of the given linkage.
-    '''
+
+    Args:
+        Y: linkage matrix
+
+    Returns:
+        Optimal number of clusters
+
+    Usage:
+        n_clusters = get_optimal_number_clusters_from_linkage_Elbow(Y)
+    """
 
     return np.diff(np.array([[nc, Y[-nc + 1][2]] for nc in range(2,min(50,len(Y)))]).T[1], 2).argmax() + 1 if len(Y) >= 5 else 1
 
 
 def get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric):
 
-    '''Determine the optimal number of cluster in data maximizing the Silhouette score.'''
+    """Determine the optimal number of cluster in data maximizing the Silhouette score.
+
+    Args:
+        Y: linkage matrix
+        data: data to analyze
+        metric: distance measure
+
+    Returns:
+        Optimal number of clusters
+
+    Usage:
+        n_clusters = get_optimal_number_clusters_from_linkage_Elbow(Y, data, 'euclidean')
+    """
 
     max_score = 0
     n_clusters = 1
@@ -1688,9 +1998,22 @@ def get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric):
 
 def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation', significance='Elbow'):
 
-    '''Cluster data into N groups, if N is provided, else determine N
+    """Cluster data into N groups, if N is provided, else determine N
     return: linkage matrix, cluster labels, possible cluster labels.
-    '''
+
+    Args:
+        data: data to analyze
+        n_groups: number of groups to split data into
+        method: linkage calculation method
+        metric: distance measure
+        significance: method for determining optimal number of groups and subgroups
+
+    Returns:
+        Linkage matrix, cluster index, possible groups
+
+    Usage:
+        x, y, z = getGroupingIndex(data, method='weighted', metric='correlation', significance='Elbow')
+    """
 
     Y = hierarchy.linkage(data, method=method, metric=metric, optimal_ordering=False)
 
@@ -1713,7 +2036,19 @@ def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation
 
 def makeClusteringObject(df_data, df_data_autocorr, significance='Elbow'):
 
-    '''Make a clustering Groups-Subgroups dictionary object.'''
+    """Make a clustering Groups-Subgroups dictionary object.
+
+    Args:
+        df_data: data to analyze in DataFrame format
+        df_data_autocorr: autocorrelations or periodograms in DataFrame format
+        significance: method for determining optimal number of groups and subgroups
+
+    Returns:
+        Clustering object
+
+    Usage:
+        myObj = makeClusteringObject(df_data, df_data_autocorr, significance='Elbow')
+    """
 
     def getSubgroups(df_data, metric, significance):
 
@@ -1750,9 +2085,22 @@ def makeClusteringObject(df_data, df_data_autocorr, significance='Elbow'):
 
 def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True, includeAutocorr=True):
 
-    '''Export a clustering Groups-Subgroups dictionary object to a SpreadSheet.
-    NOTE: linkage data is not exported.
-    '''
+    """Export a clustering Groups-Subgroups dictionary object to a SpreadSheet.
+    Linkage data is not exported.
+
+    Args:
+        ClusteringObject: clustering object
+        saveDir: path of directories to save the object to
+        dataName: label to include in the file name
+        includeData: export data 
+        includeAutocorr: export autocorrelations of data
+
+    Returns:
+        File name of the exported clustering object
+
+    Usage:
+        exportClusteringObject(myObj, '/dir1', 'myObj')
+    """
 
     if not os.path.exists(saveDir):
         os.makedirs(saveDir)
@@ -1792,7 +2140,19 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
 ### Visualization functions #######################################################################
 def makeDataHistograms(df, saveDir, dataName):
 
-    '''Make a histogram for each pandas Series (time point) in a pandas Dataframe.'''
+    """Make a histogram for each pandas Series (time point) in a pandas Dataframe.
+
+    Args:
+        df: DataFrame containing data to visualize
+        saveDir: path of directories to save the object to
+        dataName: label to include in the file name
+
+    Returns:
+        None
+
+    Usage:
+        makeDataHistograms(df, '/dir1', 'myData')
+    """
 
     if not os.path.exists(saveDir):
         os.makedirs(saveDir)
@@ -1835,9 +2195,20 @@ def makeDataHistograms(df, saveDir, dataName):
 
 def makeLombScarglePeriodograms(df, saveDir, dataName):
         
-    '''Make a combined plot of the signal and its Lomb-Scargle periodogram
+    """Make a combined plot of the signal and its Lomb-Scargle periodogram
     for each pandas Series (time point) in a pandas Dataframe.
-    '''
+
+    Args:
+        df: DataFrame containing data to visualize
+        saveDir: path of directories to save the object to
+        dataName: label to include in the file name
+
+    Returns:
+        None
+
+    Usage:
+        makeLombScarglePeriodograms(df, '/dir1', 'myData')
+    """
 
     if not os.path.exists(saveDir):
         os.makedirs(saveDir)
@@ -1893,6 +2264,33 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
                        numberOfVGs=1, groups_ac_colors=['b'], fig=None, printCommunities=False, 
                        fontsize=None, nodesize=None, level=0.55, commLineWidth=0.5, lineWidth=1.0,
                        withLabel=True, withTitle=False):
+
+    """Draw a Visibility graph of data on a provided Matplotlib figure.
+
+    Args:
+        data: array of data to visualize
+        times: times corresponding to each data point, used for labels
+        dataName: label to include in file name
+        coords: coordinates of location of the plot on the figure
+        numberOfVGs: number of plots to add to this figure
+        groups_ac_colors: colors corresponding to different groups of graphs
+        fig: figure object
+        printCommunities: print communities details to screen
+        fontsize: size of labels
+        nodesize: size of nodes
+        level: distance of the community lines to nodes
+        commLineWidth: width of the community lines
+        lineWidth: width of the edges between nodes
+        withLabel: include label on plot
+        withTitle: include title on plot
+
+    Returns:
+        None
+
+    Usage:
+        addVisibilityGraph(exampleData, exampleTimes, fig=fig, fontsize=16, nodesize=700, 
+                            level=0.85, commLineWidth=3.0, lineWidth=2.0, withLabel=False)
+    """
 
     group = int(dataName[:dataName.find('S')].strip('G'))
 
@@ -1984,12 +2382,25 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
         titleText = dataName + ' (size: ' + str(data.shape[0]) + ')' + ' min=%s max=%s' % (np.round(min(data),2), np.round(max(data),2))
         axisVG.set_title(titleText, fontsize=10)
 
-    return
+    return None
 
 
 def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True):
 
-    '''Make Dendrogram-Heatmap plot along with VIsibility graphs.'''
+    """Make Dendrogram-Heatmap plot along with VIsibility graphs.
+
+    Args:
+        ClusteringObject: clustering object
+        saveDir: path of directories to save the object to
+        dataName: label to include in the file name
+        AutocorrNotPeriodogr: export data 
+
+    Returns:
+        None
+
+    Usage:
+        makeDendrogramHeatmap(myObj, '/dir1', 'myData', AutocorrNotPeriodogr=True)
+    """
 
     def addAutocorrelationDendrogramAndHeatmap(ClusteringObject, groupColors, fig, AutocorrNotPeriodogr=AutocorrNotPeriodogr):
 
@@ -2041,7 +2452,7 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
         axisMatrixAC.set_xticks([i for i in range(tempData.shape[1] - 1)])
         axisMatrixAC.set_xticklabels([i + 1 for i in range(tempData.shape[1] - 1)], fontsize=6)
         axisMatrixAC.set_yticks([])
-        axisMatrixAC.set_xlabel('Lag')
+        axisMatrixAC.set_xlabel('Lag' if AutocorrNotPeriodogr else 'Frequency')
         axisMatrixAC.set_title('Autocorrelation' if AutocorrNotPeriodogr else 'Periodogram')
 
         axisColorAC = fig.add_axes([0.9 + 0.065,0.55,0.01,0.35])
@@ -2206,7 +2617,7 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
     
     fig.savefig(saveDir + dataName + '_DendrogramHeatmap.svg', dpi=600) #*.svg
 
-    return
+    return None
 
 ###################################################################################################
 
@@ -2215,7 +2626,22 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
 ### Dataframe functions ###########################################################################
 def prepareDataframe(dataDir, dataFileName, AlltimesFileName):
 
-    '''Make a DataFrame from CSV files.'''
+    """Make a DataFrame from CSV files.
+    
+    Args:
+        dataDir: path of directories pointing to data
+        dataFileName: file name in dataDir
+        AlltimesFileName: file name in dataDir
+
+    Returns:
+        Pandas Dataframe
+
+    Usage:
+        df_data = prepareDataframe(dataDir, dataFileName, AlltimesFileName)
+        df_data.index = pd.MultiIndex.from_tuples([(item.split(':')[1], item.split(':')[0].split('_')[0],
+                                                    (' '.join(item.split(':')[0].split('_')[1:]),)) for item in df_data.index.values], 
+                                                    names=['source', 'id', 'metadata'])
+    """
 
     df = pd.read_csv(dataDir + dataFileName, delimiter=',', header=None)
 
@@ -2228,7 +2654,17 @@ def prepareDataframe(dataDir, dataFileName, AlltimesFileName):
 
 def filterOutAllZeroSignalsDataframe(df):
 
-    '''Filter out all-zero signals from a DataFrame.'''
+    """Filter out all-zero signals from a DataFrame.
+    
+    Args:
+        df: pandas DataFrame
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = filterOutAllZeroSignalsDataframe(df_data)
+   """
 
     print('Filtering out all-zero signals...')
 
@@ -2244,7 +2680,18 @@ def filterOutAllZeroSignalsDataframe(df):
 
 def filterOutFractionZeroSignalsDataframe(df, max_fraction_of_allowed_zeros):
        
-    '''Filter out fraction-zero signals from a DataFrame.'''
+    """Filter out fraction-zero signals from a DataFrame.
+    
+    Args:
+        df: pandas DataFrame
+        max_fraction_of_allowed_zeros: maximum fraction of allowed zeros
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = filterOutFractionZeroSignalsDataframe(df_data, 0.75)
+   """
 
     print('Filtering out low-quality signals (with more than %s%% missing points)...' %(100.*(1.-max_fraction_of_allowed_zeros)))
 
@@ -2262,7 +2709,17 @@ def filterOutFractionZeroSignalsDataframe(df, max_fraction_of_allowed_zeros):
 
 def filterOutFirstPointZeroSignalsDataframe(df):
 
-    '''Filter out out first time point zeros signals from a DataFrame.'''
+    """Filter out out first time point zeros signals from a DataFrame.
+    
+    Args:
+        df: pandas DataFrame
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = filterOutFirstPointZeroSignalsDataframe(df_data)
+   """
 
     print('Filtering out first time point zeros signals...')
 
@@ -2279,7 +2736,17 @@ def filterOutFirstPointZeroSignalsDataframe(df):
 
 def tagMissingValuesDataframe(df):
 
-    '''Tag missing (i.e. zero) values with NaN.'''
+    """Tag missing (i.e. zero) values with NaN.
+    
+    Args:
+        df: pandas DataFrame
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = tagMissingValuesDataframe(df_data)
+    """
 
     print('Tagging missing (i.e. zero) values with NaN...')
 
@@ -2290,7 +2757,19 @@ def tagMissingValuesDataframe(df):
 
 def tagLowValuesDataframe(df, cutoff, replacement):
 
-    '''Tag low values with replacement value.'''
+    """Tag low values with replacement value.
+    
+    Args:
+        df: pandas DataFrame
+        cutoff: values below the "cutoff" are replaced with "replacement" value
+        replacement: replacement value
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = tagLowValuesDataframe(df_data, 1., 1.)
+    """
 
     print('Tagging low values (<=%s) with %s...'%(cutoff, replacement))
 
@@ -2301,7 +2780,18 @@ def tagLowValuesDataframe(df, cutoff, replacement):
 
 def removeConstantSignalsDataframe(df, theta_cutoff):
 
-    '''Remove constant signals.'''
+    """Remove constant signals.
+    
+    Args:
+        df: pandas DataFrame
+        theta_cutoff: parameter for filtering the signals
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = removeConstantSignalsDataframe(df_data, 0.3)
+    """
 
     print('\nRemoving constant genes. Cutoff value is %s' % (theta_cutoff))
 
@@ -2317,7 +2807,17 @@ def removeConstantSignalsDataframe(df, theta_cutoff):
 
 def boxCoxTransformDataframe(df):
 
-    '''Box-cox transform data.'''
+    """Box-cox transform data.
+    
+    Args:
+        df: pandas DataFrame
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = boxCoxTransformDataframe(df_data)
+    """
     
     print('Box-cox transforming raw data...', end='\t', flush=True)
             
@@ -2330,7 +2830,17 @@ def boxCoxTransformDataframe(df):
 
 def modifiedZScoreDataframe(df):
 
-    '''Z-score (Median-based) transform data.'''
+    """Z-score (Median-based) transform data.
+    
+    Args:
+        df: pandas DataFrame
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = modifiedZScoreDataframe(df_data)
+    """
             
     print('Z-score (Median-based) transforming box-cox transformed data...', end='\t', flush=True)
 
@@ -2343,7 +2853,17 @@ def modifiedZScoreDataframe(df):
 
 def normalizeSignalsToUnityDataframe(df):
 
-    '''Normalize signals to unity.'''
+    """Normalize signals to unity.
+    
+    Args:
+        df: pandas DataFrame
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = normalizeSignalsToUnityDataframe(df_data)
+    """
 
     print('Normalizing signals to unity...')
 
@@ -2360,20 +2880,39 @@ def normalizeSignalsToUnityDataframe(df):
 
 def quantileNormalizeDataframe(df):
 
-    '''Quantile Normalize signals.'''
+    """Quantile Normalize signals to normal distribution.
+    
+    Args:
+        df: pandas DataFrame
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = quantileNormalizeDataframe(df_data)
+    """
 
     print('Quantile normalizing signals...')
 
-    df.iloc[:] = quantile_transform(df.values)
+    df.iloc[:] = quantile_transform(df.values, output_distribution='normal')
 
     return df
 
 
 def compareTimeSeriesToPointDataframe(df, point='first'):
 
-    '''Subtract a particular point of each time series (row) of a Dataframe.
-    point='first', 'last', 0, 1, ... , 10, or a value.
-    '''
+    """Subtract a particular point of each time series (row) of a Dataframe.
+    
+    Args:
+        df: pandas DataFrame
+        point: 'first', 'last', 0, 1, ... , 10, or a value.
+
+    Returns:
+        Processed pandas Dataframe
+
+    Usage:
+        df_data = compareTimeSeriesToPointDataframe(df_data)
+    """
 
     independent = True
 
@@ -2394,17 +2933,26 @@ def compareTimeSeriesToPointDataframe(df, point='first'):
     else:
         df.iloc[:] = (df.values.T - point).T
 
-
     return df
 
 
 def compareTwoTimeSeriesDataframe(df1, df2, function=np.subtract, compareAllLevelsInIndex=True, mergeFunction=np.mean):
 
-    '''Create a new Dataframe based on comparison of two existing Dataframes.
-    operation=np.subtract (default), np.add, np.divide, or another <ufunc>.
-    compareAllLevelsInIndex=True (default), if False only "source" and "id" will be compared,
-    input Dataframes are merged with mergeFunction=np.mean (default), np.median, np.max, or another <ufunc>.
-    '''
+    """Create a new Dataframe based on comparison of two existing Dataframes.
+    
+    Args:
+        df1: pandas DataFrame
+        df2: pandas DataFrame
+        function: np.subtract (default), np.add, np.divide, or another <ufunc>.
+        compareAllLevelsInIndex: True (default), if False only "source" and "id" will be compared,
+        mergeFunction: input Dataframes are merged with this function, i.e. np.mean (default), np.median, np.max, or another <ufunc>.
+
+    Returns:
+        New merged pandas Dataframe
+
+    Usage:
+        df_data = compareTwoTimeSeriesDataframe(df_dataH2, df_dataH1, function=np.subtract, compareAllLevelsInIndex=False, mergeFunction=np.median)
+    """
 
     if df1.index.names!=df2.index.names:
         errMsg = 'Index of Dataframe 1 is not of the same shape as index of Dataframe 2!'
@@ -2427,7 +2975,17 @@ def compareTwoTimeSeriesDataframe(df1, df2, function=np.subtract, compareAllLeve
 
 def mergeDataframes(listOfDataframes):
 
-    '''Merge a list of Dataframes (outer join).'''
+    """Merge a list of Dataframes (outer join).
+    
+    Args:
+        listOfDataframes: list of pandas DataFrames
+
+    Returns:
+        New pandas Dataframe
+
+    Usage:
+        df_data = mergeDataframes([df_data1, df_data2])
+    """
 
     if len(listOfDataframes)==0:
         return None
@@ -2440,6 +2998,20 @@ def mergeDataframes(listOfDataframes):
 
 
 def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True):
+
+    """Calculate Lobm-Scargle periodogram of DataFrame.
+    
+    Args:
+        df: pandas DataFrame
+        parallel: calculate in parallel mode (>1 process)
+        NumberOfCPUs: number of processes to create if parallel
+
+    Returns:
+        New pandas Dataframe
+
+    Usage:
+        df_periodograms = getLobmScarglePeriodogramOfDataframe(df_data)
+    """
 
     if parallel:
 
@@ -2469,7 +3041,7 @@ def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True)
 
 def hdf5_usage_information():
 
-    '''Store/export any lagge datasets in hdf5 format via 'pandas' or 'h5py'
+    """Store/export any lagge datasets in hdf5 format via 'pandas' or 'h5py'
 
     # mode='w' creates/recreates file from scratch
     # mode='a' creates (if no file exists) or appends to the existing file, and reads it
@@ -2506,7 +3078,7 @@ def hdf5_usage_information():
 
     tempFile = h5py.File('data.h5', 'r')
     array_example = tempFile['arrays/my_array'].value
-    '''
+    """
 
     print(hdf5_usage_information.__doc__)
 
@@ -2520,6 +3092,27 @@ def hdf5_usage_information():
 def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05,
                              NumberOfRandomSamples=10**5, NumberOfCPUs=4, frequencyBasedClassification=False, 
                              calculateAutocorrelations=False, calculatePeriodograms=False):
+        
+    """Time series classification.
+    
+    Args:
+        df_data: pandas DataFrame
+        dataName: data name, e.g. "myData_1"
+        saveDir: path of directories poining to data storage
+        hdf5fileName: preferred hdf5 file name and location
+        p_cutoff: significance cutoff signals selection
+        NumberOfRandomSamples: size of the bootstrap distribution to generate
+        NumberOfCPUs: number of processes allowed to use in calculations
+        frequencyBasedClassification: whether Autocorrelation of Frequency based
+        calculateAutocorrelations: whether to recalculate Autocorrelations
+        calculatePeriodograms: whether to recalculate Periodograms
+
+    Returns:
+        None
+
+    Usage:
+        timeSeriesClassification(df_data, dataName, saveDir, NumberOfRandomSamples = 10**5, NumberOfCPUs = 4, p_cutoff = 0.05, frequencyBasedClassification=False)
+    """
 
     print('Processing', dataName)
 
@@ -2636,10 +3229,28 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
         write(df_classifier[lagSignigicantIndex], saveDir + dataName +'_selected%s_LAG%s'%(info,lag), hdf5fileName=hdf5fileName)
         write(df_data[lagSignigicantIndex], saveDir + dataName +'_selectedTimeSeries%s_LAG%s'%(info,lag), hdf5fileName=hdf5fileName)
                 
-    return
+    return None
 
 
 def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=False, AutocorrNotPeriodogr=True):
+
+    """Visualize time series classification.
+    
+    Args:
+        dataName: data name
+        saveDir: path of directories poining to data storage
+        numberOfLagsToDraw: first top-N lags (or frequencies) to draw
+        hdf5fileName: HDF5 storage path and name
+        exportClusteringObjects: export clustering objects to xlsx files
+        writeClusteringObjectToBinaries: export clustering objects to binary (pickle) files
+        AutocorrNotPeriodogr: label to print on the plots
+
+    Returns:
+        None
+
+    Usage:
+        visualizeTimeSeriesClassification('myData_1', '/dir1/dir2/', AutocorrNotPeriodogr=True, writeClusteringObjectToBinaries=True)
+    """
 
     info = 'Autocorrelations' if AutocorrNotPeriodogr else 'Periodograms'
 
@@ -2679,6 +3290,6 @@ def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, h
     internalDraw('SpikeMax')
     internalDraw('SpikeMin')
 
-    return
+    return None
 
 ###################################################################################################

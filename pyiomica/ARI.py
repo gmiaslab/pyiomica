@@ -3,6 +3,15 @@ from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.metrics import adjusted_rand_score
 
 def runForClusterNum(arguments):
+    
+    '''(cluster_num, data_array, trials_to_do)
+
+    # Example:
+    instPool = multiprocessing.Pool(processes = NumberOfAvailableCPUs)
+    scores = instPool.map(ARI.runForClusterNum, [(cluster_num, copy.deepcopy(data), trials_to_do) for cluster_num in range(cluster_num_min, cluster_num_max + 1)])
+    instPool.close()
+    instPool.join()
+    '''
 
     np.random.seed()
 
