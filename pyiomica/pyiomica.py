@@ -20,6 +20,19 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 
+import os
+import pickle
+import gzip
+import copy
+import multiprocessing
+import urllib.request
+import shutil
+import h5py
+import pymysql
+import datetime
+import json
+import numba
+
 import scipy
 import scipy.signal
 import scipy.stats
@@ -28,27 +41,12 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.interpolate import UnivariateSpline
 
 import sklearn
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans
 from sklearn.preprocessing import quantile_transform
-from sklearn.metrics import silhouette_score, silhouette_samples, pairwise_distances
+from sklearn.metrics import silhouette_score, silhouette_samples, pairwise_distances, adjusted_rand_score
 from sklearn.manifold import TSNE
 
-import os
-import pickle
-import gzip
-import copy
-import multiprocessing
-
-from pyiomica import ARI
-from pyiomica import VisibilityGraph as vg
-
-import urllib.request
-import requests
-import shutil
-import h5py
-import pymysql
-import datetime
-import json
+numba.config.NUMBA_DEFAULT_NUM_THREADS = 1
 
 ### Utility functions #############################################################################
 def createDirectories(path):
@@ -63,7 +61,6 @@ def createDirectories(path):
 
     Usage:
         createDirectories("/pathToFolder1/pathToSubFolder2")
-    
     """
 
     if path=='':
@@ -147,7 +144,7 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFor
         else:
             dataset = hdf5file[key]
             if dataset.shape!=data.shape:
-                dataset_example.resize(data.shape)
+                dataset.resize(data.shape)
             dataset[...] = data
         hdf5file[key].attrs['gtype'] = 'np'
     else:
@@ -171,7 +168,7 @@ def read(fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = F
     Args:
         fileName: path of directories ending with the file name
         withPKLZextension: add ".pklz" to a pickle file
-        hdf5fileName: path of directories ending with the file name. If None then data is pickled.
+        hdf5fileName: path of directories ending with the file name. If None then data is pickled
         jsonFormat: save data into compressed json file 
     
     Returns:
@@ -269,63 +266,16 @@ for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirector
 
 ### Annotations and Enumerations ##################################################################
 
-def ReactomeAnalysis(inputData):
-
-    """Reactome POST-GET-style Analysis.
-    
-    Args: 
-        arg1: text
-
-    Returns:
-        enrichmentReturn
-
-    Usage:
-        text
-    """
-
-    uploadURL = "https://reactome.org/AnalysisService/identifiers/projection?interactors=false&pageSize=20&page=1&sortBy=ENTITIES_PVALUE&order=ASC&resource=TOTAL"
-
-    def PARAMS(item):
-
-        return {"Method": "POST", "Headers": {"accept": "application/json", "content-type": "text/plain"}, "Body": str(item)}
-
-    # POST with JSON 
-    import json
-    r = requests.post(uploadURL, data=json.dumps({"Method": "POST", "Headers": {"accept": "application/json", "content-type": "text/plain"}, "Body": str('#GBM Uniprot\nP01023\nQ99758\nO15439\nO43184')}))
-
-    # Response, status etc
-    r.text
-    r.status_code
-
-    #data = {'api_dev_key':API_KEY, 
-    #    'api_option':'paste', 
-    #    'api_paste_code':source_code, 
-    #    'api_paste_format':'python'}
-    
-    #queryReactome = requests.post(url = uploadURL, params = PARAMS(inputData[0])) 
-
-    #temp = queryReactome.text
-    
-    #queryReactome = Query[All, All, All /* (URLExecute[
-    #        HTTPRequest["https://reactome.org/AnalysisService/identifiers/projection?interactors=false&pageSize=20&page=1&sortBy=ENTITIES_PVALUE&order=ASC&resource=TOTAL", 
-    #        PARAMS(item)], "RawJSON"] &)]@inputData
-
-
-    ##downloadURL = "https://reactome.org/AnalysisService/identifiers/projection?interactors=false&pageSize=20&page=1&sortBy=ENTITIES_PVALUE&order=ASC&resource=TOTAL"
-    enrichmentReturn = None
-    #enrichmentReturn = Query[All, All, "summary", "token" /* (If[MissingQ[#], <|"Missing"|>, URLExecute[
-    #        HTTPRequest["https://reactome.org/AnalysisService/download/" <> # <> "/pathways/TOTAL/result.csv" , 
-    #        <|"Method" -> "GET", "Headers" -> {"accept" -> "application/json", "content-type" ->   "text/plain"}|>], "CSV"]] &)]@ queryReactome
-
-    return enrichmentReturn
-
-
 def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, Species, totalMembers,
                             pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
                             AssignmentForwardDictionary, AssignmentReverseDictionary, prefix, infoDict):
 
     """Analysis for Multi-Omics or Single-Omics input list
-    The function is called internally and not intended to be used directly by user."""
+    The function is used internally and not intended to be used directly by user.
+    
+    Usage:
+        Intended for internal use
+    """
     
     listData = data[list(data.keys())[0]]
 
@@ -419,7 +369,8 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
     """Generate Open Biomedical Ontologies (OBO) Gene Ontology (GO) vocabulary dictionary.
     
     Args: 
-        FileURL: URL to GO terms definitions
+        FileURL: provides the location of the Open Biomedical Ontologies (OBO) Gene Ontology (GO) 
+        file in case this will be downloaded from the web
         ImportDirectly: import from URL regardles is the file already exists
         MathIOmicaDataDirectory: path of directories to data storage
         OBOFile: name of file to store data in (file will be zipped)
@@ -493,11 +444,15 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
     
     Args: 
         geneUCSCTable: path to a geneUCSCTable file
-        UCSCSQLString: query for UCSC SQL server
-        UCSCSQLSelectLabels: labels from geneUCSCTable to save
+        UCSCSQLString: an association to be used to obtain data from the UCSC Browser tables. The key of the association must 
+        match the Species option value used (default: human). The value for the species corresponds to the actual MySQL command used
+        UCSCSQLSelectLabels: an association to be used to assign key labels for the data improted from the UCSC Browser tables. 
+        The key of the association must match the Species option value used (default: human). The value is a multi component string 
+        list corresponding to the matrices in the MathIOmica data file, or the tables used in the MySQL query provided by UCSCSQLString
         ImportDirectly: import from URL regardles is the file already exists
-        Species: species to laod
-        KEGGUCSCSplit: return KEGGUCSCSplit key only
+        Species: species considered in the calculation, by default corresponding to human
+        KEGGUCSCSplit: a two component list, {True/False, label}. If the first component is set to True the initially imported KEGG IDs, 
+        identified by the second component label,  are split on + string to fix nomenclature issues, retaining the string following +
 
     Returns:
         Dictionary
@@ -542,21 +497,21 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
         ucscDatabase = pymysql.connect("genome-mysql.cse.ucsc.edu","genomep","password")
 
         if ucscDatabase==None:
-           print("Could not establish connection to UCSC. Please try again or add MathIOmica's dictionary manually at ", geneUCSCTable)
-           return
+            print("Could not establish connection to UCSC. Please try again or add MathIOmica's dictionary manually at ", geneUCSCTable)
+            return
 
         #Prepare a cursor object using cursor() method
         ucscDatabaseCursor = ucscDatabase.cursor()
 
         try:
-           #Execute the SQL command
-           ucscDatabaseCursor.execute(UCSCSQLString[Species])
+            #Execute the SQL command
+            ucscDatabaseCursor.execute(UCSCSQLString[Species])
 
-           #Fetch all the rows in a list of lists.
-           termTable = ucscDatabaseCursor.fetchall()
+            #Fetch all the rows in a list of lists.
+            termTable = ucscDatabaseCursor.fetchall()
 
         except:
-           print ("Error: unable to fetch data")
+            print ("Error: unable to fetch data")
 
         termTable = np.array(termTable).T
         termTable[np.where(termTable=="")] = None
@@ -588,15 +543,20 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
     """Download and create gene associations and restrict to required background set.
 
     Args: 
-        MathIOmicaDataDirectory: path to a geneUCSCTable file
+        MathIOmicaDataDirectory: the directory where the default MathIOmica package data is stored
         ImportDirectly: import from URL regardles is the file already exists
-        BackgroundSet: background list to create annotation projection to limited background space
-        Species: species
-        LengthFilterFunction: function to apply as a filter
+        BackgroundSet: background list to create annotation projection to limited background space, involves
+        considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should 
+        be considered as the background for the calculation
+        Species: species considered in the calculation, by default corresponding to human
+        LengthFilterFunction: performs computations of membership in pathways/ontologies/groups/sets, 
+        that specifies which function to use to filter the number of members a reported category has 
+        compared to the number typically provided by LengthFilter 
         LengthFilter: argument for LengthFilterFunction
-        GOFileName: GO file name
-        GOFileColumns: columns to use in the GO file
-        GOURL: URL to GO annotations
+        GOFileName: the name for the specific GO file to download from the GOURL if option ImportDirectly is set to True
+        GOFileColumns: columns to use for IDs and GO:accessions respectively from the downloaded GO annotation file, 
+        used when ImportDirectly is set to True to obtain a new GO association file
+        GOURL: the location (base URL) where the GO association annotation files are downloaded from
 
     Returns:
         IDToGO and GOToID dictionary
@@ -698,9 +658,10 @@ def obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions, Augme
     if not exist then create variable.
 
     Args:
-        GeneDictionary: preferred gene dictionary
-        GetGeneDictionaryOptions: options to pass to function GetGeneDictionary
-        AugmentDictionary: modify the dictionary, otherwise owerwrite
+        GeneDictionary: an existing variable to use as a gene dictionary in annotations. 
+        If set to None the default ConstantGeneDictionary will be used
+        GetGeneDictionaryOptions: a list of options that will be passed to this internal GetGeneDictionary function
+        AugmentDictionary: a choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
 
     Returns:
         None
@@ -727,7 +688,7 @@ def obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions, Augme
 
 
 def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=["UniProt ID","Gene Symbol"], OutputID="UniProt ID",
-                 GOAnalysisAssignerOptions={}, BackgroundSet="All", Species="human", OntologyLengthFilter=2, ReportFilter=1, ReportFilterFunction=np.greater_equal,
+                 GOAnalysisAssignerOptions={}, BackgroundSet=[], Species="human", OntologyLengthFilter=2, ReportFilter=1, ReportFilterFunction=np.greater_equal,
                  pValueCutoff=0.05, TestFunction=lambda n, N, M, x: 1. - scipy.stats.hypergeom.cdf(x-1, M, n, N), 
                  HypothesisFunction=lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"], 
                  FilterSignificant=True, OBODictionaryVariable=None,
@@ -737,24 +698,34 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
 
     Args:
         data: data to analyze
-        GetGeneDictionaryOptions: options to pass to function GetGeneDictionary
-        AugmentDictionary: modify the dictionary, otherwise owerwrite
-        InputID: possible input IDs
-        OutputID: output ID
-        GOAnalysisAssignerOptions: options to pass to function GOAnalysisAssigner
-        BackgroundSet: background list to create annotation projection to limited background space
-        Species: species
-        OntologyLengthFilter: function to apply as a filter
-        ReportFilter: report length filter function argumnet
-        ReportFilterFunction: report length filter function 
-        HypothesisFunction: hypothesis function
-        FilterSignificant: keep only significant entries
-        OBODictionaryVariable: OBO dictionary
-        OBOGODictionaryOptions: OBO dictionary options
-        MultipleListCorrection: used to correct for multiple lists, e.g protein+RNA
-        MultipleList: whether input is multiple omics or single - for non-omics-object inputs
-        AdditionalFilter: not implemented yet
-        GeneDictionary: preferred gene dictionary
+        GetGeneDictionaryOptions: a list of options that will be passed to this internal GetGeneDictionary function
+        AugmentDictionary: a choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
+        InputID:  kind of identifiers/accessions used as input
+        OutputID: kind of IDs/accessions to convert the input IDs/accession numbers in the function's analysis
+        GOAnalysisAssignerOptions: a list of options that will be passed to the internal GOAnalysisAssigner function
+        BackgroundSet: background list to create annotation projection to limited background space, involves
+        considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should be 
+        considered as the background for the calculation
+        Species: the species considered in the calculation, by default corresponding to human
+        OntologyLengthFilter: function that can be used to set the value for which terms to consider in the computation, 
+        by excluding GO terms that have fewer items compared to the OntologyLengthFilter value. It is used by the internal
+        GOAnalysisAssigner function
+        ReportFilter: functions that use pathways/ontologies/groups, and provides a cutoff for membership in ontologies/pathways/groups
+        in selecting which terms/categories to return. It is typically used in conjunction with ReportFilterFunction
+        ReportFilterFunction: specifies what operator form will be used to compare against ReportFilter option value in 
+        selecting which terms/categories to return
+        HypothesisFunction: allows the choice of function for implementing multiple hypothesis testing considerations
+        FilterSignificant: can be set to True to filter data based on whether the analysis result is statistically significant, 
+        or if set to False to return all membership computations
+        OBODictionaryVariable: a GO annotation variable. If set to None, OBOGODictionary will be used internally to 
+        automatically generate the default GO annotation
+        OBOGODictionaryOptions: a list of options to be passed to the internal OBOGODictionary function that provides the GO annotations
+        MultipleListCorrection: specifies whether or not to correct for multi-omics analysis. The choices are None, Automatic, 
+        or a custom number, e.g protein+RNA
+        MultipleList: specifies whether the input accessions list constituted a multi-omics list input that is annotated so
+        AdditionalFilter: provides additional filtering that may be applied to the standard function output structure to be returned
+        GeneDictionary: points to an existing variable to use as a gene dictionary in annotations. If set to None 
+        the default ConstantGeneDictionary will be used
 
     Returns:
         Enrichment dictionary
@@ -775,7 +746,7 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
     obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions, AugmentDictionary)
     
     #Get the right GO terms for the BackgroundSet requested and correct Species
-    Assignment = GOAnalysisAssigner(BackgroundSet=[], Species=Species , LengthFilter=OntologyLengthFilter) if GOAnalysisAssignerOptions=={} else GOAnalysisAssigner(**GOAnalysisAssignerOptions)
+    Assignment = GOAnalysisAssigner(BackgroundSet=BackgroundSet, Species=Species , LengthFilter=OntologyLengthFilter) if GOAnalysisAssignerOptions=={} else GOAnalysisAssigner(**GOAnalysisAssignerOptions)
     
     #The data may be a subgroup from a clustering object, i.e. a pd.DataFrame
     if type(data) is pd.DataFrame:
@@ -796,7 +767,6 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
         elif MultipleListCorrection=='Automatic':
             multiCorr = 1
             for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
-                dataClass = data[keyGroup]
                 for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
                     multiCorr = max(max(np.unique(data[keyGroup][keySubGroup]['data'].index.get_level_values('id'), return_counts=True)[1]), multiCorr)
         else:
@@ -825,7 +795,6 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
                 multiCorr = 1
             elif MultipleList and MultipleListCorrection=='Automatic':
                 multiCorr = max(np.unique([item[0] for item in data[key]], return_counts=True)[1])
-                pass
             else:
                 multiCorr = MultipleListCorrection
 
@@ -836,7 +805,7 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
                                                 prefix='', infoDict=OBODict))
 
         #If a single list was provided, return the association for Gene Ontologies
-        returning = returning[key] if listToggle else returning
+        returning = returning['dummy'] if listToggle else returning
 
     return returning
 
@@ -1022,7 +991,7 @@ def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQ
         queryFile = os.path.join(MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv")
 
         if os.path.isfile(queryFile): 
-           os.remove(queryFile)
+            os.remove(queryFile)
 
         urllib.request.urlretrieve("http://rest.kegg.jp/list/" + KEGGQuery1 + ("" if KEGGQuery2=="" else "/" + KEGGQuery2), queryFile)
 
@@ -1187,7 +1156,6 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
         elif MultipleListCorrection=='Automatic':
             multiCorr = 1
             for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
-                dataClass = data[keyGroup]
                 for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
                     multiCorr = max(max(np.unique(data[keyGroup][keySubGroup]['data'].index.get_level_values('id'), return_counts=True)[1]), multiCorr)
         else:
@@ -1215,7 +1183,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
             if MultipleListCorrection==None:
                 multiCorr = 1
             elif MultipleList and MultipleListCorrection=='Automatic':
-               multiCorr = max(np.unique([item[0] for item in data[key]], return_counts=True)[1])
+                multiCorr = max(np.unique([item[0] for item in data[key]], return_counts=True)[1])
             else:
                 multiCorr = MultipleListCorrection
 
@@ -1226,7 +1194,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
                                                 prefix='hsa:' if AnalysisType=='Genomic' else '', infoDict=keggDict))
 
         #If a single list was provided
-        returning = returning[key] if listToggle else returning
+        returning = returning['dummy'] if listToggle else returning
 
     return returning
 
@@ -1560,7 +1528,7 @@ def ampSquaredNormed(func, freq, times, data):
 
     Usage:
         coef = ampSquaredNormed(np.cos, freguency, inputTimesNormed, inputDataCentered)
-        *Intended for internal use only.
+        Intended for internal use only.
     """
 
     omega_freq = 2. * (np.pi) * freq
@@ -1695,7 +1663,7 @@ def getSpikes(inputData, func, cutoffs):
 
 def getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
 
-    """Calculat spikes cuttoffs from a bootstrap of provided data,
+    """Calculate spikes cuttoffs from a bootstrap of provided data,
     gived the significance cutoff p_cutoff.
 
     Args:
@@ -1732,7 +1700,7 @@ def getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
     return cutoffs
 
 
-def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,NormalizeIntensities=False,OversamplingRate=1,PairReturn=False,UpperFrequencyFactor=1):
+def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,NormalizeIntensities=False,OversamplingRate=1,UpperFrequencyFactor=1):
 
     """Calculate Lomb-Scargle periodogram.
 
@@ -1743,7 +1711,6 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
         FrequenciesOnly: return frequencies only
         NormalizeIntensities: normalize intensities to unity
         OversamplingRate: oversampling rate
-        PairReturn: 
         UpperFrequencyFactor: upper frequency factor
 
     Returns:
@@ -1792,9 +1759,6 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
         periodogram = periodogram / np.sqrt(np.dot(periodogram,periodogram))
 
     returning = np.vstack((freq, periodogram))
-
-    if PairReturn:
-        returning = np.transpose(returning)
 
     return returning
 
@@ -2055,7 +2019,7 @@ def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_
 
     print('Testing data clustering in a range of %s-%s clusters' % (cluster_num_min,cluster_num_max))
                 
-    scores = runCPUs(numberOfAvailableCPUs, ARI.runForClusterNum, [(cluster_num, copy.deepcopy(data), trials_to_do) for cluster_num in range(cluster_num_min, cluster_num_max + 1)])
+    scores = runCPUs(numberOfAvailableCPUs, runForClusterNum, [(cluster_num, copy.deepcopy(data), trials_to_do) for cluster_num in range(cluster_num_min, cluster_num_max + 1)])
 
     if printScores: 
         print(scores)
@@ -2114,6 +2078,46 @@ def get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric):
             n_clusters = temp_n_clusters
 
     return n_clusters - 1
+
+
+def runForClusterNum(arguments):
+    
+    """Calculate Adjusted Rand Index of the data for a range of cluster numbers.
+
+    Args:
+        arguments: a tuple of three parameters int the form
+        (cluster_num, data_array, trials_to_do), where
+        cluster_num: maximum number of clusters
+        data_array: data to test
+        trials_to_do: number of trials for each cluster number
+
+    Returns:
+        Numpy array
+
+    Usage:
+        instPool = multiprocessing.Pool(processes = NumberOfAvailableCPUs)
+        scores = instPool.map(runForClusterNum, [(cluster_num, copy.deepcopy(data), trials_to_do) for cluster_num in range(cluster_num_min, cluster_num_max + 1)])
+        instPool.close()
+        instPool.join()
+    """
+
+    np.random.seed()
+
+    cluster_num, data_array, trials_to_do = arguments
+
+    print(cluster_num, end=', ', flush=True)
+
+    labels = [KMeans(n_clusters=cluster_num).fit(data_array).labels_ for i in range(trials_to_do)]
+
+    agreement_matrix = np.zeros((trials_to_do,trials_to_do))
+
+    for i in range(trials_to_do):
+        for j in range(trials_to_do):
+            agreement_matrix[i, j] = adjusted_rand_score(labels[i], labels[j]) if agreement_matrix[j, i] == 0 else agreement_matrix[j, i]
+
+    selected_data = agreement_matrix[np.triu_indices(agreement_matrix.shape[0],1)]
+
+    return np.array((cluster_num, np.mean(selected_data), np.std(selected_data)))
 
 
 def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation', significance='Elbow'):
@@ -2252,6 +2256,154 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
     print('Saved clustering object to:', fileName)
 
     return fileName
+
+###################################################################################################
+
+
+
+### Visibility graph auxilary functions ###########################################################
+@numba.jit(cache=True)
+def getAdjecencyMatrixOfVisibilityGraph(data, times):
+
+    """Calculate adjecency matrix of visibility graph.
+    JIT-accelerated version (a bit faster than NumPy-accelerated version).
+    Allows use of Multiple CPUs.
+
+    Args:
+        data: Numpy 2-D array of floats
+        times: Numpy 1-D array of floats
+
+    Returns:
+        Adjecency matrix
+
+    Usage:
+        A = getAdjecencyMatrixOfVisibilityGraph_serial(data, times)
+    """
+
+    dimension = len(data)
+
+    V = np.zeros((dimension,dimension))
+
+    for i in range(dimension):
+        for j in range(i + 1, dimension):
+            V[i,j] = V[j,i] = (data[i] - data[j]) / (times[i] - times[j])
+
+    A = np.zeros((dimension,dimension))
+
+    for i in range(dimension):
+        for j in range(i + 1, dimension):
+            no_conflict = True
+
+            for a in list(range(i+1,j)):
+                if V[a,i] > V[j,i]:
+                    no_conflict = False
+                    break
+
+            if no_conflict:
+                A[i,j] = A[j,i] = 1
+
+    return A
+
+
+def getAdjecencyMatrixOfVisibilityGraph_NUMPY(data, times):
+
+    """Calculate adjecency matrix of visibility graph.
+    NumPy-accelerated version. Somewhat slower than JIT-accelerated version.
+    Use in serial applications.
+
+    Args:
+        data: Numpy 2-D array of floats
+        times: Numpy 1-D array of floats
+
+    Returns:
+        Adjecency matrix
+
+    Usage:
+        A = getAdjecencyMatrixOfVisibilityGraph_serial(data, times)
+    """
+
+    dimension = len(data)
+
+    V = (np.subtract.outer(data, data))/(np.subtract.outer(times, times) + np.identity(dimension))
+
+    A = np.zeros((dimension,dimension))
+
+    for i in range(dimension):
+        if i<dimension-1:
+            A[i,i+1] = A[i+1,i] = 1
+
+        for j in range(i + 2, dimension):
+            if np.max(V[i+1:j,i])<=V[j,i]:
+                A[i,j] = A[j,i] = 1
+
+    return A
+
+
+@numba.jit(cache=True)
+def getAdjecencyMatrixOfHorizontalVisibilityGraph(data):
+
+    """Calculate adjecency matrix of horizontal visibility graph.
+    JIT-accelerated version (a bit faster than NumPy-accelerated version).
+    Single-threaded beats NumPy up to 2k data sizes.
+    Allows use of Multiple CPUs.
+
+    Args:
+        data: Numpy 2-D array of floats
+
+    Returns:
+        Adjecency matrix
+
+    Usage:
+        A = getAdjecencyMatrixOfHorizontalVisibilityGraph(data)
+    """
+
+    A = np.zeros((len(data),len(data)))
+
+    for i in range(len(data)):
+        for j in range(i + 1, len(data)):
+            no_conflict = True
+
+            for a in list(range(i+1,j)):
+                if data[a] > data[i] or data[a] > data[j]:
+                    no_conflict = False
+                    break
+
+            if no_conflict:
+                A[i,j] = A[j,i] = 1
+
+    return A
+
+
+def getAdjecencyMatrixOfHorizontalVisibilityGraph_NUMPY(data):
+
+    """Calculate adjecency matrix of horizontal visibility graph.
+    NumPy-accelerated version.
+    Use with datasets larger than 2k.
+    Use in serial applications.
+
+    Args:
+        data: Numpy 2-D array of floats
+
+    Returns:
+        Adjecency matrix
+
+    Usage:
+        A = getAdjecencyMatrixOfHorizontalVisibilityGraph_NUMPY(data)
+    """
+
+    dimension = len(data)
+
+    A = np.zeros((dimension,dimension))
+
+    for i in range(dimension):
+        if i<dimension-1:
+            A[i,i+1] = A[i+1,i] = 1
+
+        for j in range(i + 2, dimension):
+            if np.max(data[i+1:j])<=min(data[i], data[j]):
+                A[i,j] = A[j,i] = 1
+
+    return A
 
 ###################################################################################################
 
@@ -2432,7 +2584,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
         data = pd.DataFrame(data=data).apply(imputeWithMedian, axis=1).apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
 
     axisVG = fig.add_axes([x1,y1,x2 - x1,y2 - y1])
-    graph_nx = nx.from_numpy_matrix(vg.getAdjecencyMatrixOfVisibilityGraph(data, times))
+    graph_nx = nx.from_numpy_matrix(getAdjecencyMatrixOfVisibilityGraph(data, times))
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list('GR', [(0, 1, 0), (1, 0, 0)], N=1000)
 
     pos = nx.circular_layout(graph_nx)
@@ -2455,7 +2607,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
         return graph_nx, node_to_remove
 
     list_of_nodes = []
-    graph_nx_inv = nx.from_numpy_matrix(vg.getAdjecencyMatrixOfVisibilityGraph(-data, times))
+    graph_nx_inv = nx.from_numpy_matrix(getAdjecencyMatrixOfVisibilityGraph(-data, times))
     for i in range(6):
         graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
         list_of_nodes.append(node)
@@ -2737,6 +2889,101 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
     
     fig.savefig(saveDir + dataName + '_DendrogramHeatmap.svg', dpi=600) #*.svg
 
+    return None
+
+
+def PlotVisibilityGraph(A, data, times, fileName, id):
+
+    """Bar-plot style visibility graph.
+
+    Args:
+        A: Adjecency matrix
+        data: Numpy 2-D array of floats
+        times: Numpy 1-D array of floats
+        fileName: name of the figure file to save
+        id: label to add to the figure title
+
+    Returns:
+        None
+
+    Usage:
+        PlotVisibilityGraph(A, data, times, 'FIgure.png', 'Test Data')
+    """
+
+    fig, ax = plt.subplots(figsize=(8,4))
+    ax.bar(times, data, width = 0.03, color='r', align='center', zorder=-np.inf)
+    ax.scatter(times, data, color='b')
+
+    for i in range(A.shape[0]):
+        for j in range(A.shape[1]):
+            if i>j and A[i,j] == 1:
+                ax.annotate(s='', xy=(times[i],data[i]), xytext=(times[j],data[j]), 
+                            arrowprops=dict(arrowstyle='<->', shrinkA=0, shrinkB=0,linestyle='--'))
+
+    ax.set_title('%s Time Series'%(id), fontdict={'color': 'k'})
+    ax.set_xlabel('Times', fontsize=8)
+    ax.set_ylabel('Signal intensity', fontsize=8)
+    ax.set_xticks(times)
+    ax.set_xticklabels([str(item)[:-2]+' hr' for item in np.round(times,0)],fontsize=10, rotation=90)
+    ax.set_yticks([])
+
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(True)
+
+    fig.tight_layout()
+    fig.savefig(fileName, dpi=600)
+    plt.close(fig)
+
+    return None
+
+
+def PlotHorizontaVisibilityGraph(A, data, times, fileName, id):
+    
+    """Bar-plot style horizontal visibility graph.
+
+    Args:
+        A: Adjecency matrix
+        data: Numpy 2-D array of floats
+        times: Numpy 1-D array of floats
+        fileName: name of the figure file to save
+        id: label to add to the figure title
+
+    Returns:
+        None
+
+    Usage:
+        PlotHorizontaVisibilityGraph(A, data, times, 'FIgure.png', 'Test Data')
+    """
+
+    fig, ax = plt.subplots(figsize=(8,4))
+    ax.bar(times, data, width = 0.03, color='r', align='center', zorder=-np.inf)
+    ax.scatter(times, data, color='b')
+
+    for i in range(A.shape[0]):
+        for j in range(A.shape[1]):
+            if i>j and A[i,j] == 1:
+                level = np.min([data[i],data[j]])
+                ax.annotate(s='', xy=(times[i],level), xytext=(times[j],level), 
+                            arrowprops=dict(arrowstyle='<->', shrinkA=0, shrinkB=0,linestyle='--'))
+
+    ax.set_title('%s Time Series'%(id), fontdict={'color': 'k'})
+    ax.set_xlabel('Times', fontsize=8)
+    ax.set_ylabel('Signal intensity', fontsize=8)
+    ax.set_xticks(times)
+    ax.set_xticklabels([str(item)[:-2]+' hr' for item in np.round(times,0)],fontsize=10, rotation=90)
+    ax.set_yticks([])
+
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(True)
+
+    fig.tight_layout()
+    fig.savefig(fileName, dpi=600)
+    plt.close(fig)
+    
     return None
 
 ###################################################################################################
