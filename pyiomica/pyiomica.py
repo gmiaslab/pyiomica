@@ -1506,7 +1506,17 @@ def modifiedZScore(subset):
 def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
 
     """Power transform from scipy.stats
-    subset: 1D numpy array
+
+    Args:
+        subset: pandas Series.
+        lmbda: Lambda parameter, if not specified optimal value will be determined
+        giveLmbda: also return Lambda value
+
+    Returns:
+        Transformed subset and Lambda parameter
+
+    Usage:
+        myData = boxCoxTransform(myData)
     """
 
     where_negative = np.where(subset < 0)
@@ -1538,10 +1548,19 @@ def ampSquaredNormed(func, freq, times, data):
 
     """Lomb-Scargle core translated from MathIOmica.m
     Calculate the different frequency components of our spectrum: project the cosine/sine component and normalize it:
-    func: Sin or Cos
-    freq: frequencies (1D array of floats)
-    times: input times (starting point adjusted w.r.t.dataset times), Zero-padded (is it???)
-    data: input Data with the mean subtracted from it, before zero-padding (for sure???)
+
+    Args:
+        func: Sin or Cos
+        freq: frequencies (1D array of floats)
+        times: input times (starting point adjusted w.r.t.dataset times), Zero-padded
+        data: input Data with the mean subtracted from it, before zero-padding.
+
+    Returns:
+        Squared amplitude normalized.
+
+    Usage:
+        coef = ampSquaredNormed(np.cos, freguency, inputTimesNormed, inputDataCentered)
+        *Intended for internal use only.
     """
 
     omega_freq = 2. * (np.pi) * freq
@@ -1556,9 +1575,17 @@ def ampSquaredNormed(func, freq, times, data):
 def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1):
     
     """Autocorrelation from MathIOmica.m
-    inputTimes: times corresponding to provided data points (1D array of floats)
-    inputData: data points (1D array of floats)
-    inputSetTimes: a complete set of all possible N times during which data could have been collected
+
+    Args:
+        inputTimes: times corresponding to provided data points (1D array of floats)
+        inputData: data points (1D array of floats)
+        inputSetTimes: a complete set of all possible N times during which data could have been collected.
+
+    Returns:
+        Array of time lags with corresponding autocorrelations
+
+    Usage:
+        result = autocorrelation(inputTimes, inputData, inputSetTimes)
     """
 
     #InverseAutocovariance from MathIOmica.m
@@ -1617,7 +1644,17 @@ def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1
 
 def pAutocorrelation(args):
 
-    """Wrapper of Autocorrelation function for use with Multiprocessing."""
+    """Wrapper of Autocorrelation function for use with Multiprocessing.
+
+    Args:
+        args: a tuple of arguments in the form (inputTimes, inputData, inputSetTimes)
+
+    Returns:
+        Array of time lags with corresponding autocorrelations
+
+    Usage:
+        result = pAutocorrelation((inputTimes, inputData, inputSetTimes))
+    """
 
     inputTimes, inputData, inputSetTimes = args
     
@@ -1626,8 +1663,19 @@ def pAutocorrelation(args):
 
 def getSpikes(inputData, func, cutoffs):
 
-    """inputData: data points (2D array of floats), rows are normalized signals
-    func: np.max or np.min
+    """Get sorted index of signals with statistically significant spikes,
+    i.e. those that pass the provided cutoff.
+
+    Args:
+        inputData: data points (2D array of floats) where rows are normalized signals
+        func: np.max or np.min
+        cutoffs: a dictionary of cutoff values
+
+    Returns:
+        Index of data with statistically significant spikes
+
+    Usage:
+        index = getSpikes(inputData, np.max, cutoffs)
     """
 
     data = inputData.copy()
@@ -1647,9 +1695,19 @@ def getSpikes(inputData, func, cutoffs):
 
 def getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
 
-    """df_data:
-    p_cutoff:
-    NumberOfRandomSamples:
+    """Calculat spikes cuttoffs from a bootstrap of provided data,
+    gived the significance cutoff p_cutoff.
+
+    Args:
+        df_data: pandas DataFrame where rows are normalized signals
+        p_cutoff: p-Value cutoff, e.g. 0.01
+        NumberOfRandomSamples: size of the bootstrap distribution
+
+    Returns:
+        Dictionary of spike cutoffs.
+
+    Usage:
+        cutoffs = getSpikesCutoffs(df_data, 0.01)
     """
 
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
@@ -1676,12 +1734,23 @@ def getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
 
 def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,NormalizeIntensities=False,OversamplingRate=1,PairReturn=False,UpperFrequencyFactor=1):
 
-    """Lomb-Scargle Periodogram from MathIOmica.m
-    inputTimes: times corresponding to provided data points (1D array of floats)
-    inputData: data points (1D array of floats)
-    inputSetTimes: a complete set of all possible N times during which data could have been collected
+    """Calculate Lomb-Scargle periodogram.
 
-    TO DO: debug all optional parameters, such as FrequenciesOnly, NormalizeIntensities, etc.
+    Args:
+        inputTimes: times corresponding to provided data points (1D array of floats)
+        inputData: data points (1D array of floats)
+        inputSetTimes: a complete set of all possible N times during which data could have been collected
+        FrequenciesOnly: return frequencies only
+        NormalizeIntensities: normalize intensities to unity
+        OversamplingRate: oversampling rate
+        PairReturn: 
+        UpperFrequencyFactor: upper frequency factor
+
+    Returns:
+        Periodogram with a list of frequencies.
+
+    Usage:
+        pgram = LombScargle(inputTimes, inputData, inputSetTimes)
     """
 
     #adjust inputTimes starting point w.r.t.dataset times
@@ -1708,13 +1777,10 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
     freqStep = 1 / (OversamplingRate * (np.floor(n / 2) - 1)) * (n / 2 * UpperFrequencyFactor - 1) * f0
 
     #get the list of frequencies, adjusting both the lower frequency (to equal
-    #f0 0- effectively a lowpass filter) and the upper cutoff Nyquist by the
-    #upper factor specified
+    #f0 0-effectively a lowpass filter) and the upper cutoff Nyquist by the upper factor specified
     freq = np.linspace(f0, n / 2 * UpperFrequencyFactor * f0, f0 * (n / 2 * UpperFrequencyFactor) / freqStep)
 
     if FrequenciesOnly:
-        #return Association@ MapIndexed[("f" <> ToString[Sequence @@ #2] ->
-        ##1)&]@freq]
         return freq
 
     #get the periodogram
@@ -1735,7 +1801,17 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
 
 def pLombScargle(args):
 
-    """Wrapper of LombScargle function for use with Multiprocessing."""
+    """Wrapper of LombScargle function for use with Multiprocessing.
+
+    Args:
+        args: a tuple of arguments in the form (inputTimes, inputData, inputSetTimes)
+
+    Returns:
+        Array of frequencies with corresponding intensities
+
+    Usage:
+        result = pLombScargle((inputTimes, inputData, inputSetTimes))
+    """
 
     inputTimes, inputData, inputSetTimes = args
     
@@ -1746,8 +1822,17 @@ def getAutocorrelationsOfData(params):
 
     """Calculate autocorrelation using Lomb-Scargle Autocorrelation.
     NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
-    df_data: pandas Series or Dataframe
-    setAllInputTimes: a complete set of all possible N times during which data could have been collected
+
+    Args:
+        params: a tuple of parameters in the form (df_data, setAllInputTimes), where
+        df_data is a pandas Series or Dataframe, 
+        setAllInputTimes is a complete set of all possible N times during which data could have been collected.
+
+    Returns:
+        Array of autocorrelations of data.
+
+    Usage:
+        result  = autocorrelation(df_data, setAllInputTimes)
     """
 
     df, setAllInputTimes = params
@@ -1771,11 +1856,19 @@ def getAutocorrelationsOfData(params):
 
 def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
 
-    """Generate autocorrelation null-distribution from permutated data.
-    Calculate autocorrelation using Lomb-Scargle Autocorrelation.
+    """Generate autocorrelation null-distribution from permutated data using Lomb-Scargle Autocorrelation.
     NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
-    df_data: pandas Series or Dataframe
-    NumberOfRandomSamples: size of the distribution to generate
+
+    Args:
+        df_data: pandas Series or Dataframe
+        NumberOfRandomSamples: size of the distribution to generate
+        NumberOfCPUs: number of processes to run simultaneously
+
+    Returns:
+        DataFrame containing autocorrelations of null-distribution of data.
+
+    Usage:
+        result = getRandomAutocorrelations(df_data)
     """
 
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
@@ -1794,9 +1887,18 @@ def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs
 
 def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
 
-    """Generate periodograms null-distribution from permutated data.
-    Calculate periodograms using Lomb-Scargle function.
-    NumberOfRandomSamples: size of the distribution to generate
+    """Generate periodograms null-distribution from permutated data using Lomb-Scargle function.
+
+    Args:
+        df_data: pandas Series or Dataframe
+        NumberOfRandomSamples: size of the distribution to generate
+        NumberOfCPUs: number of processes to run simultaneously
+
+    Returns:
+        New Pandas DataFrame containing periodograms
+
+    Usage:
+        result = getRandomPeriodograms(df_data)
     """
 
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
@@ -1814,8 +1916,16 @@ def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
 def BenjaminiHochbergFDR(pValues, SignificanceLevel=0.05):
 
     """HypothesisTesting BenjaminiHochbergFDR correction from MathIOmica.m
-    pValues: p-values (1D array of floats)
-    SignificanceLevel: default = 0.05
+
+    Args:
+        pValues: p-values (1D array of floats)
+        SignificanceLevel: default = 0.05.
+
+    Returns:
+        Corrected p-Values, p- and q-Value cuttoffs
+
+    Usage:
+        result = BenjaminiHochbergFDR(pValues)
     """
 
     pValues = np.round(pValues,6)
@@ -1866,6 +1976,16 @@ def metricCommonEuclidean(u,v):
 
     """Metric to calculate 'euclidean' distance between vectors u and v 
     using only common non-missing points (not NaNs).
+
+    Args:
+        u: Numpy 1-D array
+        v: Numpy 1-D array
+
+    Returns:
+        Measure of the distance between u and v
+
+    Usage:
+        dist = metricCommonEuclidean(u,v)
     """
 
     where_common = (~np.isnan(u)) * (~np.isnan(v))
