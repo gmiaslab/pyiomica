@@ -370,7 +370,7 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
     
     Args: 
         FileURL: provides the location of the Open Biomedical Ontologies (OBO) Gene Ontology (GO) 
-        file in case this will be downloaded from the web
+    file in case this will be downloaded from the web
         ImportDirectly: import from URL regardles is the file already exists
         MathIOmicaDataDirectory: path of directories to data storage
         OBOFile: name of file to store data in (file will be zipped)
@@ -445,14 +445,14 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
     Args: 
         geneUCSCTable: path to a geneUCSCTable file
         UCSCSQLString: an association to be used to obtain data from the UCSC Browser tables. The key of the association must 
-        match the Species option value used (default: human). The value for the species corresponds to the actual MySQL command used
+    match the Species option value used (default: human). The value for the species corresponds to the actual MySQL command used
         UCSCSQLSelectLabels: an association to be used to assign key labels for the data improted from the UCSC Browser tables. 
-        The key of the association must match the Species option value used (default: human). The value is a multi component string 
-        list corresponding to the matrices in the MathIOmica data file, or the tables used in the MySQL query provided by UCSCSQLString
+    The key of the association must match the Species option value used (default: human). The value is a multi component string 
+    list corresponding to the matrices in the data file, or the tables used in the MySQL query provided by UCSCSQLString
         ImportDirectly: import from URL regardles is the file already exists
         Species: species considered in the calculation, by default corresponding to human
         KEGGUCSCSplit: a two component list, {True/False, label}. If the first component is set to True the initially imported KEGG IDs, 
-        identified by the second component label,  are split on + string to fix nomenclature issues, retaining the string following +
+    identified by the second component label,  are split on + string to fix nomenclature issues, retaining the string following +
 
     Returns:
         Dictionary
@@ -497,7 +497,7 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
         ucscDatabase = pymysql.connect("genome-mysql.cse.ucsc.edu","genomep","password")
 
         if ucscDatabase==None:
-            print("Could not establish connection to UCSC. Please try again or add MathIOmica's dictionary manually at ", geneUCSCTable)
+            print("Could not establish connection to UCSC. Please try again or add the dictionary manually at ", geneUCSCTable)
             return
 
         #Prepare a cursor object using cursor() method
@@ -543,19 +543,19 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
     """Download and create gene associations and restrict to required background set.
 
     Args: 
-        MathIOmicaDataDirectory: the directory where the default MathIOmica package data is stored
+        MathIOmicaDataDirectory: the directory where the default package data is stored
         ImportDirectly: import from URL regardles is the file already exists
         BackgroundSet: background list to create annotation projection to limited background space, involves
-        considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should 
-        be considered as the background for the calculation
+    considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should 
+    be considered as the background for the calculation
         Species: species considered in the calculation, by default corresponding to human
         LengthFilterFunction: performs computations of membership in pathways/ontologies/groups/sets, 
-        that specifies which function to use to filter the number of members a reported category has 
-        compared to the number typically provided by LengthFilter 
+    that specifies which function to use to filter the number of members a reported category has 
+    compared to the number typically provided by LengthFilter 
         LengthFilter: argument for LengthFilterFunction
         GOFileName: the name for the specific GO file to download from the GOURL if option ImportDirectly is set to True
         GOFileColumns: columns to use for IDs and GO:accessions respectively from the downloaded GO annotation file, 
-        used when ImportDirectly is set to True to obtain a new GO association file
+    used when ImportDirectly is set to True to obtain a new GO association file
         GOURL: the location (base URL) where the GO association annotation files are downloaded from
 
     Returns:
@@ -659,7 +659,7 @@ def obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions, Augme
 
     Args:
         GeneDictionary: an existing variable to use as a gene dictionary in annotations. 
-        If set to None the default ConstantGeneDictionary will be used
+    If set to None the default ConstantGeneDictionary will be used
         GetGeneDictionaryOptions: a list of options that will be passed to this internal GetGeneDictionary function
         AugmentDictionary: a choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
 
@@ -704,28 +704,28 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
         OutputID: kind of IDs/accessions to convert the input IDs/accession numbers in the function's analysis
         GOAnalysisAssignerOptions: a list of options that will be passed to the internal GOAnalysisAssigner function
         BackgroundSet: background list to create annotation projection to limited background space, involves
-        considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should be 
-        considered as the background for the calculation
+    considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should be 
+    considered as the background for the calculation
         Species: the species considered in the calculation, by default corresponding to human
         OntologyLengthFilter: function that can be used to set the value for which terms to consider in the computation, 
-        by excluding GO terms that have fewer items compared to the OntologyLengthFilter value. It is used by the internal
-        GOAnalysisAssigner function
+    by excluding GO terms that have fewer items compared to the OntologyLengthFilter value. It is used by the internal
+    GOAnalysisAssigner function
         ReportFilter: functions that use pathways/ontologies/groups, and provides a cutoff for membership in ontologies/pathways/groups
-        in selecting which terms/categories to return. It is typically used in conjunction with ReportFilterFunction
+    in selecting which terms/categories to return. It is typically used in conjunction with ReportFilterFunction
         ReportFilterFunction: specifies what operator form will be used to compare against ReportFilter option value in 
-        selecting which terms/categories to return
+    selecting which terms/categories to return
         HypothesisFunction: allows the choice of function for implementing multiple hypothesis testing considerations
         FilterSignificant: can be set to True to filter data based on whether the analysis result is statistically significant, 
-        or if set to False to return all membership computations
+    or if set to False to return all membership computations
         OBODictionaryVariable: a GO annotation variable. If set to None, OBOGODictionary will be used internally to 
-        automatically generate the default GO annotation
+    automatically generate the default GO annotation
         OBOGODictionaryOptions: a list of options to be passed to the internal OBOGODictionary function that provides the GO annotations
         MultipleListCorrection: specifies whether or not to correct for multi-omics analysis. The choices are None, Automatic, 
-        or a custom number, e.g protein+RNA
+    or a custom number, e.g protein+RNA
         MultipleList: specifies whether the input accessions list constituted a multi-omics list input that is annotated so
         AdditionalFilter: provides additional filtering that may be applied to the standard function output structure to be returned
         GeneDictionary: points to an existing variable to use as a gene dictionary in annotations. If set to None 
-        the default ConstantGeneDictionary will be used
+    the default ConstantGeneDictionary will be used
 
     Returns:
         Enrichment dictionary
@@ -817,9 +817,10 @@ def GeneTranslation(InputList, TargetIDList, GeneDictionary, InputID = None, Spe
     Args:
         InputList: list of names
         TargetIDList: target ID list
-        GeneDictionary: gene dictionary
-        InputID: input ID list
-        Species: species
+        GeneDictionary: an existing variable to use as a gene dictionary in annotations. 
+    If set to None the default ConstantGeneDictionary will be used
+        InputID: the kind of identifiers/accessions used as input
+        Species: the species considered in the calculation, by default corresponding to human
     
     Returns:
         Dictionary
@@ -870,14 +871,19 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
     restricted to required background set, downloading the data if necessary.
 
     Args: 
-        MathIOmicaDataDirectory: path to a geneUCSCTable file
+        MathIOmicaDataDirectory: directory where the default package data is stored
         ImportDirectly: import from URL regardles is the file already exists
-        BackgroundSet: background list to create annotation projection to limited background space
-        KEGGQuery1: KEGGQuery1
-        KEGGQuery2: KEGGQuery2
-        LengthFilterFunction: function to apply as a filter
-        LengthFilter: argument for LengthFilterFunction
-        Labels: labels
+        BackgroundSet: a list of IDs (e.g. gene accessions) that should be considered as the background for the calculation
+        KEGGQuery1: make KEGG API calls, and sets string query1 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
+    Typically this will be used as the target database to find related entries by using database cross-references
+        KEGGQuery2: KEGG API calls, and sets string query2 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
+    Typically this will be used as the source database to find related entries by using database cross-references
+        LengthFilterFunction: option for functions that perform computations of membership in 
+    pathways/ontologies/groups/sets, that specifies which function to use to filter the number of members a reported 
+    category has compared to the number typically provided by LengthFilter
+        LengthFilter: allows the selection of how many members each category can have, as typically 
+    restricted by the LengthFilterFunction
+        Labels: a string list for how keys in a created association will be named
 
     Returns:
         IDToPath and PathToID dictionary
@@ -962,10 +968,12 @@ def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQ
     typically association of pathways and members therein.
     
     Args: 
-        MathIOmicaDataDirectory: path of directories to data storage
+        MathIOmicaDataDirectory: directory where the default package data is stored
         ImportDirectly: import from URL regardles is the file already exists
-        KEGGQuery1: KEGGQuery1
-        KEGGQuery2: KEGGQuery2
+        KEGGQuery1: make KEGG API calls, and sets string query1 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
+    Typically this will be used as the target database to find related entries by using database cross-references
+        KEGGQuery2: KEGG API calls, and sets string query2 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
+    Typically this will be used as the source database to find related entries by using database cross-references
 
     Returns:
         Dictionary of definitions
@@ -1026,34 +1034,44 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
 
     Args:
         data: data to analyze
-        AnalysisType: analysis type, "Genomic", "Molecular" or "All"
-        GetGeneDictionaryOptions: options to pass to function GetGeneDictionary
-        AugmentDictionary: modify the dictionary, otherwise owerwrite
-        InputID: possible input IDs
-        OutputID: output ID
-        MolecularInputID: molecular input ID
-        KEGGAnalysisAssignerOptions: options to pass to function KEGGAnalysisAssigner
-        BackgroundSet: background list to create annotation projection to limited background space
-        KEGGOrganism: KEGG organism
-        KEGGMolecular: species
-        KEGGDatabase: species
-        PathwayLengthFilter: 
-        ReportFilter: report length filter function argumnet
-        ReportFilterFunction: report length filter function 
-        pValueCutoff: 
-        TestFunction: 
-        HypothesisFunction: hypothesis function
-        FilterSignificant: keep only significant entries
-        KEGGDictionaryVariable: OBO dictionary
-        KEGGDictionaryOptions: OBO dictionary options
-        MultipleListCorrection: used to correct for multiple lists, e.g protein+RNA
-        MultipleList: whether input is multiple omics or single - for non-omics-object inputs
-        AdditionalFilter: not implemented yet
-        GeneDictionary: preferred gene dictionary
-        Species: used in GeneDictionary
-        MolecularSpecies: molecular species
-        NonUCSC: 
-        MathIOmicaDataDirectory: 
+        AnalysisType: analysis methods that may be used, "Genomic", "Molecular" or "All"
+        GetGeneDictionaryOptions: a list of options that will be passed to this internal GetGeneDictionary function
+        AugmentDictionary: a choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
+        InputID: the kind of identifiers/accessions used as input
+        OutputID: a string value that specifies what kind of IDs/accessions to convert the input IDs/accession 
+    numbers in the function's analysis
+        MolecularInputID: a string list to indicate the kind of ID to use for the input molecule entries
+        KEGGAnalysisAssignerOptions: a list of options that will be passed to this internal KEGGAnalysisAssigner function
+        BackgroundSet: a list of IDs (e.g. gene accessions) that should be considered as the background for the calculation
+        KEGGOrganism: indicates which organism (org) to use for \"Genomic\" type of analysis (default is human analysis: org=\"hsa\")
+        KEGGMolecular: which database to use for molecular analysis (default is the compound database: cpd)
+        KEGGDatabase: KEGG database to use as the target database
+        PathwayLengthFilter: pathways to consider in the computation, by excluding pathways that have fewer items 
+    compared to the PathwayLengthFilter value
+        ReportFilter: provides a cutoff for membership in ontologies/pathways/groups in selecting which terms/categories 
+    to return. It is typically used in conjunction with ReportFilterFunction
+        ReportFilterFunction: operator form will be used to compare against ReportFilter option value in selecting 
+    which terms/categories to return
+        pValueCutoff: a cutoff p-value for (adjusted) p-values to assess statistical significance 
+        TestFunction: a function used to calculate p-values
+        HypothesisFunction: allows the choice of function for implementing multiple hypothesis testing considerations
+        FilterSignificant: can be set to True to filter data based on whether the analysis result is statistically significant, 
+    or if set to False to return all membership computations
+        KEGGDictionaryVariable: KEGG dictionary, and provides a KEGG annotation variable. If set to None, KEGGDictionary 
+    will be used internally to automatically generate the default KEGG annotation
+        KEGGDictionaryOptions: a list of options to be passed to the internal KEGGDictionary function that provides the KEGG annotations
+        MultipleListCorrection: specifies whether or not to correct for multi-omics analysis. 
+    The choices are None, Automatic, or a custom number
+        MultipleList: whether the input accessions list constituted a multi-omics list input that is annotated so
+        AdditionalFilter: additional filtering that may be applied to the standard function output structure to be returned
+        GeneDictionary: existing variable to use as a gene dictionary in annotations. If set to None the default ConstantGeneDictionary will be used
+        Species: the species considered in the calculation, by default corresponding to human
+        MolecularSpecies: the kind of molecular input
+        NonUCSC: if UCSC browser was used in determining an internal GeneDictionary used in ID translations,
+    where the KEGG identifiers for genes are number strings (e.g. 4790).The NonUCSC option can be set to True 
+    if standard KEGG accessions are used in a user provided GeneDictionary variable, 
+    in the form OptionValue[KEGGOrganism] <>:<>numberString, e.g. hsa:4790
+        MathIOmicaDataDirectory: directory where the default package data is stored
 
     Returns:
         Enrichment dictionary
@@ -1207,8 +1225,9 @@ def MassMatcher(data, accuracy, MassDictionaryVariable = None, MolecularSpecies 
     Args: 
         data: input data
         accuracy: accuracy
-        MassDictionaryVariable: mass dictionary
-        MolecularSpecies: molecular species
+        MassDictionaryVariable: mass dictionary variable. If set to None, inbuilt 
+    mass dictionary (MassDictionary) will be loaded and used
+        MolecularSpecies: the kind of molecular input
 
     Returns:
         List of IDs 
@@ -1230,7 +1249,7 @@ def MassDictionary(MathIOmicaDataDirectory=None):
     """Load PyIOmica's current mass dictionary.
     
     Args:
-        MathIOmicaDataDirectory: path of directories to data storage
+        MathIOmicaDataDirectory: directory where the default package data is stored
 
     Returns:
         Mass dictionary
@@ -1239,17 +1258,38 @@ def MassDictionary(MathIOmicaDataDirectory=None):
         MassDict = MassDictionary()
     """
 
-    fileMassDict = os.path.join("AdditionalData", "MathIOmicaMassDictionary" +  ".csv")
+    global ConstantMathIOmicaDataDirectory
+
+    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+
+    fileMassDict = os.path.join(MathIOmicaDataDirectory, "MathIOmicaMassDictionary.json.gz")
 
     if os.path.isfile(fileMassDict):
-        with open(fileMassDict, 'r') as tempFile:
-            fileMassDictData = tempFile.readlines()
-            fileMassDictData = np.array([item.strip('\n').replace('"','').split(",") for item in fileMassDictData])
-
-        MassDict = {fileMassDictData[0][0].split(':')[0]: dict(zip(fileMassDictData.T[0],fileMassDictData.T[1].astype(float)))}
+        MassDict = read(fileMassDict, jsonFormat=True)[1]
     else:
-        print("Could not find MathIOmica's mass dictionary at ", fileMassDict, 
-                "Please either obtain a mass dictionary file from mathiomica.org or provide a custom file at the above location.")
+        fileCSV = os.path.join("AdditionalData", "MathIOmicaMassDictionary" +  ".csv")
+
+        if False:
+            with open("MathIOmicaMassDictionary", 'r') as tempFile:
+                mathDictData = tempFile.readlines()
+
+            mathDict = ''.join([line.strip('\n') for line in mathDictData]).replace('"','').replace(' ','').replace('->',' ').split(',')
+            mathDict = np.array([line.split(' ') for line in mathDict])
+            np.savetxt(fileCSV, mathDictData, delimiter=',', fmt='%s')
+
+        if os.path.isfile(fileCSV):
+            print('Reading:', fileCSV)
+
+            fileMassDictData = np.loadtxt(fileCSV, delimiter=',', dtype=str)
+            MassDict = {fileMassDictData[0][0].split(':')[0]: dict(zip(fileMassDictData.T[0],fileMassDictData.T[1].astype(float)))}
+            write((datetime.datetime.now().isoformat(), MassDict), fileMassDict, jsonFormat=True)
+
+            print("Created mass dictionary at ", fileMassDict)
+        else:
+            print("Could not find mass dictionary at ", fileMassDict, 
+                    "Please either obtain a mass dictionary file from mathiomica.org or provide a custom file at the above location.")
+
+            return None
 
     return MassDict
 
@@ -1514,7 +1554,7 @@ def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
 
 def ampSquaredNormed(func, freq, times, data):
 
-    """Lomb-Scargle core translated from MathIOmica.m
+    """Lomb-Scargle core function
     Calculate the different frequency components of our spectrum: project the cosine/sine component and normalize it:
 
     Args:
@@ -1542,7 +1582,7 @@ def ampSquaredNormed(func, freq, times, data):
 
 def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1):
     
-    """Autocorrelation from MathIOmica.m
+    """Autocorrelation function
 
     Args:
         inputTimes: times corresponding to provided data points (1D array of floats)
@@ -1556,7 +1596,6 @@ def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1
         result = autocorrelation(inputTimes, inputData, inputSetTimes)
     """
 
-    #InverseAutocovariance from MathIOmica.m
     def InverseAutocovariance(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1):
 
         #adjust inputTimes starting point w.r.t.dataset times, AND ZERO-PAD THEM
@@ -1879,7 +1918,7 @@ def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
 
 def BenjaminiHochbergFDR(pValues, SignificanceLevel=0.05):
 
-    """HypothesisTesting BenjaminiHochbergFDR correction from MathIOmica.m
+    """HypothesisTesting BenjaminiHochbergFDR correction
 
     Args:
         pValues: p-values (1D array of floats)
