@@ -267,7 +267,7 @@ for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirector
 ### Annotations and Enumerations ##################################################################
 
 def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, Species, totalMembers,
-                            pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
+                            pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, FilterSignificant,
                             AssignmentForwardDictionary, AssignmentReverseDictionary, prefix, infoDict):
 
     """Analysis for Multi-Omics or Single-Omics input list
@@ -357,9 +357,6 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
     whatIsFiltered = whatIsFilteredLength * whatIsFilteredSignif
 
     returning = dict(zip(list(np.array(list(ResultsHCct.keys()))[whatIsFiltered]),list(np.array(list(ResultsHCct.values()))[whatIsFiltered])))
-
-    if AdditionalFilter!=None: 
-        print("AdditionalFilter option is not yet available...")
 
     return {list(data.keys())[0]: returning}
 
@@ -692,7 +689,7 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
                  pValueCutoff=0.05, TestFunction=lambda n, N, M, x: 1. - scipy.stats.hypergeom.cdf(x-1, M, n, N), 
                  HypothesisFunction=lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"], 
                  FilterSignificant=True, OBODictionaryVariable=None,
-                 OBOGODictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, AdditionalFilter=None, GeneDictionary=None):
+                 OBOGODictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, GeneDictionary=None):
 
     """Calculate input data over-representation analysis for Gene Ontology (GO) categories.
 
@@ -723,7 +720,6 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
         MultipleListCorrection: specifies whether or not to correct for multi-omics analysis. The choices are None, Automatic, 
     or a custom number, e.g protein+RNA
         MultipleList: specifies whether the input accessions list constituted a multi-omics list input that is annotated so
-        AdditionalFilter: provides additional filtering that may be applied to the standard function output structure to be returned
         GeneDictionary: points to an existing variable to use as a gene dictionary in annotations. If set to None 
     the default ConstantGeneDictionary will be used
 
@@ -783,7 +779,7 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
 
                 returning[keyGroup][keySubGroup] = internalAnalysisFunction({keySubGroup:SubGroupList},
                                                                      multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[Species]["IDToGO"]),
-                                                                     pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
+                                                                     pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, FilterSignificant,
                                                                      AssignmentForwardDictionary=Assignment[Species]['IDToGO'],
                                                                      AssignmentReverseDictionary=Assignment[Species]['GOToID'],
                                                                      prefix='', infoDict=OBODict)[keySubGroup]
@@ -799,7 +795,7 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
                 multiCorr = MultipleListCorrection
 
             returning.update(internalAnalysisFunction({key:data[key]}, multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[Species]["IDToGO"]),
-                                                pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
+                                                pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, FilterSignificant,
                                                 AssignmentForwardDictionary=Assignment[Species]['IDToGO'],
                                                 AssignmentReverseDictionary=Assignment[Species]['GOToID'],
                                                 prefix='', infoDict=OBODict))
@@ -1026,7 +1022,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
                 KEGGOrganism = "hsa", KEGGMolecular = "cpd", KEGGDatabase = "pathway", PathwayLengthFilter = 2, ReportFilter = 1, 
                 ReportFilterFunction = np.greater_equal, pValueCutoff = 0.05, TestFunction = lambda n, N, M, x: 1. - scipy.stats.hypergeom.cdf(x-1, M, n, N), 
                 HypothesisFunction = lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"],
-                FilterSignificant = True, KEGGDictionaryVariable = None, KEGGDictionaryOptions = {}, MultipleListCorrection = None, MultipleList = False, AdditionalFilter = None, 
+                FilterSignificant = True, KEGGDictionaryVariable = None, KEGGDictionaryOptions = {}, MultipleListCorrection = None, MultipleList = False, 
                 GeneDictionary = None, Species = "human", MolecularSpecies = "compound", NonUCSC = False, MathIOmicaDataDirectory = None):
 
     """Calculate input data over-representation analysis for KEGG: Kyoto Encyclopedia of Genes and Genomes pathways.
@@ -1063,7 +1059,6 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
         MultipleListCorrection: specifies whether or not to correct for multi-omics analysis. 
     The choices are None, Automatic, or a custom number
         MultipleList: whether the input accessions list constituted a multi-omics list input that is annotated so
-        AdditionalFilter: additional filtering that may be applied to the standard function output structure to be returned
         GeneDictionary: existing variable to use as a gene dictionary in annotations. If set to None the default ConstantGeneDictionary will be used
         Species: the species considered in the calculation, by default corresponding to human
         MolecularSpecies: the kind of molecular input
@@ -1190,7 +1185,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
 
                 returning[keyGroup][keySubGroup] = internalAnalysisFunction({keySubGroup:SubGroupList},
                                                                              multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[KEGGOrganism]["IDToPath"]),
-                                                                             pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
+                                                                             pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, FilterSignificant,
                                                                              AssignmentForwardDictionary=Assignment[KEGGOrganism]['IDToPath'],
                                                                              AssignmentReverseDictionary=Assignment[KEGGOrganism]['PathToID'],
                                                                              prefix='hsa:' if AnalysisType=='Genomic' else '', infoDict=keggDict)[keySubGroup]
@@ -1206,7 +1201,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
                 multiCorr = MultipleListCorrection
 
             returning.update(internalAnalysisFunction({key:data[key]}, multiCorr, MultipleList,  OutputID, InputID, Species, len(Assignment[KEGGOrganism]["IDToPath"]),
-                                                pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, AdditionalFilter, FilterSignificant,
+                                                pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, FilterSignificant,
                                                 AssignmentForwardDictionary=Assignment[KEGGOrganism]['IDToPath'],
                                                 AssignmentReverseDictionary=Assignment[KEGGOrganism]['PathToID'],
                                                 prefix='hsa:' if AnalysisType=='Genomic' else '', infoDict=keggDict))
