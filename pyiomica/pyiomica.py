@@ -40,7 +40,7 @@ import scipy.signal
 import scipy.stats
 import scipy.cluster.hierarchy as hierarchy
 from scipy.spatial.distance import pdist, squareform
-from scipy.interpolate import UnivariateSpline, interp2d
+from scipy.interpolate import UnivariateSpline
 
 import sklearn
 from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans
@@ -241,6 +241,40 @@ def createReverseDictionary(inputDictionary):
     GOs = df.values.T[0]
 
     return dict(zip(keys, [GOs[value].tolist() for value in values]))
+
+
+def readMathIOmicaData(fileName):
+
+    '''Read text files exported by MathIOmica and convert to Python data
+
+    Args:
+        fileName: path of directories and name of the file containing data
+
+    Returns:
+        Python data
+
+    Usage:
+        data = readMathIOmicaData("../../MathIOmica/MathIOmica/MathIOmicaData/ExampleData/rnaExample")
+    '''
+
+    if os.path.isfile(fileName):
+        with open(fileName, 'r') as tempFile:
+            data = tempFile.read()
+
+        data = data.replace('\n','').replace('{','(').replace('}',')').replace('->',':').replace('|>','}')
+        data = data.replace('<|','{').replace('^','*').replace('`','*').replace('Missing[]','"Missing[]"')
+        data = data.replace("\\",'')
+    else:
+        print('File not found (%s)'%(fileName))
+
+    returning = None
+
+    try:
+        returning = eval(data)
+    except:
+        print('Error occured while converting data (%s)'%(fileName))
+
+    return returning
 
 ###################################################################################################
 
