@@ -14,6 +14,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
+import matplotlib.patches
+import matplotlib.collections
 from matplotlib import cm
 
 import numpy as np
@@ -38,7 +40,7 @@ import scipy.signal
 import scipy.stats
 import scipy.cluster.hierarchy as hierarchy
 from scipy.spatial.distance import pdist, squareform
-from scipy.interpolate import UnivariateSpline
+from scipy.interpolate import UnivariateSpline, interp2d
 
 import sklearn
 from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans
@@ -207,8 +209,8 @@ def read(fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = F
         searchPickled = print(fileName.split("/")[-1], 'not found in', hdf5fileName)
 
     if hdf5fileName==None or ('searchPickled' in locals()):  
-        if not os.path.isfile(fileName):
-            print(fileName + '.pklz', 'not found.')
+        if not os.path.isfile(fileName + ('.pklz' if withPKLZextension else '')):
+            print(fileName + ('.pklz' if withPKLZextension else ''), 'not found.')
             return None
 
         with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'rb') as temp_file:
@@ -248,16 +250,16 @@ def createReverseDictionary(inputDictionary):
 """ConstantGeneDictionary is a global gene/protein dictionary variable typically created by GetGeneDictionary."""
 ConstantGeneDictionary = None
 
-"""ConstantMathIOmicaDataDirectory is a global variable pointing to the MathIOmica data directory."""
-ConstantMathIOmicaDataDirectory = os.path.join(os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData")
+"""ConstantPyIOmicaDataDirectory is a global variable pointing to the PyIOmica data directory."""
+ConstantPyIOmicaDataDirectory = os.path.join(os.getcwd(), "Applications",  "PyIOmica", "PyIOmicaData")
 
-"""ConstantMathIOmicaExamplesDirectory is a global variable pointing to the MathIOmica example data directory."""
-ConstantMathIOmicaExamplesDirectory = os.path.join(os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleData")
+"""ConstantPyIOmicaExamplesDirectory is a global variable pointing to the PyIOmica example data directory."""
+ConstantPyIOmicaExamplesDirectory = os.path.join(os.getcwd(), "Applications",  "PyIOmica", "PyIOmicaData", "ExampleData")
 
-"""ConstantMathIOmicaExampleVideosDirectory is a global variable pointing to the MathIOmica example videos directory."""
-ConstantMathIOmicaExampleVideosDirectory = os.path.join(os.getcwd(), "Applications",  "MathIOmica", "MathIOmicaData", "ExampleVideos")
+"""ConstantPyIOmicaExampleVideosDirectory is a global variable pointing to the PyIOmica example videos directory."""
+ConstantPyIOmicaExampleVideosDirectory = os.path.join(os.getcwd(), "Applications",  "PyIOmica", "PyIOmicaData", "ExampleVideos")
 
-for path in [ConstantMathIOmicaDataDirectory, ConstantMathIOmicaExamplesDirectory, ConstantMathIOmicaExampleVideosDirectory]:
+for path in [ConstantPyIOmicaDataDirectory, ConstantPyIOmicaExamplesDirectory, ConstantPyIOmicaExampleVideosDirectory]:
     createDirectories(path)
 
 ###################################################################################################
@@ -361,7 +363,7 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
     return {list(data.keys())[0]: returning}
 
 
-def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", ImportDirectly=False, MathIOmicaDataDirectory=None, OBOFile="goBasicObo.txt"):
+def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", ImportDirectly=False, PyIOmicaDataDirectory=None, OBOFile="goBasicObo.txt"):
 
     """Generate Open Biomedical Ontologies (OBO) Gene Ontology (GO) vocabulary dictionary.
     
@@ -369,7 +371,7 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
         FileURL: provides the location of the Open Biomedical Ontologies (OBO) Gene Ontology (GO) 
     file in case this will be downloaded from the web
         ImportDirectly: import from URL regardles is the file already exists
-        MathIOmicaDataDirectory: path of directories to data storage
+        PyIOmicaDataDirectory: path of directories to data storage
         OBOFile: name of file to store data in (file will be zipped)
 
     Returns:
@@ -379,10 +381,10 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
         OBODict = OBOGODictionary()
     """
 
-    global ConstantMathIOmicaDataDirectory
+    global ConstantPyIOmicaDataDirectory
 
-    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
-    fileGOOBO = os.path.join(MathIOmicaDataDirectory, OBOFile)
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
+    fileGOOBO = os.path.join(PyIOmicaDataDirectory, OBOFile)
     fileGOOBOgz = fileGOOBO + '.gz'
 
     #import the GO OBO file: we check if the OBO file Exist, if not, attempt to download and create it
@@ -474,12 +476,12 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
         hg19.knownToKeggEntrez.name LEFT JOIN hg19.knownToU133Plus2 ON \
         hg19.kgXref.kgID = hg19.knownToU133Plus2.name"}
 
-    global ConstantMathIOmicaDataDirectory
+    global ConstantPyIOmicaDataDirectory
 
-    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory
 
     if geneUCSCTable is None:
-        geneUCSCTable = os.path.join(MathIOmicaDataDirectory, Species + "GeneUCSCTable" + ".json.gz")
+        geneUCSCTable = os.path.join(PyIOmicaDataDirectory, Species + "GeneUCSCTable" + ".json.gz")
        
     #If the user asked us to import directly, import directly with SQL, otherwise, get it from a directory they specify
     if not os.path.isfile(geneUCSCTable):
@@ -533,14 +535,14 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
     return returning
 
 
-def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, BackgroundSet = [], Species = "human",
+def GOAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, BackgroundSet = [], Species = "human",
                         LengthFilter = None, LengthFilterFunction = np.greater_equal, GOFileName = None, GOFileColumns = [2, 5], 
                         GOURL = "http://current.geneontology.org/annotations/"):
     
     """Download and create gene associations and restrict to required background set.
 
     Args: 
-        MathIOmicaDataDirectory: the directory where the default package data is stored
+        PyIOmicaDataDirectory: the directory where the default package data is stored
         ImportDirectly: import from URL regardles is the file already exists
         BackgroundSet: background list to create annotation projection to limited background space, involves
     considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should 
@@ -562,15 +564,15 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
         GOassignment = GOAnalysisAssigner()
     """
 
-    global ConstantMathIOmicaDataDirectory
+    global ConstantPyIOmicaDataDirectory
 
-    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
 
-    #If the user asked us to import MathIOmicaDataDirectoryectly, import MathIOmicaDataDirectoryectly from GO website, otherwise, get it from a MathIOmicaDataDirectoryectory they specify
+    #If the user asked us to import PyIOmicaDataDirectoryectly, import PyIOmicaDataDirectoryectly from GO website, otherwise, get it from a PyIOmicaDataDirectoryectory they specify
     file = "goa_" + Species + ".gaf.gz" if GOFileName==None else GOFileName
-    localFile =  os.path.join(MathIOmicaDataDirectory, "goa_" + Species + ".gaf")
-    localZipFile =  os.path.join(MathIOmicaDataDirectory, "goa_" + Species + ".gaf.gz")
-    fileGOAssociations = [os.path.join(MathIOmicaDataDirectory, Species + item + ".json.gz") for item in ["GeneOntAssoc", "IdentifierAssoc"]]
+    localFile =  os.path.join(PyIOmicaDataDirectory, "goa_" + Species + ".gaf")
+    localZipFile =  os.path.join(PyIOmicaDataDirectory, "goa_" + Species + ".gaf.gz")
+    fileGOAssociations = [os.path.join(PyIOmicaDataDirectory, Species + item + ".json.gz") for item in ["GeneOntAssoc", "IdentifierAssoc"]]
 
     #We check if the Annotations exist, if not, attempt to download and create them
     if not np.array(list(map(os.path.isfile, fileGOAssociations))).all():
@@ -625,7 +627,7 @@ def GOAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, B
             print("Did Not Find Annotation Files, Aborting Process")
             return
     else:
-        #Otherwise we get from the user specified MathIOmicaDataDirectoryectory
+        #Otherwise we get from the user specified PyIOmicaDataDirectoryectory
         geneOntAssoc = read(fileGOAssociations[0], jsonFormat=True)[-1]
         identifierAssoc = read(fileGOAssociations[1], jsonFormat=True)[-1]
 
@@ -860,14 +862,14 @@ def GeneTranslation(InputList, TargetIDList, GeneDictionary, InputID = None, Spe
     return returning
 
 
-def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False, BackgroundSet = [], KEGGQuery1 = "pathway", KEGGQuery2 = "hsa",
+def KEGGAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, BackgroundSet = [], KEGGQuery1 = "pathway", KEGGQuery2 = "hsa",
                         LengthFilter = None, LengthFilterFunction = np.greater_equal, Labels = ["IDToPath", "PathToID"]):
 
     """Create KEGG: Kyoto Encyclopedia of Genes and Genomes pathway associations, 
     restricted to required background set, downloading the data if necessary.
 
     Args: 
-        MathIOmicaDataDirectory: directory where the default package data is stored
+        PyIOmicaDataDirectory: directory where the default package data is stored
         ImportDirectly: import from URL regardles is the file already exists
         BackgroundSet: a list of IDs (e.g. gene accessions) that should be considered as the background for the calculation
         KEGGQuery1: make KEGG API calls, and sets string query1 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
@@ -888,12 +890,12 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
         KEGGassignment = KEGGAnalysisAssigner()
     """
     
-    global ConstantMathIOmicaDataDirectory
+    global ConstantPyIOmicaDataDirectory
     
-    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
 
     ##if the user asked us to import directly, import directly from KEGG website, otherwise, get it from a directory they specify
-    fileAssociations = [os.path.join(MathIOmicaDataDirectory, item) for item in [KEGGQuery1 + "_" + KEGGQuery2 + "KEGGMemberToPathAssociation.json.gz", 
+    fileAssociations = [os.path.join(PyIOmicaDataDirectory, item) for item in [KEGGQuery1 + "_" + KEGGQuery2 + "KEGGMemberToPathAssociation.json.gz", 
                                                                                 KEGGQuery1 + "_" + KEGGQuery2 + "KEGGPathToMemberAssociation.json.gz"]]
 
     if not np.array(list(map(os.path.isfile, fileAssociations))).all():
@@ -901,7 +903,7 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
         ImportDirectly = True
 
     if ImportDirectly:
-        localFile = os.path.join(MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv")
+        localFile = os.path.join(PyIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv")
         #Delete existing file
         if os.path.isfile(localFile):
             os.remove(localFile)
@@ -934,7 +936,7 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
             print("Did Not Find Annotation Files, Aborting Process")
             return
     else:
-        #otherwise import the necessary associations from MathIOmicaDataDirectoryectory
+        #otherwise import the necessary associations from PyIOmicaDataDirectoryectory
         idToPath = read(fileAssociations[0], jsonFormat=True)[1]
         pathToID = read(fileAssociations[1], jsonFormat=True)[1]
 
@@ -958,13 +960,13 @@ def KEGGAnalysisAssigner(MathIOmicaDataDirectory = None, ImportDirectly = False,
     return {KEGGQuery2 : {Labels[0]: idToPath, Labels[1]: pathToID}}
 
 
-def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQuery1 = "pathway", KEGGQuery2 = "hsa"):
+def KEGGDictionary(PyIOmicaDataDirectory = None, ImportDirectly = False, KEGGQuery1 = "pathway", KEGGQuery2 = "hsa"):
 
     """Create a dictionary from KEGG: Kyoto Encyclopedia of Genes and Genomes terms - 
     typically association of pathways and members therein.
     
     Args: 
-        MathIOmicaDataDirectory: directory where the default package data is stored
+        PyIOmicaDataDirectory: directory where the default package data is stored
         ImportDirectly: import from URL regardles is the file already exists
         KEGGQuery1: make KEGG API calls, and sets string query1 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
     Typically this will be used as the target database to find related entries by using database cross-references
@@ -978,12 +980,12 @@ def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQ
         KEGGDict = KEGGDictionary()
     """
     
-    global ConstantMathIOmicaDataDirectory
+    global ConstantPyIOmicaDataDirectory
     
-    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
 
     #if the user asked us to import directly, import directly from KEGG website, otherwise, get it from a directory they specify
-    fileKEGGDict = os.path.join(MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + "_KEGGDictionary.json.gz")
+    fileKEGGDict = os.path.join(PyIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + "_KEGGDictionary.json.gz")
 
     if os.path.isfile(fileKEGGDict):
         associationKEGG = read(fileKEGGDict, jsonFormat=True)[1]
@@ -992,7 +994,7 @@ def KEGGDictionary(MathIOmicaDataDirectory = None, ImportDirectly = False, KEGGQ
         ImportDirectly = True
 
     if ImportDirectly:
-        queryFile = os.path.join(MathIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv")
+        queryFile = os.path.join(PyIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + ".tsv")
 
         if os.path.isfile(queryFile): 
             os.remove(queryFile)
@@ -1023,7 +1025,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
                 ReportFilterFunction = np.greater_equal, pValueCutoff = 0.05, TestFunction = lambda n, N, M, x: 1. - scipy.stats.hypergeom.cdf(x-1, M, n, N), 
                 HypothesisFunction = lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"],
                 FilterSignificant = True, KEGGDictionaryVariable = None, KEGGDictionaryOptions = {}, MultipleListCorrection = None, MultipleList = False, 
-                GeneDictionary = None, Species = "human", MolecularSpecies = "compound", NonUCSC = False, MathIOmicaDataDirectory = None):
+                GeneDictionary = None, Species = "human", MolecularSpecies = "compound", NonUCSC = False, PyIOmicaDataDirectory = None):
 
     """Calculate input data over-representation analysis for KEGG: Kyoto Encyclopedia of Genes and Genomes pathways.
     Input can be a list, a dictionary of lists or a clustering object.
@@ -1066,7 +1068,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
     where the KEGG identifiers for genes are number strings (e.g. 4790).The NonUCSC option can be set to True 
     if standard KEGG accessions are used in a user provided GeneDictionary variable, 
     in the form OptionValue[KEGGOrganism] <>:<>numberString, e.g. hsa:4790
-        MathIOmicaDataDirectory: directory where the default package data is stored
+        PyIOmicaDataDirectory: directory where the default package data is stored
 
     Returns:
         Enrichment dictionary
@@ -1078,11 +1080,11 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
 
     argsLocal = locals().copy()
 
-    global ConstantMathIOmicaDataDirectory
+    global ConstantPyIOmicaDataDirectory
 
     obtainConstantGeneDictionary(None, {}, True)
     
-    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
 
     #Gene Identifier based analysis
     if AnalysisType=="Genomic":
@@ -1107,12 +1109,12 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
         keggDict = KEGGDictionary(**({"KEGGQuery1": "pathway", "KEGGQuery2": ""} if KEGGDictionaryOptions=={} else KEGGDictionaryOptions)) if KEGGDictionaryVariable==None else KEGGDictionaryVariable
 
         #Obtain gene dictionary - if it exists can either augment with new information or Species or create new, if not exist then create variable
-        fileMolDict = os.path.join(MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary.json.gz")
+        fileMolDict = os.path.join(PyIOmicaDataDirectory, "PyIOmicaMolecularDictionary.json.gz")
 
         if os.path.isfile(fileMolDict):
             GeneDictionary = read(fileMolDict, jsonFormat=True)[1]
         else:
-            fileCSV = os.path.join(MathIOmicaDataDirectory, "MathIOmicaMolecularDictionary.csv")
+            fileCSV = os.path.join("data", "AdditionalData", "MathIOmicaMolecularDictionary.csv")
 
             print('Attempting to read:', fileCSV)
 
@@ -1239,12 +1241,12 @@ def MassMatcher(data, accuracy, MassDictionaryVariable = None, MolecularSpecies 
     return keys[np.where((values > data*(1 - ppm)) * (values < data*(1 + ppm)))[0]]
 
 
-def MassDictionary(MathIOmicaDataDirectory=None):
+def MassDictionary(PyIOmicaDataDirectory=None):
 
     """Load PyIOmica's current mass dictionary.
     
     Args:
-        MathIOmicaDataDirectory: directory where the default package data is stored
+        PyIOmicaDataDirectory: directory where the default package data is stored
 
     Returns:
         Mass dictionary
@@ -1253,19 +1255,19 @@ def MassDictionary(MathIOmicaDataDirectory=None):
         MassDict = MassDictionary()
     """
 
-    global ConstantMathIOmicaDataDirectory
+    global ConstantPyIOmicaDataDirectory
 
-    MathIOmicaDataDirectory = ConstantMathIOmicaDataDirectory if MathIOmicaDataDirectory==None else MathIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
 
-    fileMassDict = os.path.join(MathIOmicaDataDirectory, "MathIOmicaMassDictionary.json.gz")
+    fileMassDict = os.path.join(PyIOmicaDataDirectory, "PyIOmicaMassDictionary.json.gz")
 
     if os.path.isfile(fileMassDict):
         MassDict = read(fileMassDict, jsonFormat=True)[1]
     else:
-        fileCSV = os.path.join("AdditionalData", "MathIOmicaMassDictionary" +  ".csv")
+        fileCSV = os.path.join("data", "AdditionalData", "MathIOmicaMassDictionary" +  ".csv")
 
         if False:
-            with open("MathIOmicaMassDictionary", 'r') as tempFile:
+            with open("PyIOmicaMassDictionary", 'r') as tempFile:
                 mathDictData = tempFile.readlines()
 
             mathDict = ''.join([line.strip('\n') for line in mathDictData]).replace('"','').replace(' ','').replace('->',' ').split(',')
@@ -2567,9 +2569,9 @@ def makeLombScarglePeriodograms(df, saveDir, dataName):
 
 
 def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95], 
-                       numberOfVGs=1, groups_ac_colors=['b'], fig=None, printCommunities=False, 
+                       numberOfVGs=1, groups_ac_colors=['b'], fig=None, numberOfCommunities=6, printCommunities=False, 
                        fontsize=None, nodesize=None, level=0.55, commLineWidth=0.5, lineWidth=1.0,
-                       withLabel=True, withTitle=False):
+                       withLabel=True, withTitle=False, layout='circle', radius=0.07, noplot=False):
 
     """Draw a Visibility graph of data on a provided Matplotlib figure.
 
@@ -2598,16 +2600,6 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
                             level=0.85, commLineWidth=3.0, lineWidth=2.0, withLabel=False)
     """
 
-    group = int(dataName[:dataName.find('S')].strip('G'))
-
-    if fontsize is None:
-        fontsize = 4. * (8. + 5.) / (numberOfVGs + 5.)
-    
-    if nodesize is None:
-        nodesize = 30. * (8. + 5.) / (numberOfVGs + 5.)
-
-    (x1,x2,y1,y2) = coords
-
     def imputeWithMedian(data):
 
         data[np.isnan(data)] = np.median(data[np.isnan(data) == False])
@@ -2617,23 +2609,8 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
     if len(data.shape)>1:
         data = pd.DataFrame(data=data).apply(imputeWithMedian, axis=1).apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
 
-    axisVG = fig.add_axes([x1,y1,x2 - x1,y2 - y1])
     graph_nx = nx.from_numpy_matrix(getAdjecencyMatrixOfVisibilityGraph(data, times))
-    cmap = matplotlib.colors.LinearSegmentedColormap.from_list('GR', [(0, 1, 0), (1, 0, 0)], N=1000)
-
-    pos = nx.circular_layout(graph_nx)
-    keys = np.array(list(pos.keys())[::-1])
-    values = np.array(list(pos.values()))
-    keys = np.roll(keys, np.argmax(values.T[1]) - np.argmin(keys))
-    pos = dict(zip(keys, values))
-
-    shortest_path = nx.shortest_path(graph_nx, source=min(keys), target=max(keys))
-    shortest_path_edges = [(shortest_path[i],shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-
-    nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color='y', edge_color='y', node_size=nodesize * 1.7, width=3.0*lineWidth, nodelist=shortest_path, edgelist=shortest_path_edges, with_labels=False)
-    nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color=data, cmap=cmap, alpha=1.0, font_size=fontsize,  width=lineWidth, font_color='b', node_size=nodesize)
-
-
+    
     def find_and_remove_node(graph_nx):
         bc = nx.betweenness_centrality(graph_nx)
         node_to_remove = list(bc.keys())[np.argmax(list(bc.values()))]
@@ -2642,7 +2619,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
 
     list_of_nodes = []
     graph_nx_inv = nx.from_numpy_matrix(getAdjecencyMatrixOfVisibilityGraph(-data, times))
-    for i in range(6):
+    for i in range(numberOfCommunities):
         graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
         list_of_nodes.append(node)
         
@@ -2659,17 +2636,87 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
         [print(community) for community in communities]
         print()
 
-    xmin, xmax = axisVG.get_xlim()
-    ymin, ymax = axisVG.get_ylim()
-    X, Y = np.meshgrid(np.arange(xmin, xmax, (xmax - xmin) / 100.), np.arange(ymin, ymax, (ymax - ymin) / 100.))
+    if noplot:
+        return graph_nx, data, communities
+
+    group = int(dataName[:dataName.find('S')].strip('G'))
+
+    if fontsize is None:
+        fontsize = 4. * (8. + 5.) / (numberOfVGs + 5.)
+    
+    if nodesize is None:
+        nodesize = 30. * (8. + 5.) / (numberOfVGs + 5.)
+
+    (x1,x2,y1,y2) = coords
+    
+    axisVG = fig.add_axes([x1,y1,x2 - x1,y2 - y1])
+    cmap = matplotlib.colors.LinearSegmentedColormap.from_list('GR', [(0, 1, 0), (1, 0, 0)], N=1000)
+
+    if layout=='line':
+        pos = {i:[float(i)/float(len(graph_nx)), 0.5] for i in range(len(graph_nx))}
+    else:
+        pos = nx.circular_layout(graph_nx)
+        keys = np.array(list(pos.keys())[::-1])
+        values = np.array(list(pos.values()))
+        values = (values - np.min(values, axis=0))/(np.max(values, axis=0)-np.min(values, axis=0))
+        keys = np.roll(keys, np.argmax(values.T[1]) - np.argmin(keys))
+        pos = dict(zip(keys, values))
+
+    keys = np.array(list(pos.keys()))
+    values = np.array(list(pos.values()))
+
+    shortest_path = nx.shortest_path(graph_nx, source=min(keys), target=max(keys))
+    shortest_path_edges = [(shortest_path[i],shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
+
+    if layout=='line':
+        for edge in graph_nx.edges:
+            l = np.array(pos[edge[0]])
+            r = np.array(pos[edge[1]])
+
+            if edge in shortest_path_edges:
+                axisVG.add_artist(matplotlib.patches.Wedge((l+r)/2., 0.5*np.sqrt((l-r)[0]*(l-r)[0]+(l-r)[1]*(l-r)[1]), 0, 180, fill=False, edgecolor='y', linewidth=0.5*3.*lineWidth, alpha=0.7, width=0.001))
+
+            axisVG.add_artist(matplotlib.patches.Wedge((l+r)/2., 0.5*np.sqrt((l-r)[0]*(l-r)[0]+(l-r)[1]*(l-r)[1]), 0, 180, fill=False, edgecolor='k', linewidth=0.5*lineWidth, alpha=0.7, width=0.001))
+
+        nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color='y', edge_color='y', node_size=nodesize * 1.7, width=0., nodelist=shortest_path, edgelist=shortest_path_edges, with_labels=False)
+        nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color=data, cmap=cmap, alpha=1.0, font_size=fontsize,  width=0., font_color='k', node_size=nodesize)
+    else:
+        nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color='y', edge_color='y', node_size=nodesize * 1.7, width=3.0*lineWidth, nodelist=shortest_path, edgelist=shortest_path_edges, with_labels=False)
+        nx.draw_networkx(graph_nx, pos=pos, ax=axisVG, node_color=data, cmap=cmap, alpha=1.0, font_size=fontsize,  width=lineWidth, font_color='k', node_size=nodesize)
+
+    if layout=='line':
+        xmin, xmax = (-1.,1.)
+        ymin, ymax = (-1.,1.)
+    else:
+        xmin, xmax = axisVG.get_xlim()
+        ymin, ymax = axisVG.get_ylim()
+
+    X, Y = np.meshgrid(np.arange(xmin, xmax, (xmax - xmin) / 300.), np.arange(ymin, ymax, (ymax - ymin) / 300.))
+
+    def smooth(Z, N=7.):
+        for ix in range(1,Z.shape[0]-1,1):
+            Z[ix] = ((N-1.)*Z[ix] + (Z[ix-1] + Z[ix+1])/2.)/N
+        return Z
 
     for icommunity, community in enumerate(communities):
-        nX, nY = tuple(np.array([pos[node] for node in community]).T)
         Z = np.exp(X ** 2 - Y ** 2) * 0.
-        for i in range(len(community)):
-            Z += np.exp(-35. * (X - nX[i]) ** 2 - 35. * (Y - nY[i]) ** 2)
+        nX, nY = tuple(np.array([pos[node] for node in community]).T)
+        for i in range(len(community)-1):
+            p1, p2 = np.array([nX[i], nY[i]]), np.array([nX[i+1], nY[i+1]])
+
+            for j in range(-2, 32):
+                pm = p1 + (p2-p1)*float(j)/30.
+                Z[np.where((X-pm[0])**2+(Y-pm[1])**2<=radius**2)] = 1.
+        
+        for _ in range(20):
+            Z = smooth(smooth(Z).T).T
+
         CS = axisVG.contour(X, Y, Z, [level], linewidths=commLineWidth, alpha=0.8, colors=groups_ac_colors[group - 1])
         #axisVG.clabel(CS, inline=True,fontsize=4,colors=group_colors[group-1], fmt ={level:'C%s'%icommunity})
+
+    if layout=='line':
+        axisVG.set_xlim(-0.1,1.)
+        axisVG.set_ylim(-0.1,1.)
 
     axisVG.spines['left'].set_visible(False)
     axisVG.spines['right'].set_visible(False)
@@ -2688,10 +2735,10 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
         titleText = dataName + ' (size: ' + str(data.shape[0]) + ')' + ' min=%s max=%s' % (np.round(min(data),2), np.round(max(data),2))
         axisVG.set_title(titleText, fontsize=10)
 
-    return None
+    return graph_nx, data, communities
 
 
-def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True):
+def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0):
 
     """Make Dendrogram-Heatmap plot along with VIsibility graphs.
 
@@ -2756,14 +2803,14 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
             axisMatrixAC.plot([-0.5, tempData.shape[1] - 0.5], [cluster_line_positions[i + 1] - 0.5, cluster_line_positions[i + 1] - 0.5], '--', color='black', linewidth = 1.0)
 
         axisMatrixAC.set_xticks([i for i in range(tempData.shape[1] - 1)])
-        axisMatrixAC.set_xticklabels([i + 1 for i in range(tempData.shape[1] - 1)], fontsize=6)
+        axisMatrixAC.set_xticklabels([i + 1 for i in range(tempData.shape[1] - 1)], fontsize=6*textScale)
         axisMatrixAC.set_yticks([])
-        axisMatrixAC.set_xlabel('Lag' if AutocorrNotPeriodogr else 'Frequency')
-        axisMatrixAC.set_title('Autocorrelation' if AutocorrNotPeriodogr else 'Periodogram')
+        axisMatrixAC.set_xlabel('Lag' if AutocorrNotPeriodogr else 'Frequency', fontsize=axisMatrixAC.xaxis.label._fontproperties._size*textScale)
+        axisMatrixAC.set_title('Autocorrelation' if AutocorrNotPeriodogr else 'Periodogram', fontsize=axisMatrixAC.title._fontproperties._size*textScale)
 
         axisColorAC = fig.add_axes([0.9 + 0.065,0.55,0.01,0.35])
 
-        axisColorAC.tick_params(labelsize=6)
+        axisColorAC.tick_params(labelsize=6*textScale)
         plt.colorbar(imAC, cax=axisColorAC, ticks=[np.round(np.min(tempData),2),np.round(np.max(tempData),2)])
 
         return
@@ -2805,7 +2852,7 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
         axisDendro.plot([posA, axisDendro.get_xlim()[1]], [-0. + axisDendro.get_ylim()[1], -0. + axisDendro.get_ylim()[1]], '--', color='k', linewidth = 1.0)
 
         axisDendro.text(axisDendro.get_xlim()[0], 0.5 * axisDendro.get_ylim()[1], 
-                        'G%s:' % group + str(groupSize), fontsize=14).set_path_effects([path_effects.Stroke(linewidth=1, foreground=groupColors[group - 1]),path_effects.Normal()])
+                        'G%s:' % group + str(groupSize), fontsize=14*textScale).set_path_effects([path_effects.Stroke(linewidth=1, foreground=groupColors[group - 1]),path_effects.Normal()])
 
         return n_clusters, clusters, cluster_line_positions
 
@@ -2825,7 +2872,7 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
             axisMatrix.plot([-0.5, data_loc.shape[1] - 0.5], [posB - 0.5, posB - 0.5], '--', color='black', linewidth = 1.0)
 
         def add_label(pos, labelText):
-            return axisMatrix.text(-1., pos, labelText, ha='right', va='center').set_path_effects([path_effects.Stroke(linewidth=0.4, foreground=groupColors[group - 1]),path_effects.Normal()])
+            return axisMatrix.text(-1., pos, labelText, ha='right', va='center', fontsize=12.*textScale).set_path_effects([path_effects.Stroke(linewidth=0.4, foreground=groupColors[group - 1]),path_effects.Normal()])
 
         order = clusters[np.sort(np.unique(clusters,return_index=True)[1])] - 1
 
@@ -2847,15 +2894,15 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
 
         if group == 1:
             axisMatrix.set_xticks(range(data_loc.shape[1]))
-            axisMatrix.set_xticklabels([np.int(i) for i in np.round(times,1)], rotation=0, fontsize=6)
-            axisMatrix.set_xlabel('Time (hours)')
+            axisMatrix.set_xticklabels([('' if (i%2==1 and textScale>1.3) else np.int(time)) for i, time in enumerate(np.round(times,1))], rotation=0, fontsize=6*textScale)
+            axisMatrix.set_xlabel('Time (hours)', fontsize=axisMatrix.xaxis.label._fontproperties._size*textScale)
 
         if group == sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage'])[-1]:
-            axisMatrix.set_title('Transformed gene expression')
+            axisMatrix.set_title('Transformed gene expression', fontsize=axisMatrix.title._fontproperties._size*textScale)
 
         axisColor = fig.add_axes([0.635 - 0.075 - 0.1 + 0.075,current_bottom + 0.01,0.01, max(0.01,(current_top - current_bottom) - 0.02)])
         plt.colorbar(im, cax=axisColor, ticks=[np.max(im._A),np.min(im._A)])
-        axisColor.tick_params(labelsize=6)
+        axisColor.tick_params(labelsize=6*textScale)
         axisColor.set_yticklabels([np.round(np.max(im._A),2),np.round(np.min(im._A),2)])
 
         return
@@ -2876,6 +2923,7 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
 
     groupColors = ['b','g','r','c','m','y','k']
     [groupColors.extend(groupColors) for _ in range(10)]
+
     addAutocorrelationDendrogramAndHeatmap(ClusteringObject, groupColors, fig)
 
     for group in sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage']):
@@ -2921,7 +2969,8 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
 
         addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, groupColors, fig)
     
-    fig.savefig(saveDir + dataName + '_DendrogramHeatmap.svg', dpi=600) #*.svg
+    fig.savefig(saveDir + dataName + '_DendrogramHeatmap.eps')
+    fig.savefig(saveDir + dataName + '_DendrogramHeatmap.svg')
 
     return None
 
