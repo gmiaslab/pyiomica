@@ -1114,7 +1114,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
         if os.path.isfile(fileMolDict):
             GeneDictionary = read(fileMolDict, jsonFormat=True)[1]
         else:
-            fileCSV = os.path.join("data", "AdditionalData", "MathIOmicaMolecularDictionary.csv")
+            fileCSV = os.path.join("pyiomica", "data", "MathIOmicaMolecularDictionary.csv")
 
             print('Attempting to read:', fileCSV)
 
@@ -1264,7 +1264,7 @@ def MassDictionary(PyIOmicaDataDirectory=None):
     if os.path.isfile(fileMassDict):
         MassDict = read(fileMassDict, jsonFormat=True)[1]
     else:
-        fileCSV = os.path.join("data", "AdditionalData", "MathIOmicaMassDictionary" +  ".csv")
+        fileCSV = os.path.join("pyiomica", "data", "MathIOmicaMassDictionary" +  ".csv")
 
         if False:
             with open("PyIOmicaMassDictionary", 'r') as tempFile:
