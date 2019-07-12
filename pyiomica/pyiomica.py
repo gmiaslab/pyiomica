@@ -3724,10 +3724,10 @@ def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, h
 
         print('Exporting clustering object.')
         if writeClusteringObjectToBinaries:
-            write(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/' + dataName + '_%s'%(className) + '_GroupsSubgroups')
+            write(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/' + dataName + '_%s_%s'%(className,info) + '_GroupsSubgroups')
         
         if exportClusteringObjects:
-            exportClusteringObject(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_%s'%(className))
+            exportClusteringObject(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_%s_%s'%(className,info))
 
         print('Plotting Dendrogram with Heatmaps.')
         makeDendrogramHeatmap(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=AutocorrNotPeriodogr)
