@@ -48,6 +48,7 @@ setup(
         'requests>=2.22.0',
         'scikit-learn>=0.21.2',
         'scipy>=1.2.1',
-        'xlsxwriter>=1.1.8'],
+        'xlsxwriter>=1.1.8',
+        'appdirs>=1.4.3'],
     zip_safe=False
 )

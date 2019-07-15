@@ -22,6 +22,8 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 
+import appdirs
+
 import os
 import pickle
 import gzip
@@ -114,7 +116,7 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFor
         None
 
     Usage:
-        write(exampeDataFrame, '/dir1/exampeDataFrame', hdf5fileName='/dir2/data.h5')
+        write(exampleDataFrame, '/dir1/exampleDataFrame', hdf5fileName='/dir2/data.h5')
     """
 
     if jsonFormat:
@@ -177,7 +179,7 @@ def read(fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = F
         data: data object to write into a file
 
     Usage:
-        exampeDataFrame = read('/dir1/exampeDataFrame', hdf5fileName='/dir2/data.h5')
+        exampleDataFrame = read('/dir1/exampleDataFrame', hdf5fileName='/dir2/data.h5')
     """
 
    
@@ -281,17 +283,23 @@ def readMathIOmicaData(fileName):
 
 
 ### Global constants ##############################################################################
+"""Package directory"""
+PackageDirectory = os.path.split(__file__)[0]
+
 """ConstantGeneDictionary is a global gene/protein dictionary variable typically created by GetGeneDictionary."""
 ConstantGeneDictionary = None
 
+"""User data directory"""
+UserDataDirectory = appdirs.user_data_dir('pyiomica', os.getlogin())
+
 """ConstantPyIOmicaDataDirectory is a global variable pointing to the PyIOmica data directory."""
-ConstantPyIOmicaDataDirectory = os.path.join(os.getcwd(), "Applications",  "PyIOmica", "PyIOmicaData")
+ConstantPyIOmicaDataDirectory = os.path.join(UserDataDirectory, "PyIOmicaData")
 
 """ConstantPyIOmicaExamplesDirectory is a global variable pointing to the PyIOmica example data directory."""
-ConstantPyIOmicaExamplesDirectory = os.path.join(os.getcwd(), "Applications",  "PyIOmica", "PyIOmicaData", "ExampleData")
+ConstantPyIOmicaExamplesDirectory = os.path.join(UserDataDirectory, "PyIOmicaData", "ExampleData")
 
 """ConstantPyIOmicaExampleVideosDirectory is a global variable pointing to the PyIOmica example videos directory."""
-ConstantPyIOmicaExampleVideosDirectory = os.path.join(os.getcwd(), "Applications",  "PyIOmica", "PyIOmicaData", "ExampleVideos")
+ConstantPyIOmicaExampleVideosDirectory = os.path.join(UserDataDirectory, "PyIOmicaData", "ExampleVideos")
 
 for path in [ConstantPyIOmicaDataDirectory, ConstantPyIOmicaExamplesDirectory, ConstantPyIOmicaExampleVideosDirectory]:
     createDirectories(path)
@@ -1148,7 +1156,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
         if os.path.isfile(fileMolDict):
             GeneDictionary = read(fileMolDict, jsonFormat=True)[1]
         else:
-            fileCSV = os.path.join("pyiomica", "data", "MathIOmicaMolecularDictionary.csv")
+            fileCSV = os.path.join(PackageDirectory, "data", "MathIOmicaMolecularDictionary.csv")
 
             print('Attempting to read:', fileCSV)
 
@@ -1298,7 +1306,7 @@ def MassDictionary(PyIOmicaDataDirectory=None):
     if os.path.isfile(fileMassDict):
         MassDict = read(fileMassDict, jsonFormat=True)[1]
     else:
-        fileCSV = os.path.join("pyiomica", "data", "MathIOmicaMassDictionary" +  ".csv")
+        fileCSV = os.path.join(PackageDirectory, "data", "MathIOmicaMassDictionary" +  ".csv")
 
         if False:
             with open("PyIOmicaMassDictionary", 'r') as tempFile:
@@ -3378,7 +3386,7 @@ def quantileNormalizeDataframe(df):
 
     print('Quantile normalizing signals...')
 
-    df.iloc[:] = quantile_transform(df.values, output_distribution='normal')
+    df.iloc[:] = quantile_transform(df.values, output_distribution='normal', n_quantiles=min(df.shape[0],1000), copy=False)
 
     return df
 
