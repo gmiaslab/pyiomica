@@ -24,6 +24,7 @@ import networkx as nx
 
 import appdirs
 
+import zipfile
 import os
 import pickle
 import gzip
@@ -50,7 +51,43 @@ from sklearn.preprocessing import quantile_transform
 from sklearn.metrics import silhouette_score, silhouette_samples, pairwise_distances, adjusted_rand_score
 from sklearn.manifold import TSNE
 
+from importlib import resources
+
 numba.config.NUMBA_DEFAULT_NUM_THREADS = 1
+
+### Global constants ##############################################################################
+"""Package directory"""
+PackageDirectory = os.path.split(__file__)[0]
+
+try: 
+    with resources.path('pyiomica.data','__init__.py') as readIn:
+        ConstantPyIOmicaDataDirectory = os.path.dirname(readIn)
+
+    UserDataDirectory = os.path.join(PackageDirectory, "data")
+except:
+    print('Cannot accesss default site package directory, will instead use', ConstantPyIOmicaDataDirectory)
+
+    UserDataDirectory = appdirs.user_data_dir('pyiomica', 'gmiaslab')
+
+"""ConstantPyIOmicaDataDirectory is a global variable pointing to the PyIOmica data directory."""
+ConstantPyIOmicaDataDirectory = UserDataDirectory
+
+"""ConstantPyIOmicaExamplesDirectory is a global variable pointing to the PyIOmica example data directory."""
+ConstantPyIOmicaExamplesDirectory = os.path.join(UserDataDirectory, "ExampleData")
+
+"""ConstantPyIOmicaExampleVideosDirectory is a global variable pointing to the PyIOmica example videos directory."""
+ConstantPyIOmicaExampleVideosDirectory = os.path.join(UserDataDirectory, "ExampleVideos")
+
+for path in [ConstantPyIOmicaDataDirectory, ConstantPyIOmicaExamplesDirectory, ConstantPyIOmicaExampleVideosDirectory]:
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+"""ConstantGeneDictionary is a global gene/protein dictionary variable typically created by GetGeneDictionary."""
+ConstantGeneDictionary = None
+
+###################################################################################################
+
+
 
 ### Utility functions #############################################################################
 def createDirectories(path):
@@ -277,32 +314,6 @@ def readMathIOmicaData(fileName):
         print('Error occured while converting data (%s)'%(fileName))
 
     return returning
-
-###################################################################################################
-
-
-
-### Global constants ##############################################################################
-"""Package directory"""
-PackageDirectory = os.path.split(__file__)[0]
-
-"""ConstantGeneDictionary is a global gene/protein dictionary variable typically created by GetGeneDictionary."""
-ConstantGeneDictionary = None
-
-"""User data directory"""
-UserDataDirectory = appdirs.user_data_dir('pyiomica', os.getlogin())
-
-"""ConstantPyIOmicaDataDirectory is a global variable pointing to the PyIOmica data directory."""
-ConstantPyIOmicaDataDirectory = os.path.join(UserDataDirectory, "PyIOmicaData")
-
-"""ConstantPyIOmicaExamplesDirectory is a global variable pointing to the PyIOmica example data directory."""
-ConstantPyIOmicaExamplesDirectory = os.path.join(UserDataDirectory, "PyIOmicaData", "ExampleData")
-
-"""ConstantPyIOmicaExampleVideosDirectory is a global variable pointing to the PyIOmica example videos directory."""
-ConstantPyIOmicaExampleVideosDirectory = os.path.join(UserDataDirectory, "PyIOmicaData", "ExampleVideos")
-
-for path in [ConstantPyIOmicaDataDirectory, ConstantPyIOmicaExamplesDirectory, ConstantPyIOmicaExampleVideosDirectory]:
-    createDirectories(path)
 
 ###################################################################################################
 
@@ -3135,11 +3146,11 @@ def prepareDataframe(dataDir, dataFileName, AlltimesFileName):
                                                     names=['source', 'id', 'metadata'])
     """
 
-    df = pd.read_csv(dataDir + dataFileName, delimiter=',', header=None)
+    df = pd.read_csv(os.path.join(dataDir, dataFileName), delimiter=',', header=None)
 
     df = df.set_index(df[df.columns[0]]).drop(columns=[df.columns[0]])
 
-    df.columns = list(pd.read_csv(dataDir + AlltimesFileName, delimiter=',', header=None).values.T[0])
+    df.columns = list(pd.read_csv(os.path.join(dataDir, AlltimesFileName), delimiter=',', header=None).values.T[0])
 
     return df
 

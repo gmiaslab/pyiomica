@@ -38,7 +38,7 @@ def testGOAnalysis(EnrichmentOutputDirectory):
     pyiomica.ExportEnrichmentReport(analysisGOMixedMulti, AppendString='analysisGOMixedMulti', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
 
     #Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
-    ExampleClusteringObject = pyiomica.read('ExampleClusteringObject')
+    ExampleClusteringObject = pyiomica.read(os.path.join(pyiomica.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
 
     if not ExampleClusteringObject is None:
         #We calculate the GOAnalysis for each group in each class:
@@ -122,7 +122,7 @@ def testKEGGAnalysis(EnrichmentOutputDirectory):
                         ["cpd:C20790", 212.1051, 7.127666, "Meta"], ["cpd:C09137", 352.2613, 12.869867, "Meta"],
                         ["cpd:C17648", 400.2085, 10.843841, "Meta"], ["cpd:C07807", 240.1471, 0.48564285, "Meta"], 
                         ["cpd:C08564", 324.0948, 10.281, "Meta"], ["cpd:C19426", 338.2818, 13.758765, "Meta"], 
-                        ["cpd:C02943", 468.3218, 14.263261, "Meta"], ["cpd:C04882", 1193.342, 14.707576, "Meta"]];
+                        ["cpd:C02943", 468.3218, 14.263261, "Meta"], ["cpd:C04882", 1193.342, 14.707576, "Meta"]]
 
     #We can carry out "Genomic" and "Molecular" analysis concurrently by setting AnalysisType = "All":
     multiOmicsDataKEGG = pyiomica.KEGGAnalysis(multiOmicsData, AnalysisType='All', MultipleList=True, MultipleListCorrection='Automatic') 
@@ -130,27 +130,12 @@ def testKEGGAnalysis(EnrichmentOutputDirectory):
     pyiomica.ExportEnrichmentReport(multiOmicsDataKEGG, AppendString='multiOmicsDataKEGG', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
-    ExampleClusteringObject = pyiomica.read('ExampleClusteringObject')
+    pyiomica.read(os.path.join(pyiomica.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
 
     if not ExampleClusteringObject is None:
         #We calculate the KEGGAnalysis for each group in each class:
         ExampleClusteringObject = pyiomica.KEGGAnalysis(ExampleClusteringObject)
 
         pyiomica.ExportEnrichmentReport(ExampleClusteringObject, AppendString='ExampleClusteringObject', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
-
-    return
-
-## Examples of Reactome Analysis ##########################################################################################################################################
-def testReactomeAnalysis(EnrichmentOutputDirectory):
-        
-    #Example of a list of UniProt IDs
-    uniProtExampleIDs = ["Q6ZRT9", "Q6NZ36", "H7C361", "Q6ZRT9", "A8MQT6", "Q9BUW7", "Q6NZ67", "Q6P582", "P39019", "E9PM41", "A8MTZ0", 
-                        "A8MTZ0", "E9PRI7", "A8MTZ0", "Q9H6L5", "Q5H9J7", "Q5H9J7", "Q5H9J7", "P06454", "Q53S24", "B8ZZW7", "A0PJW6"]
-
-    ResultUniProtExampleIDs = pyiomica.ReactomeAnalysis(uniProtExampleIDs)
-
-    pyiomica.ExportEnrichmentReport(ResultUniProtExampleIDs, AppendString='ResultUniProtExampleIDs', OutputDirectory=EnrichmentOutputDirectory + 'ReactomeAnalysis/')
-
-    # . . .
 
     return
