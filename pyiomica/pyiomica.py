@@ -2789,7 +2789,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
     return graph_nx, data, communities
 
 
-def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0):
+def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0, vectorImage=True):
 
     """Make Dendrogram-Heatmap plot along with VIsibility graphs.
 
@@ -3020,8 +3020,11 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
 
         addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, groupColors, fig)
     
-    fig.savefig(saveDir + dataName + '_DendrogramHeatmap.eps')
-    fig.savefig(saveDir + dataName + '_DendrogramHeatmap.svg')
+    if vectorImage:
+        fig.savefig(saveDir + dataName + '_DendrogramHeatmap.eps')
+        fig.savefig(saveDir + dataName + '_DendrogramHeatmap.svg')
+    else:
+        fig.savefig(saveDir + dataName + '_DendrogramHeatmap.png', dpi=300)
 
     return None
 
@@ -3733,7 +3736,7 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
     return None
 
 
-def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=False, AutocorrNotPeriodogr=True):
+def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=False, AutocorrNotPeriodogr=True, vectorImage=True):
 
     """Visualize time series classification.
     
@@ -3781,7 +3784,7 @@ def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, h
             exportClusteringObject(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_%s_%s'%(className,info))
 
         print('Plotting Dendrogram with Heatmaps.')
-        makeDendrogramHeatmap(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=AutocorrNotPeriodogr)
+        makeDendrogramHeatmap(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=AutocorrNotPeriodogr, vectorImage=vectorImage)
 
         return
 
