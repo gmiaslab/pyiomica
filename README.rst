@@ -6,8 +6,8 @@ bioinformatics utilities for analyzing (dynamic) omics datasets.
 PyIOmica extends MathIOmica usage to Python and implements new
 visualizations and computational tools for graph analyses.
 
-\*\* PyIOmica Versions*\*
-
+PyIOmica Versions
+-----------------
 -  1.0.0
 
 PyIOmica Installation Instructions
@@ -19,20 +19,20 @@ A. INSTALLATION
 Pre-Installation Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    To install PyIOmica on any platform you need:
-    1. Python version 3.7 or higher
-    2. Recommended: 16GB of RAM or higher
+To install PyIOmica on any platform you need:
+1. Python version 3.7 or higher
+2. Recommended: 16GB of RAM or higher
 
 Installation Instructions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    1. To install the current release from PyPI (Python Package Index) use pip:
+1. To install the current release from PyPI (Python Package Index) use pip:
 
 .. code:: bash
 
    pip install pyiomica
 
-Alternatively, you can install directly from github using:
+2. Alternatively, you can install directly from github using:
 
 .. code:: bash
 
@@ -46,12 +46,12 @@ After installation you can run:
 
 .. code:: python
 
-   >>> import pyiomica
+   >>> from pyiomica import pyiomica
 
 C. DOCUMENTATION
 ----------------
 
-Documentation for PyIOmica is built-in and is available ...
+Documentation for PyIOmica is built-in and is available through the help() functionality in Python. 
 
 D. ADDITIONAL INFORMATION
 -------------------------
@@ -60,8 +60,7 @@ D. ADDITIONAL INFORMATION
    package that aims to assist in bioinformatics.
 -  The most current version of the package is maintained at
    `https://github.com/gmiaslab/pyiomica`
--  News are distributed via twitter (@mathiomica) and on the website
-   mathiomica.org
+-  News are distributed via twitter (@mathiomica)
 
 E. LICENSING
 ------------
