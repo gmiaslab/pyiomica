@@ -1,5 +1,5 @@
 """
-PyIomica is a general omics package with multiple tools for analyzing omics data.
+PyIOmica is a general omics package with multiple tools for analyzing omics data.
 
 Usage:
     from pyiomica import pyiomica
@@ -2352,9 +2352,9 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
 
 ### Visibility graph auxilary functions ###########################################################
 @numba.jit(cache=True)
-def getAdjecencyMatrixOfVisibilityGraph(data, times):
+def getAdjacencyMatrixOfVisibilityGraph(data, times):
 
-    """Calculate adjecency matrix of visibility graph.
+    """Calculate adjacency matrix of visibility graph.
     JIT-accelerated version (a bit faster than NumPy-accelerated version).
     Allows use of Multiple CPUs.
 
@@ -2363,10 +2363,10 @@ def getAdjecencyMatrixOfVisibilityGraph(data, times):
         times: Numpy 1-D array of floats
 
     Returns:
-        Adjecency matrix
+        Adjacency matrix
 
     Usage:
-        A = getAdjecencyMatrixOfVisibilityGraph_serial(data, times)
+        A = getAdjacencyMatrixOfVisibilityGraph_serial(data, times)
     """
 
     dimension = len(data)
@@ -2394,9 +2394,9 @@ def getAdjecencyMatrixOfVisibilityGraph(data, times):
     return A
 
 
-def getAdjecencyMatrixOfVisibilityGraph_NUMPY(data, times):
+def getAdjacencyMatrixOfVisibilityGraph_NUMPY(data, times):
 
-    """Calculate adjecency matrix of visibility graph.
+    """Calculate adjacency matrix of visibility graph.
     NumPy-accelerated version. Somewhat slower than JIT-accelerated version.
     Use in serial applications.
 
@@ -2405,10 +2405,10 @@ def getAdjecencyMatrixOfVisibilityGraph_NUMPY(data, times):
         times: Numpy 1-D array of floats
 
     Returns:
-        Adjecency matrix
+        Adjacency matrix
 
     Usage:
-        A = getAdjecencyMatrixOfVisibilityGraph_serial(data, times)
+        A = getAdjacencyMatrixOfVisibilityGraph_serial(data, times)
     """
 
     dimension = len(data)
@@ -2429,9 +2429,9 @@ def getAdjecencyMatrixOfVisibilityGraph_NUMPY(data, times):
 
 
 @numba.jit(cache=True)
-def getAdjecencyMatrixOfHorizontalVisibilityGraph(data):
+def getAdjacencyMatrixOfHorizontalVisibilityGraph(data):
 
-    """Calculate adjecency matrix of horizontal visibility graph.
+    """Calculate adjacency matrix of horizontal visibility graph.
     JIT-accelerated version (a bit faster than NumPy-accelerated version).
     Single-threaded beats NumPy up to 2k data sizes.
     Allows use of Multiple CPUs.
@@ -2440,10 +2440,10 @@ def getAdjecencyMatrixOfHorizontalVisibilityGraph(data):
         data: Numpy 2-D array of floats
 
     Returns:
-        Adjecency matrix
+        Adjacency matrix
 
     Usage:
-        A = getAdjecencyMatrixOfHorizontalVisibilityGraph(data)
+        A = getAdjacencyMatrixOfHorizontalVisibilityGraph(data)
     """
 
     A = np.zeros((len(data),len(data)))
@@ -2463,9 +2463,9 @@ def getAdjecencyMatrixOfHorizontalVisibilityGraph(data):
     return A
 
 
-def getAdjecencyMatrixOfHorizontalVisibilityGraph_NUMPY(data):
+def getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY(data):
 
-    """Calculate adjecency matrix of horizontal visibility graph.
+    """Calculate adjacency matrix of horizontal visibility graph.
     NumPy-accelerated version.
     Use with datasets larger than 2k.
     Use in serial applications.
@@ -2474,10 +2474,10 @@ def getAdjecencyMatrixOfHorizontalVisibilityGraph_NUMPY(data):
         data: Numpy 2-D array of floats
 
     Returns:
-        Adjecency matrix
+        Adjacency matrix
 
     Usage:
-        A = getAdjecencyMatrixOfHorizontalVisibilityGraph_NUMPY(data)
+        A = getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY(data)
     """
 
     dimension = len(data)
@@ -2662,7 +2662,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
     if len(data.shape)>1:
         data = pd.DataFrame(data=data).apply(imputeWithMedian, axis=1).apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
 
-    graph_nx = nx.from_numpy_matrix(getAdjecencyMatrixOfVisibilityGraph(data, times))
+    graph_nx = nx.from_numpy_matrix(getAdjacencyMatrixOfVisibilityGraph(data, times))
     
     def find_and_remove_node(graph_nx):
         bc = nx.betweenness_centrality(graph_nx)
@@ -2671,7 +2671,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
         return graph_nx, node_to_remove
 
     list_of_nodes = []
-    graph_nx_inv = nx.from_numpy_matrix(getAdjecencyMatrixOfVisibilityGraph(-data, times))
+    graph_nx_inv = nx.from_numpy_matrix(getAdjacencyMatrixOfVisibilityGraph(-data, times))
     for i in range(numberOfCommunities):
         graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
         list_of_nodes.append(node)
@@ -3033,7 +3033,7 @@ def PlotVisibilityGraph(A, data, times, fileName, id):
     """Bar-plot style visibility graph.
 
     Args:
-        A: Adjecency matrix
+        A: Adjacency matrix
         data: Numpy 2-D array of floats
         times: Numpy 1-D array of floats
         fileName: name of the figure file to save
@@ -3080,7 +3080,7 @@ def PlotHorizontaVisibilityGraph(A, data, times, fileName, id):
     """Bar-plot style horizontal visibility graph.
 
     Args:
-        A: Adjecency matrix
+        A: Adjacency matrix
         data: Numpy 2-D array of floats
         times: Numpy 1-D array of floats
         fileName: name of the figure file to save
