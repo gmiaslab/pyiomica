@@ -25,10 +25,10 @@ This repository contains PyIOmica, a Python package that provides bioinformatics
 pip install pyiomica
 ```
 
-Alternatively, you can install directly from github using:
+<!-- Alternatively, you can install directly from github using:
 ```bash
 pip install git+https://github.com/gmiaslab/pyiomica/
-```
+``` -->
 
 ## B. RUNNING PyIOmica
 
