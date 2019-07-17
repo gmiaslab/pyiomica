@@ -77,7 +77,7 @@ Returns:<br>
 &nbsp;<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#-ExportEnrichmentReport">ExportEnrichmentReport</a>(goExample1,&nbsp;AppendString='goExample1',&nbsp;OutputDirectory=None)</tt></dd></dl>
- <dl><dt><a name="-GOAnalysis"><strong>GOAnalysis</strong></a>(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=['UniProt ID', 'Gene Symbol'], OutputID='UniProt ID', GOAnalysisAssignerOptions={}, BackgroundSet=[], Species='human', OntologyLengthFilter=2, ReportFilter=1, ReportFilterFunction=&lt;ufunc 'greater_equal'&gt;, pValueCutoff=0.05, TestFunction=&lt;function &lt;lambda&gt; at 0x7fe759268bf8&gt;, HypothesisFunction=&lt;function &lt;lambda&gt; at 0x7fe759268c80&gt;, FilterSignificant=True, OBODictionaryVariable=None, OBOGODictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, GeneDictionary=None)</dt><dd><tt>Calculate&nbsp;input&nbsp;data&nbsp;over-representation&nbsp;analysis&nbsp;for&nbsp;Gene&nbsp;Ontology&nbsp;(GO)&nbsp;categories.<br>
+ <dl><dt><a name="-GOAnalysis"><strong>GOAnalysis</strong></a>(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=['UniProt ID', 'Gene Symbol'], OutputID='UniProt ID', GOAnalysisAssignerOptions={}, BackgroundSet=[], Species='human', OntologyLengthFilter=2, ReportFilter=1, ReportFilterFunction=&lt;ufunc 'greater_equal'&gt;, pValueCutoff=0.05, TestFunction=&lt;function &lt;lambda&gt; at 0x7fad40c80bf8&gt;, HypothesisFunction=&lt;function &lt;lambda&gt; at 0x7fad40c80c80&gt;, FilterSignificant=True, OBODictionaryVariable=None, OBOGODictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, GeneDictionary=None)</dt><dd><tt>Calculate&nbsp;input&nbsp;data&nbsp;over-representation&nbsp;analysis&nbsp;for&nbsp;Gene&nbsp;Ontology&nbsp;(GO)&nbsp;categories.<br>
 &nbsp;<br>
 Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;data:&nbsp;data&nbsp;to&nbsp;analyze<br>
@@ -174,7 +174,7 @@ Returns:<br>
 &nbsp;<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;geneDict&nbsp;=&nbsp;<a href="#-GetGeneDictionary">GetGeneDictionary</a>()</tt></dd></dl>
- <dl><dt><a name="-KEGGAnalysis"><strong>KEGGAnalysis</strong></a>(data, AnalysisType='Genomic', GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=['UniProt ID', 'Gene Symbol'], OutputID='KEGG Gene ID', MolecularInputID=['cpd'], MolecularOutputID='cpd', KEGGAnalysisAssignerOptions={}, BackgroundSet=[], KEGGOrganism='hsa', KEGGMolecular='cpd', KEGGDatabase='pathway', PathwayLengthFilter=2, ReportFilter=1, ReportFilterFunction=&lt;ufunc 'greater_equal'&gt;, pValueCutoff=0.05, TestFunction=&lt;function &lt;lambda&gt; at 0x7fe759268f28&gt;, HypothesisFunction=&lt;function &lt;lambda&gt; at 0x7fe759266048&gt;, FilterSignificant=True, KEGGDictionaryVariable=None, KEGGDictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, GeneDictionary=None, Species='human', MolecularSpecies='compound', NonUCSC=False, PyIOmicaDataDirectory=None)</dt><dd><tt>Calculate&nbsp;input&nbsp;data&nbsp;over-representation&nbsp;analysis&nbsp;for&nbsp;KEGG:&nbsp;Kyoto&nbsp;Encyclopedia&nbsp;of&nbsp;Genes&nbsp;and&nbsp;Genomes&nbsp;pathways.<br>
+ <dl><dt><a name="-KEGGAnalysis"><strong>KEGGAnalysis</strong></a>(data, AnalysisType='Genomic', GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=['UniProt ID', 'Gene Symbol'], OutputID='KEGG Gene ID', MolecularInputID=['cpd'], MolecularOutputID='cpd', KEGGAnalysisAssignerOptions={}, BackgroundSet=[], KEGGOrganism='hsa', KEGGMolecular='cpd', KEGGDatabase='pathway', PathwayLengthFilter=2, ReportFilter=1, ReportFilterFunction=&lt;ufunc 'greater_equal'&gt;, pValueCutoff=0.05, TestFunction=&lt;function &lt;lambda&gt; at 0x7fad40c80f28&gt;, HypothesisFunction=&lt;function &lt;lambda&gt; at 0x7fad40c81048&gt;, FilterSignificant=True, KEGGDictionaryVariable=None, KEGGDictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, GeneDictionary=None, Species='human', MolecularSpecies='compound', NonUCSC=False, PyIOmicaDataDirectory=None)</dt><dd><tt>Calculate&nbsp;input&nbsp;data&nbsp;over-representation&nbsp;analysis&nbsp;for&nbsp;KEGG:&nbsp;Kyoto&nbsp;Encyclopedia&nbsp;of&nbsp;Genes&nbsp;and&nbsp;Genomes&nbsp;pathways.<br>
 Input&nbsp;can&nbsp;be&nbsp;a&nbsp;list,&nbsp;a&nbsp;dictionary&nbsp;of&nbsp;lists&nbsp;or&nbsp;a&nbsp;clustering&nbsp;object.<br>
 &nbsp;<br>
 Args:<br>
@@ -441,7 +441,7 @@ Returns:<br>
 &nbsp;<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;df_data&nbsp;=&nbsp;<a href="#-compareTimeSeriesToPointDataframe">compareTimeSeriesToPointDataframe</a>(df_data)</tt></dd></dl>
- <dl><dt><a name="-compareTwoTimeSeriesDataframe"><strong>compareTwoTimeSeriesDataframe</strong></a>(df1, df2, function=&lt;ufunc 'subtract'&gt;, compareAllLevelsInIndex=True, mergeFunction=&lt;function mean at 0x7fe7982c4840&gt;)</dt><dd><tt>Create&nbsp;a&nbsp;new&nbsp;Dataframe&nbsp;based&nbsp;on&nbsp;comparison&nbsp;of&nbsp;two&nbsp;existing&nbsp;Dataframes.<br>
+ <dl><dt><a name="-compareTwoTimeSeriesDataframe"><strong>compareTwoTimeSeriesDataframe</strong></a>(df1, df2, function=&lt;ufunc 'subtract'&gt;, compareAllLevelsInIndex=True, mergeFunction=&lt;function mean at 0x7fad301bd840&gt;)</dt><dd><tt>Create&nbsp;a&nbsp;new&nbsp;Dataframe&nbsp;based&nbsp;on&nbsp;comparison&nbsp;of&nbsp;two&nbsp;existing&nbsp;Dataframes.<br>
 &nbsp;<br>
 Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;df1:&nbsp;pandas&nbsp;DataFrame<br>
@@ -770,13 +770,15 @@ Returns:<br>
 &nbsp;<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#-makeDataHistograms">makeDataHistograms</a>(df,&nbsp;'/dir1',&nbsp;'myData')</tt></dd></dl>
- <dl><dt><a name="-makeDendrogramHeatmap"><strong>makeDendrogramHeatmap</strong></a>(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0)</dt><dd><tt>Make&nbsp;Dendrogram-Heatmap&nbsp;plot&nbsp;along&nbsp;with&nbsp;VIsibility&nbsp;graphs.<br>
+ <dl><dt><a name="-makeDendrogramHeatmap"><strong>makeDendrogramHeatmap</strong></a>(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0, vectorImage=True)</dt><dd><tt>Make&nbsp;Dendrogram-Heatmap&nbsp;plot&nbsp;along&nbsp;with&nbsp;VIsibility&nbsp;graphs.<br>
 &nbsp;<br>
 Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;ClusteringObject:&nbsp;clustering&nbsp;object<br>
 &nbsp;&nbsp;&nbsp;&nbsp;saveDir:&nbsp;path&nbsp;of&nbsp;directories&nbsp;to&nbsp;save&nbsp;the&nbsp;object&nbsp;to<br>
 &nbsp;&nbsp;&nbsp;&nbsp;dataName:&nbsp;label&nbsp;to&nbsp;include&nbsp;in&nbsp;the&nbsp;file&nbsp;name<br>
-&nbsp;&nbsp;&nbsp;&nbsp;AutocorrNotPeriodogr:&nbsp;export&nbsp;data&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;AutocorrNotPeriodogr:&nbsp;export&nbsp;data<br>
+&nbsp;&nbsp;&nbsp;&nbsp;textScale:&nbsp;scaling&nbsp;of&nbsp;text&nbsp;size<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vectorImage:&nbsp;Boolean&nbsp;for&nbsp;exporting&nbsp;vector&nbsp;graphics&nbsp;or&nbsp;PNG&nbsp;format&nbsp;<br>
 &nbsp;<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;None<br>
@@ -944,7 +946,7 @@ Returns:<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;df_data&nbsp;=&nbsp;<a href="#-removeConstantSignalsDataframe">removeConstantSignalsDataframe</a>(df_data,&nbsp;0.3)</tt></dd></dl>
  <dl><dt><a name="-runCPUs"><strong>runCPUs</strong></a>(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params)</dt><dd><tt>Parallelize&nbsp;function&nbsp;call&nbsp;with&nbsp;multiprocessing.Pool.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;<br>
 Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;NumberOfAvailableCPUs:&nbsp;number&nbsp;of&nbsp;processes&nbsp;to&nbsp;create<br>
 &nbsp;&nbsp;&nbsp;&nbsp;func:&nbsp;function&nbsp;to&nbsp;apply,&nbsp;must&nbsp;take&nbsp;at&nbsp;most&nbsp;one&nbsp;argument<br>
@@ -1013,7 +1015,7 @@ Returns:<br>
 &nbsp;<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#-timeSeriesClassification">timeSeriesClassification</a>(df_data,&nbsp;dataName,&nbsp;saveDir,&nbsp;NumberOfRandomSamples&nbsp;=&nbsp;10**5,&nbsp;NumberOfCPUs&nbsp;=&nbsp;4,&nbsp;p_cutoff&nbsp;=&nbsp;0.05,&nbsp;frequencyBasedClassification=False)</tt></dd></dl>
- <dl><dt><a name="-visualizeTimeSeriesClassification"><strong>visualizeTimeSeriesClassification</strong></a>(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=False, AutocorrNotPeriodogr=True)</dt><dd><tt>Visualize&nbsp;time&nbsp;series&nbsp;classification.<br>
+ <dl><dt><a name="-visualizeTimeSeriesClassification"><strong>visualizeTimeSeriesClassification</strong></a>(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=False, AutocorrNotPeriodogr=True, vectorImage=True)</dt><dd><tt>Visualize&nbsp;time&nbsp;series&nbsp;classification.<br>
 &nbsp;<br>
 Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;dataName:&nbsp;data&nbsp;name<br>
