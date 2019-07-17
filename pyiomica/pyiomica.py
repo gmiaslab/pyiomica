@@ -3618,7 +3618,7 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
         timeSeriesClassification(df_data, dataName, saveDir, NumberOfRandomSamples = 10**5, NumberOfCPUs = 4, p_cutoff = 0.05, frequencyBasedClassification=False)
     """
 
-    print('Processing', dataName)
+    print('\n', '-'*70, '\n\tProcessing %s (%s)'%(dataName, 'Periodograms' if frequencyBasedClassification else 'Autocorrelations'), '\n', '-'*70)
 
     if not os.path.exists(saveDir):
         os.makedirs(saveDir)
@@ -3698,6 +3698,12 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
         df_classifier = df_dataAutocorrelations
         df_randomClassifier = df_randomAutocorrelations
         info = 'Autocorrelations'
+
+    df_classifier.sort_index(inplace=True)
+    df_data.sort_index(inplace=True)
+
+    if not (df_data.index.values == df_classifier.index.values).all():
+        raise ValueError('Index mismatch')
             
     QP = [1.0]
     QP.extend([np.quantile(df_randomClassifier.values.T[i], 1. - p_cutoff,interpolation='lower') for i in range(1,df_classifier.shape[1])])
@@ -3710,6 +3716,9 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
     print(spike_cutoffs)
 
     df_data = normalizeSignalsToUnityDataframe(df_data)
+
+    if not (df_data.index.values == df_classifier.index.values).all():
+        raise ValueError('Index mismatch')
 
     print('Recording SpikeMax data...')
     max_spikes = df_data.index.values[getSpikes(df_data.values, np.max, spike_cutoffs)]
