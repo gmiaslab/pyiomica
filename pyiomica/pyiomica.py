@@ -8,7 +8,7 @@ Notes:
 """
 
 
-print("Loading PyIOmica (https://mathiomica.org by G. Mias Lab)")
+print("Loading PyIOmica (https://github.com/gmiaslab/pyiomica by G. Mias Lab)")
 
 import matplotlib
 matplotlib.use('Agg')
@@ -59,13 +59,13 @@ numba.config.NUMBA_DEFAULT_NUM_THREADS = 1
 """Package directory"""
 PackageDirectory = os.path.split(__file__)[0]
 
-try: 
+try:
     with resources.path('pyiomica.data','__init__.py') as readIn:
         ConstantPyIOmicaDataDirectory = os.path.dirname(readIn)
 
     UserDataDirectory = os.path.join(PackageDirectory, "data")
 except:
-    print('Cannot accesss default site package directory, will instead use', ConstantPyIOmicaDataDirectory)
+    print('Cannot access default site package directory, will instead use ', ConstantPyIOmicaDataDirectory)
 
     UserDataDirectory = appdirs.user_data_dir('pyiomica', 'gmiaslab')
 
@@ -87,16 +87,14 @@ ConstantGeneDictionary = None
 
 ###################################################################################################
 
-
-
 ### Utility functions #############################################################################
 def createDirectories(path):
 
     """Create a path of directories, unless the path already exists.
-    
+
     Args:
         path: path directory
-    
+
     Returns:
         None
 
@@ -116,12 +114,12 @@ def createDirectories(path):
 def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
 
     """Parallelize function call with multiprocessing.Pool.
-        
+
     Args:
         NumberOfAvailableCPUs: number of processes to create
         func: function to apply, must take at most one argument
         list_of_tuples_of_func_params: function parameters
-    
+
     Returns:
         Results of func in a numpy array
 
@@ -135,7 +133,7 @@ def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
     instPool.join()
 
     return np.vstack(return_values)
-  
+
 
 def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = False):
 
@@ -148,7 +146,7 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFor
         withPKLZextension: add ".pklz" to a pickle file
         hdf5fileName: path of directories ending with the file name. If None then data is pickled.
         jsonFormat: save data into compressed json file 
-    
+
     Returns:
         None
 
@@ -160,7 +158,7 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFor
         createDirectories("/".join(fileName.split("/")[:-1]))
 
         with gzip.GzipFile(fileName, 'w') as tempFile:
-            tempFile.write(json.dumps(data).encode('utf-8'))  
+            tempFile.write(json.dumps(data).encode('utf-8'))
 
         return None
 

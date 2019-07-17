@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="pyiomica.html"><font color="#ffffff">pyiomica</font></a>.pyiomica</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="https://github.com/gmiaslab/pyiomica">Github Repository</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="https://github.com/gmiaslab/pyiomica/">PyIOmica Github Repository</a></font></td></tr></table>
     <p><tt>PyIOmica&nbsp;is&nbsp;a&nbsp;general&nbsp;omics&nbsp;package&nbsp;with&nbsp;multiple&nbsp;tools&nbsp;for&nbsp;analyzing&nbsp;omics&nbsp;data.<br>
 &nbsp;<br>
 Usage:<br>
@@ -77,7 +77,7 @@ Returns:<br>
 &nbsp;<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#-ExportEnrichmentReport">ExportEnrichmentReport</a>(goExample1,&nbsp;AppendString='goExample1',&nbsp;OutputDirectory=None)</tt></dd></dl>
- <dl><dt><a name="-GOAnalysis"><strong>GOAnalysis</strong></a>(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=['UniProt ID', 'Gene Symbol'], OutputID='UniProt ID', GOAnalysisAssignerOptions={}, BackgroundSet=[], Species='human', OntologyLengthFilter=2, ReportFilter=1, ReportFilterFunction=&lt;ufunc 'greater_equal'&gt;, pValueCutoff=0.05, TestFunction=&lt;function &lt;lambda&gt; at 0x7fc968b62d90&gt;, HypothesisFunction=&lt;function &lt;lambda&gt; at 0x7fc968b62e18&gt;, FilterSignificant=True, OBODictionaryVariable=None, OBOGODictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, GeneDictionary=None)</dt><dd><tt>Calculate&nbsp;input&nbsp;data&nbsp;over-representation&nbsp;analysis&nbsp;for&nbsp;Gene&nbsp;Ontology&nbsp;(GO)&nbsp;categories.<br>
+ <dl><dt><a name="-GOAnalysis"><strong>GOAnalysis</strong></a>(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=['UniProt ID', 'Gene Symbol'], OutputID='UniProt ID', GOAnalysisAssignerOptions={}, BackgroundSet=[], Species='human', OntologyLengthFilter=2, ReportFilter=1, ReportFilterFunction=&lt;ufunc 'greater_equal'&gt;, pValueCutoff=0.05, TestFunction=&lt;function &lt;lambda&gt; at 0x7fe759268bf8&gt;, HypothesisFunction=&lt;function &lt;lambda&gt; at 0x7fe759268c80&gt;, FilterSignificant=True, OBODictionaryVariable=None, OBOGODictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, GeneDictionary=None)</dt><dd><tt>Calculate&nbsp;input&nbsp;data&nbsp;over-representation&nbsp;analysis&nbsp;for&nbsp;Gene&nbsp;Ontology&nbsp;(GO)&nbsp;categories.<br>
 &nbsp;<br>
 Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;data:&nbsp;data&nbsp;to&nbsp;analyze<br>
@@ -174,7 +174,7 @@ Returns:<br>
 &nbsp;<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;geneDict&nbsp;=&nbsp;<a href="#-GetGeneDictionary">GetGeneDictionary</a>()</tt></dd></dl>
- <dl><dt><a name="-KEGGAnalysis"><strong>KEGGAnalysis</strong></a>(data, AnalysisType='Genomic', GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=['UniProt ID', 'Gene Symbol'], OutputID='KEGG Gene ID', MolecularInputID=['cpd'], MolecularOutputID='cpd', KEGGAnalysisAssignerOptions={}, BackgroundSet=[], KEGGOrganism='hsa', KEGGMolecular='cpd', KEGGDatabase='pathway', PathwayLengthFilter=2, ReportFilter=1, ReportFilterFunction=&lt;ufunc 'greater_equal'&gt;, pValueCutoff=0.05, TestFunction=&lt;function &lt;lambda&gt; at 0x7fc968b64158&gt;, HypothesisFunction=&lt;function &lt;lambda&gt; at 0x7fc968b641e0&gt;, FilterSignificant=True, KEGGDictionaryVariable=None, KEGGDictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, GeneDictionary=None, Species='human', MolecularSpecies='compound', NonUCSC=False, PyIOmicaDataDirectory=None)</dt><dd><tt>Calculate&nbsp;input&nbsp;data&nbsp;over-representation&nbsp;analysis&nbsp;for&nbsp;KEGG:&nbsp;Kyoto&nbsp;Encyclopedia&nbsp;of&nbsp;Genes&nbsp;and&nbsp;Genomes&nbsp;pathways.<br>
+ <dl><dt><a name="-KEGGAnalysis"><strong>KEGGAnalysis</strong></a>(data, AnalysisType='Genomic', GetGeneDictionaryOptions={}, AugmentDictionary=True, InputID=['UniProt ID', 'Gene Symbol'], OutputID='KEGG Gene ID', MolecularInputID=['cpd'], MolecularOutputID='cpd', KEGGAnalysisAssignerOptions={}, BackgroundSet=[], KEGGOrganism='hsa', KEGGMolecular='cpd', KEGGDatabase='pathway', PathwayLengthFilter=2, ReportFilter=1, ReportFilterFunction=&lt;ufunc 'greater_equal'&gt;, pValueCutoff=0.05, TestFunction=&lt;function &lt;lambda&gt; at 0x7fe759268f28&gt;, HypothesisFunction=&lt;function &lt;lambda&gt; at 0x7fe759266048&gt;, FilterSignificant=True, KEGGDictionaryVariable=None, KEGGDictionaryOptions={}, MultipleListCorrection=None, MultipleList=False, GeneDictionary=None, Species='human', MolecularSpecies='compound', NonUCSC=False, PyIOmicaDataDirectory=None)</dt><dd><tt>Calculate&nbsp;input&nbsp;data&nbsp;over-representation&nbsp;analysis&nbsp;for&nbsp;KEGG:&nbsp;Kyoto&nbsp;Encyclopedia&nbsp;of&nbsp;Genes&nbsp;and&nbsp;Genomes&nbsp;pathways.<br>
 Input&nbsp;can&nbsp;be&nbsp;a&nbsp;list,&nbsp;a&nbsp;dictionary&nbsp;of&nbsp;lists&nbsp;or&nbsp;a&nbsp;clustering&nbsp;object.<br>
 &nbsp;<br>
 Args:<br>
@@ -320,7 +320,7 @@ Usage:<br>
  <dl><dt><a name="-PlotHorizontaVisibilityGraph"><strong>PlotHorizontaVisibilityGraph</strong></a>(A, data, times, fileName, id)</dt><dd><tt>Bar-plot&nbsp;style&nbsp;horizontal&nbsp;visibility&nbsp;graph.<br>
 &nbsp;<br>
 Args:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;A:&nbsp;Adjecency&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A:&nbsp;Adjacency&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;data:&nbsp;Numpy&nbsp;2-D&nbsp;array&nbsp;of&nbsp;floats<br>
 &nbsp;&nbsp;&nbsp;&nbsp;times:&nbsp;Numpy&nbsp;1-D&nbsp;array&nbsp;of&nbsp;floats<br>
 &nbsp;&nbsp;&nbsp;&nbsp;fileName:&nbsp;name&nbsp;of&nbsp;the&nbsp;figure&nbsp;file&nbsp;to&nbsp;save<br>
@@ -334,7 +334,7 @@ Usage:<br>
  <dl><dt><a name="-PlotVisibilityGraph"><strong>PlotVisibilityGraph</strong></a>(A, data, times, fileName, id)</dt><dd><tt>Bar-plot&nbsp;style&nbsp;visibility&nbsp;graph.<br>
 &nbsp;<br>
 Args:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;A:&nbsp;Adjecency&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A:&nbsp;Adjacency&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;data:&nbsp;Numpy&nbsp;2-D&nbsp;array&nbsp;of&nbsp;floats<br>
 &nbsp;&nbsp;&nbsp;&nbsp;times:&nbsp;Numpy&nbsp;1-D&nbsp;array&nbsp;of&nbsp;floats<br>
 &nbsp;&nbsp;&nbsp;&nbsp;fileName:&nbsp;name&nbsp;of&nbsp;the&nbsp;figure&nbsp;file&nbsp;to&nbsp;save<br>
@@ -441,7 +441,7 @@ Returns:<br>
 &nbsp;<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;df_data&nbsp;=&nbsp;<a href="#-compareTimeSeriesToPointDataframe">compareTimeSeriesToPointDataframe</a>(df_data)</tt></dd></dl>
- <dl><dt><a name="-compareTwoTimeSeriesDataframe"><strong>compareTwoTimeSeriesDataframe</strong></a>(df1, df2, function=&lt;ufunc 'subtract'&gt;, compareAllLevelsInIndex=True, mergeFunction=&lt;function mean at 0x7fc9a858a840&gt;)</dt><dd><tt>Create&nbsp;a&nbsp;new&nbsp;Dataframe&nbsp;based&nbsp;on&nbsp;comparison&nbsp;of&nbsp;two&nbsp;existing&nbsp;Dataframes.<br>
+ <dl><dt><a name="-compareTwoTimeSeriesDataframe"><strong>compareTwoTimeSeriesDataframe</strong></a>(df1, df2, function=&lt;ufunc 'subtract'&gt;, compareAllLevelsInIndex=True, mergeFunction=&lt;function mean at 0x7fe7982c4840&gt;)</dt><dd><tt>Create&nbsp;a&nbsp;new&nbsp;Dataframe&nbsp;based&nbsp;on&nbsp;comparison&nbsp;of&nbsp;two&nbsp;existing&nbsp;Dataframes.<br>
 &nbsp;<br>
 Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;df1:&nbsp;pandas&nbsp;DataFrame<br>
@@ -522,7 +522,7 @@ Returns:<br>
 &nbsp;<br>
 Usage:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;df_data&nbsp;=&nbsp;<a href="#-filterOutFractionZeroSignalsDataframe">filterOutFractionZeroSignalsDataframe</a>(df_data,&nbsp;0.75)</tt></dd></dl>
- <dl><dt><a name="-getAdjecencyMatrixOfHorizontalVisibilityGraph"><strong>getAdjecencyMatrixOfHorizontalVisibilityGraph</strong></a>(data)</dt><dd><tt>Calculate&nbsp;adjecency&nbsp;matrix&nbsp;of&nbsp;horizontal&nbsp;visibility&nbsp;graph.<br>
+ <dl><dt><a name="-getAdjacencyMatrixOfHorizontalVisibilityGraph"><strong>getAdjacencyMatrixOfHorizontalVisibilityGraph</strong></a>(data)</dt><dd><tt>Calculate&nbsp;adjacency&nbsp;matrix&nbsp;of&nbsp;horizontal&nbsp;visibility&nbsp;graph.<br>
 JIT-accelerated&nbsp;version&nbsp;(a&nbsp;bit&nbsp;faster&nbsp;than&nbsp;NumPy-accelerated&nbsp;version).<br>
 Single-threaded&nbsp;beats&nbsp;NumPy&nbsp;up&nbsp;to&nbsp;2k&nbsp;data&nbsp;sizes.<br>
 Allows&nbsp;use&nbsp;of&nbsp;Multiple&nbsp;CPUs.<br>
@@ -531,11 +531,11 @@ Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;data:&nbsp;Numpy&nbsp;2-D&nbsp;array&nbsp;of&nbsp;floats<br>
 &nbsp;<br>
 Returns:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Adjecency&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Adjacency&nbsp;matrix<br>
 &nbsp;<br>
 Usage:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;=&nbsp;<a href="#-getAdjecencyMatrixOfHorizontalVisibilityGraph">getAdjecencyMatrixOfHorizontalVisibilityGraph</a>(data)</tt></dd></dl>
- <dl><dt><a name="-getAdjecencyMatrixOfHorizontalVisibilityGraph_NUMPY"><strong>getAdjecencyMatrixOfHorizontalVisibilityGraph_NUMPY</strong></a>(data)</dt><dd><tt>Calculate&nbsp;adjecency&nbsp;matrix&nbsp;of&nbsp;horizontal&nbsp;visibility&nbsp;graph.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;=&nbsp;<a href="#-getAdjacencyMatrixOfHorizontalVisibilityGraph">getAdjacencyMatrixOfHorizontalVisibilityGraph</a>(data)</tt></dd></dl>
+ <dl><dt><a name="-getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY"><strong>getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY</strong></a>(data)</dt><dd><tt>Calculate&nbsp;adjacency&nbsp;matrix&nbsp;of&nbsp;horizontal&nbsp;visibility&nbsp;graph.<br>
 NumPy-accelerated&nbsp;version.<br>
 Use&nbsp;with&nbsp;datasets&nbsp;larger&nbsp;than&nbsp;2k.<br>
 Use&nbsp;in&nbsp;serial&nbsp;applications.<br>
@@ -544,11 +544,11 @@ Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;data:&nbsp;Numpy&nbsp;2-D&nbsp;array&nbsp;of&nbsp;floats<br>
 &nbsp;<br>
 Returns:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Adjecency&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Adjacency&nbsp;matrix<br>
 &nbsp;<br>
 Usage:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;=&nbsp;<a href="#-getAdjecencyMatrixOfHorizontalVisibilityGraph_NUMPY">getAdjecencyMatrixOfHorizontalVisibilityGraph_NUMPY</a>(data)</tt></dd></dl>
- <dl><dt><a name="-getAdjecencyMatrixOfVisibilityGraph"><strong>getAdjecencyMatrixOfVisibilityGraph</strong></a>(data, times)</dt><dd><tt>Calculate&nbsp;adjecency&nbsp;matrix&nbsp;of&nbsp;visibility&nbsp;graph.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;=&nbsp;<a href="#-getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY">getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY</a>(data)</tt></dd></dl>
+ <dl><dt><a name="-getAdjacencyMatrixOfVisibilityGraph"><strong>getAdjacencyMatrixOfVisibilityGraph</strong></a>(data, times)</dt><dd><tt>Calculate&nbsp;adjacency&nbsp;matrix&nbsp;of&nbsp;visibility&nbsp;graph.<br>
 JIT-accelerated&nbsp;version&nbsp;(a&nbsp;bit&nbsp;faster&nbsp;than&nbsp;NumPy-accelerated&nbsp;version).<br>
 Allows&nbsp;use&nbsp;of&nbsp;Multiple&nbsp;CPUs.<br>
 &nbsp;<br>
@@ -557,11 +557,11 @@ Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;times:&nbsp;Numpy&nbsp;1-D&nbsp;array&nbsp;of&nbsp;floats<br>
 &nbsp;<br>
 Returns:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Adjecency&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Adjacency&nbsp;matrix<br>
 &nbsp;<br>
 Usage:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;=&nbsp;getAdjecencyMatrixOfVisibilityGraph_serial(data,&nbsp;times)</tt></dd></dl>
- <dl><dt><a name="-getAdjecencyMatrixOfVisibilityGraph_NUMPY"><strong>getAdjecencyMatrixOfVisibilityGraph_NUMPY</strong></a>(data, times)</dt><dd><tt>Calculate&nbsp;adjecency&nbsp;matrix&nbsp;of&nbsp;visibility&nbsp;graph.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;=&nbsp;getAdjacencyMatrixOfVisibilityGraph_serial(data,&nbsp;times)</tt></dd></dl>
+ <dl><dt><a name="-getAdjacencyMatrixOfVisibilityGraph_NUMPY"><strong>getAdjacencyMatrixOfVisibilityGraph_NUMPY</strong></a>(data, times)</dt><dd><tt>Calculate&nbsp;adjacency&nbsp;matrix&nbsp;of&nbsp;visibility&nbsp;graph.<br>
 NumPy-accelerated&nbsp;version.&nbsp;Somewhat&nbsp;slower&nbsp;than&nbsp;JIT-accelerated&nbsp;version.<br>
 Use&nbsp;in&nbsp;serial&nbsp;applications.<br>
 &nbsp;<br>
@@ -570,10 +570,10 @@ Args:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;times:&nbsp;Numpy&nbsp;1-D&nbsp;array&nbsp;of&nbsp;floats<br>
 &nbsp;<br>
 Returns:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Adjecency&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Adjacency&nbsp;matrix<br>
 &nbsp;<br>
 Usage:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;=&nbsp;getAdjecencyMatrixOfVisibilityGraph_serial(data,&nbsp;times)</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;=&nbsp;getAdjacencyMatrixOfVisibilityGraph_serial(data,&nbsp;times)</tt></dd></dl>
  <dl><dt><a name="-getAutocorrelationsOfData"><strong>getAutocorrelationsOfData</strong></a>(params)</dt><dd><tt>Calculate&nbsp;autocorrelation&nbsp;using&nbsp;Lomb-Scargle&nbsp;Autocorrelation.<br>
 NOTE:&nbsp;there&nbsp;should&nbsp;be&nbsp;already&nbsp;no&nbsp;missing&nbsp;or&nbsp;non-numeric&nbsp;points&nbsp;in&nbsp;the&nbsp;input&nbsp;Series&nbsp;or&nbsp;Dataframe<br>
 &nbsp;<br>
@@ -1052,11 +1052,11 @@ Usage:<br>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>ConstantGeneDictionary</strong> = None<br>
-<strong>ConstantPyIOmicaDataDirectory</strong> = '/Users/george/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data'<br>
-<strong>ConstantPyIOmicaExampleVideosDirectory</strong> = '/Users/george/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data/ExampleVideos'<br>
-<strong>ConstantPyIOmicaExamplesDirectory</strong> = '/Users/george/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data/ExampleData'<br>
-<strong>PackageDirectory</strong> = '/Users/george/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica'<br>
-<strong>UserDataDirectory</strong> = '/Users/george/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data'<br>
-<strong>path</strong> = '/Users/george/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data/ExampleVideos'<br>
-<strong>readIn</strong> = PosixPath('/Users/george/anaconda3/envs/pyiomica...thon3.7/site-packages/pyiomica/data/__init__.py')</td></tr></table>
+<strong>ConstantPyIOmicaDataDirectory</strong> = '/Users/user/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data'<br>
+<strong>ConstantPyIOmicaExampleVideosDirectory</strong> = '/Users/user/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data/ExampleVideos'<br>
+<strong>ConstantPyIOmicaExamplesDirectory</strong> = '/Users/user/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data/ExampleData'<br>
+<strong>PackageDirectory</strong> = '/Users/user/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica'<br>
+<strong>UserDataDirectory</strong> = '/Users/user/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data'<br>
+<strong>path</strong> = '/Users/user/anaconda3/envs/pyiomicaTest/lib/python3.7/site-packages/pyiomica/data/ExampleVideos'<br>
+<strong>readIn</strong> = PosixPath('/Users/user/anaconda3/envs/pyiomica...thon3.7/site-packages/pyiomica/data/__init__.py')</td></tr></table>
 </body></html>
