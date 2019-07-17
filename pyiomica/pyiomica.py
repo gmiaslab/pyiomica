@@ -2797,7 +2797,9 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
         ClusteringObject: clustering object
         saveDir: path of directories to save the object to
         dataName: label to include in the file name
-        AutocorrNotPeriodogr: export data 
+        AutocorrNotPeriodogr: export data
+        textScale: scaling of text size
+        vectorImage: Boolean for exporting vector graphics or PNG format 
 
     Returns:
         None
