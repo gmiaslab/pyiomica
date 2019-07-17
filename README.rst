@@ -20,6 +20,7 @@ Pre-Installation Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To install PyIOmica on any platform you need:
+
 1. Python version 3.7 or higher
 2. Recommended: 16GB of RAM or higher
 
