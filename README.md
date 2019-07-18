@@ -47,7 +47,8 @@ Documentation for PyIOmica is built-in and is available through the help() funct
 * PyIOmica is a multi-omics analysis framework distributed as a Python package that aims to assist in bioinformatics.
 * The most current version of the package is maintained at
 <https://github.com/gmiaslab/pyiomica>
-* News are distributed via twitter (@mathiomica)
+* News are distributed via twitter (@mathiomica) and at
+<https://mathiomica.org>
 
 ## E. LICENSING
 
