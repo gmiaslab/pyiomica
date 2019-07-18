@@ -3078,7 +3078,7 @@ def PlotVisibilityGraph(A, data, times, fileName, id):
     return None
 
 
-def PlotHorizontaVisibilityGraph(A, data, times, fileName, id):
+def PlotHorizontalVisibilityGraph(A, data, times, fileName, id):
     
     """Bar-plot style horizontal visibility graph.
 
@@ -3093,7 +3093,7 @@ def PlotHorizontaVisibilityGraph(A, data, times, fileName, id):
         None
 
     Usage:
-        PlotHorizontaVisibilityGraph(A, data, times, 'FIgure.png', 'Test Data')
+        PlotHorizontalVisibilityGraph(A, data, times, 'FIgure.png', 'Test Data')
     """
 
     fig, ax = plt.subplots(figsize=(8,4))
