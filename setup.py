@@ -12,7 +12,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='pyiomica',
     packages=find_packages(),
-    version='1.0.0',
+    version='1.0.1',
     description='Omics Analysis Tool Suite',
     long_description=long_description,
     include_package_data=True,
