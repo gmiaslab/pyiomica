@@ -8,7 +8,7 @@ visualizations and computational tools for graph analyses.
 
 PyIOmica Versions
 -----------------
--  1.0.0
+-  1.0.2
 
 PyIOmica Installation Instructions
 ==================================

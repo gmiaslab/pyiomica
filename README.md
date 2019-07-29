@@ -5,6 +5,8 @@ This repository contains PyIOmica, a Python package that provides bioinformatics
 
 ## PyIOmica Versions
 
+* 1.0.2 : Setup updates
+* 1.0.1 : Setup updates
 * 1.0.0 : Initial Release
 
 # PyIOmica Installation Instructions
