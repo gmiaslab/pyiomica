@@ -45,7 +45,7 @@ setup(
         'openpyxl>=2.6.2',
         'pandas>=0.24.2',
         'pymysql>=0.9.3',
-        'pytables>=3.5.2',
+        'tables>=3.5.2',
         'requests>=2.22.0',
         'scikit-learn>=0.21.2',
         'scipy>=1.2.1',
