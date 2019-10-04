@@ -92,8 +92,9 @@ def createDirectories(path):
 
     """Create a path of directories, unless the path already exists.
 
-    Args:
-        path: path directory
+    Parameters:
+        path: str
+            Path directory
 
     Returns:
         None
@@ -115,13 +116,19 @@ def runCPUs(NumberOfAvailableCPUs, func, list_of_tuples_of_func_params):
 
     """Parallelize function call with multiprocessing.Pool.
 
-    Args:
-        NumberOfAvailableCPUs: number of processes to create
-        func: function to apply, must take at most one argument
-        list_of_tuples_of_func_params: function parameters
+    Parameters:
+        NumberOfAvailableCPUs: int
+            Number of processes to create
+
+        func: function
+            Function to apply, must take at most one argument
+
+        list_of_tuples_of_func_params: list
+            Function parameters
 
     Returns:
-        Results of func in a numpy array
+        2d numpy.array
+            Results of func in a numpy array
 
     Usage:
         results = runCPUs(4, pAutocorrelation, [(times[i], data[i], allTimes) for i in range(10)])
@@ -140,12 +147,21 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFor
     """Write object into a file. Pandas and Numpy objects are recorded in HDF5 format
     when 'hdf5fileName' is provided otherwise pickled into a new file.
 
-    Args:
-        data: data object to write into a file
-        fileName: path of directories ending with the file name
-        withPKLZextension: add ".pklz" to a pickle file
-        hdf5fileName: path of directories ending with the file name. If None then data is pickled.
-        jsonFormat: save data into compressed json file 
+    Parameters:
+        data: any type
+            Data object to write into a file
+
+        fileName: str
+            Path of directories ending with the file name
+
+        withPKLZextension: boolean, Default True
+            Add ".pklz" to a pickle file
+
+        hdf5fileName: str, Default None
+            Path of directories ending with the file name. If None then data is pickled
+
+        jsonFormat: boolean, Default False
+            Save data into compressed json file 
 
     Returns:
         None
@@ -204,14 +220,23 @@ def read(fileName, withPKLZextension = True, hdf5fileName = None, jsonFormat = F
     """Read object from a file recorded by function "write". Pandas and Numpy objects are
     read from HDF5 file when provided, otherwise attempt to read from PKLZ file.
 
-    Args:
-        fileName: path of directories ending with the file name
-        withPKLZextension: add ".pklz" to a pickle file
-        hdf5fileName: path of directories ending with the file name. If None then data is pickled
-        jsonFormat: save data into compressed json file 
+    Parameters:
+        fileName: str
+            Path of directories ending with the file name
+
+        withPKLZextension: boolean, Default True
+            Add ".pklz" to a pickle file
+
+        hdf5fileName: str, Default None
+            Path of directories ending with the file name. 
+            If None then data is read from a pickle file
+
+        jsonFormat: boolean, Default False
+            Save data into compressed json file 
     
     Returns:
-        data: data object to write into a file
+        data 
+            Data object to write into a file
 
     Usage:
         exampleDataFrame = read('/dir1/exampleDataFrame', hdf5fileName='/dir2/data.h5')
@@ -261,11 +286,13 @@ def createReverseDictionary(inputDictionary):
     """Efficient way to create a reverse dictionary from a dictionary.
     Utilizes Pandas.Dataframe.groupby and Numpy arrays indexing.
     
-    Args: 
-        inputDictionary: a dictionary to reverse
+    Parameters: 
+        inputDictionary: dictionary
+            Dictionary to reverse
 
     Returns:
-        Reversed dictionary
+        dictionary
+            Reversed dictionary
 
     Usage:
         revDict = createReverseDictionary(Dict)
@@ -284,11 +311,13 @@ def readMathIOmicaData(fileName):
 
     '''Read text files exported by MathIOmica and convert to Python data
 
-    Args:
-        fileName: path of directories and name of the file containing data
+    Parameters:
+        fileName: str
+            Path of directories and name of the file containing data
 
     Returns:
-        Python data
+        data
+            Python data
 
     Usage:
         data = readMathIOmicaData("../../MathIOmica/MathIOmica/MathIOmicaData/ExampleData/rnaExample")
@@ -418,15 +447,23 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
 
     """Generate Open Biomedical Ontologies (OBO) Gene Ontology (GO) vocabulary dictionary.
     
-    Args: 
-        FileURL: provides the location of the Open Biomedical Ontologies (OBO) Gene Ontology (GO) 
-    file in case this will be downloaded from the web
-        ImportDirectly: import from URL regardles is the file already exists
-        PyIOmicaDataDirectory: path of directories to data storage
-        OBOFile: name of file to store data in (file will be zipped)
+    Parameters: 
+        FileURL: str, Default "http://purl.obolibrary.org/obo/go/go-basic.obo"
+            Provides the location of the Open Biomedical Ontologies (OBO) Gene Ontology (GO) 
+            file in case this will be downloaded from the web
+
+        ImportDirectly: boolean, Default False
+            Import from URL regardles is the file already exists
+
+        PyIOmicaDataDirectory: str, Default None
+            Path of directories to data storage
+
+        OBOFile: str, Default "goBasicObo.txt"
+            Name of file to store data in (file will be zipped)
 
     Returns:
-        Dictionary of definitions
+        dictionary
+            Dictionary of definitions
 
     Usage:
         OBODict = OBOGODictionary()
@@ -492,20 +529,32 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
     
     """Create an ID/accession dictionary from a UCSC search - typically of gene annotations.
     
-    Args: 
-        geneUCSCTable: path to a geneUCSCTable file
-        UCSCSQLString: an association to be used to obtain data from the UCSC Browser tables. The key of the association must 
-    match the Species option value used (default: human). The value for the species corresponds to the actual MySQL command used
-        UCSCSQLSelectLabels: an association to be used to assign key labels for the data improted from the UCSC Browser tables. 
-    The key of the association must match the Species option value used (default: human). The value is a multi component string 
-    list corresponding to the matrices in the data file, or the tables used in the MySQL query provided by UCSCSQLString
-        ImportDirectly: import from URL regardles is the file already exists
-        Species: species considered in the calculation, by default corresponding to human
-        KEGGUCSCSplit: a two component list, {True/False, label}. If the first component is set to True the initially imported KEGG IDs, 
-    identified by the second component label,  are split on + string to fix nomenclature issues, retaining the string following +
+    Parameters: 
+        geneUCSCTable: str, Default None
+            Path to a geneUCSCTable file
+
+        UCSCSQLString: str, Default None
+            An association to be used to obtain data from the UCSC Browser tables. The key of the association must 
+            match the Species option value used (default: human). The value for the species corresponds to the actual MySQL command used
+
+        UCSCSQLSelectLabels: str, Default None
+            An association to be used to assign key labels for the data improted from the UCSC Browser tables. 
+            The key of the association must match the Species option value used (default: human). The value is a multi component string 
+            list corresponding to the matrices in the data file, or the tables used in the MySQL query provided by UCSCSQLString
+
+        ImportDirectly: boolean, Default False
+            Import from URL regardles is the file already exists
+
+        Species: str, Default "human"
+            Species considered in the calculation, by default corresponding to human
+
+        KEGGUCSCSplit: list, Default [True,"KEGG Gene ID"]
+            Two component list, {True/False, label}. If the first component is set to True the initially imported KEGG IDs, 
+            identified by the second component label,  are split on + string to fix nomenclature issues, retaining the string following +
 
     Returns:
-        Dictionary
+        dictionary
+            Gene dictionary
 
     Usage:
         geneDict = GetGeneDictionary()
@@ -592,24 +641,42 @@ def GOAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, Bac
     
     """Download and create gene associations and restrict to required background set.
 
-    Args: 
-        PyIOmicaDataDirectory: the directory where the default package data is stored
-        ImportDirectly: import from URL regardles is the file already exists
-        BackgroundSet: background list to create annotation projection to limited background space, involves
-    considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should 
-    be considered as the background for the calculation
-        Species: species considered in the calculation, by default corresponding to human
-        LengthFilterFunction: performs computations of membership in pathways/ontologies/groups/sets, 
-    that specifies which function to use to filter the number of members a reported category has 
-    compared to the number typically provided by LengthFilter 
-        LengthFilter: argument for LengthFilterFunction
-        GOFileName: the name for the specific GO file to download from the GOURL if option ImportDirectly is set to True
-        GOFileColumns: columns to use for IDs and GO:accessions respectively from the downloaded GO annotation file, 
-    used when ImportDirectly is set to True to obtain a new GO association file
-        GOURL: the location (base URL) where the GO association annotation files are downloaded from
+    Parameters: 
+        PyIOmicaDataDirectory: str, Default None
+            The directory where the default package data is stored
+
+        ImportDirectly: boolean, Default False
+            Import from URL regardles is the file already exists
+
+        BackgroundSet: list, Default []
+            Background list to create annotation projection to limited background space, involves
+            considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should 
+            be considered as the background for the calculation
+
+        Species: str, Default "human"
+            Species considered in the calculation, by default corresponding to human
+
+        LengthFilterFunction: function, Default np.greater_equal
+            Performs computations of membership in pathways/ontologies/groups/sets, 
+            that specifies which function to use to filter the number of members a reported category has 
+            compared to the number typically provided by LengthFilter 
+
+        LengthFilter: int, Default None
+            Argument for LengthFilterFunction
+
+        GOFileName: str, Default None
+            The name for the specific GO file to download from the GOURL if option ImportDirectly is set to True
+
+        GOFileColumns: list, Default [2, 5]
+            Columns to use for IDs and GO:accessions respectively from the downloaded GO annotation file, 
+            used when ImportDirectly is set to True to obtain a new GO association file
+
+        GOURL: str, Default "http://current.geneontology.org/annotations/"
+            The location (base URL) where the GO association annotation files are downloaded from
 
     Returns:
-        IDToGO and GOToID dictionary
+        dictionary
+            Dictionary of IDToGO and GOToID dictionaries
 
     Usage:
         GOassignment = GOAnalysisAssigner()
@@ -707,11 +774,16 @@ def obtainConstantGeneDictionary(GeneDictionary, GetGeneDictionaryOptions, Augme
     """Obtain gene dictionary - if it exists can either augment with new information or Species or create new, 
     if not exist then create variable.
 
-    Args:
-        GeneDictionary: an existing variable to use as a gene dictionary in annotations. 
-    If set to None the default ConstantGeneDictionary will be used
-        GetGeneDictionaryOptions: a list of options that will be passed to this internal GetGeneDictionary function
-        AugmentDictionary: a choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
+    Parameters:
+        GeneDictionary: dictionary or None
+            An existing variable to use as a gene dictionary in annotations. 
+            If set to None the default ConstantGeneDictionary will be used
+
+        GetGeneDictionaryOptions: dictionary
+            A list of options that will be passed to this internal GetGeneDictionary function
+
+        AugmentDictionary: boolean
+            A choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
 
     Returns:
         None
@@ -746,38 +818,80 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
 
     """Calculate input data over-representation analysis for Gene Ontology (GO) categories.
 
-    Args:
-        data: data to analyze
-        GetGeneDictionaryOptions: a list of options that will be passed to this internal GetGeneDictionary function
-        AugmentDictionary: a choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
-        InputID:  kind of identifiers/accessions used as input
-        OutputID: kind of IDs/accessions to convert the input IDs/accession numbers in the function's analysis
-        GOAnalysisAssignerOptions: a list of options that will be passed to the internal GOAnalysisAssigner function
-        BackgroundSet: background list to create annotation projection to limited background space, involves
-    considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should be 
-    considered as the background for the calculation
-        Species: the species considered in the calculation, by default corresponding to human
-        OntologyLengthFilter: function that can be used to set the value for which terms to consider in the computation, 
-    by excluding GO terms that have fewer items compared to the OntologyLengthFilter value. It is used by the internal
-    GOAnalysisAssigner function
-        ReportFilter: functions that use pathways/ontologies/groups, and provides a cutoff for membership in ontologies/pathways/groups
-    in selecting which terms/categories to return. It is typically used in conjunction with ReportFilterFunction
-        ReportFilterFunction: specifies what operator form will be used to compare against ReportFilter option value in 
-    selecting which terms/categories to return
-        HypothesisFunction: allows the choice of function for implementing multiple hypothesis testing considerations
-        FilterSignificant: can be set to True to filter data based on whether the analysis result is statistically significant, 
-    or if set to False to return all membership computations
-        OBODictionaryVariable: a GO annotation variable. If set to None, OBOGODictionary will be used internally to 
-    automatically generate the default GO annotation
-        OBOGODictionaryOptions: a list of options to be passed to the internal OBOGODictionary function that provides the GO annotations
-        MultipleListCorrection: specifies whether or not to correct for multi-omics analysis. The choices are None, Automatic, 
-    or a custom number, e.g protein+RNA
-        MultipleList: specifies whether the input accessions list constituted a multi-omics list input that is annotated so
-        GeneDictionary: points to an existing variable to use as a gene dictionary in annotations. If set to None 
-    the default ConstantGeneDictionary will be used
+    Parameters:
+        data: pd.DataFrame or list
+            Data to analyze
+
+        GetGeneDictionaryOptions: dictionary, Default {}
+            A list of options that will be passed to this internal GetGeneDictionary function
+
+        AugmentDictionary: boolean, Default True
+            A choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
+
+        InputID: list, Default ["UniProt ID","Gene Symbol"]
+            Kind of identifiers/accessions used as input
+
+        OutputID: str, Default "UniProt ID"
+            Kind of IDs/accessions to convert the input IDs/accession numbers in the function's analysis
+
+        GOAnalysisAssignerOptions: dictionary, Default {}
+            A list of options that will be passed to the internal GOAnalysisAssigner function
+
+        BackgroundSet: list, Default []
+            Background list to create annotation projection to limited background space, involves
+            considering pathways/groups/sets and that provides a list of IDs (e.g. gene accessions) that should be 
+            considered as the background for the calculation
+
+        Species: str, Default "human"
+            The species considered in the calculation, by default corresponding to human
+
+        OntologyLengthFilter: int, Default 2
+            Function that can be used to set the value for which terms to consider in the computation, 
+            by excluding GO terms that have fewer items compared to the OntologyLengthFilter value. It is used by the internal
+            GOAnalysisAssigner function
+
+        ReportFilter: int, Default 1
+            Functions that use pathways/ontologies/groups, and provides a cutoff for membership in ontologies/pathways/groups
+            in selecting which terms/categories to return. It is typically used in conjunction with ReportFilterFunction
+
+        ReportFilterFunction: function , Default np.greater_equal
+            Specifies what operator form will be used to compare against ReportFilter option value in 
+            selecting which terms/categories to return
+
+        pValueCutoff: float, Default 0.05
+            Significance cutoff
+
+        TestFunction: function, Default lambda n, N, M, x: 1. - scipy.stats.hypergeom.cdf(x-1, M, n, N)
+            Test function
+
+        HypothesisFunction: function, Default lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"]
+            Allows the choice of function for implementing multiple hypothesis testing considerations
+
+        FilterSignificant: boolean, Default True
+            Can be set to True to filter data based on whether the analysis result is statistically significant, 
+            or if set to False to return all membership computations
+
+        OBODictionaryVariable: str, Default None
+            A GO annotation variable. If set to None, OBOGODictionary will be used internally to 
+            automatically generate the default GO annotation
+
+        OBOGODictionaryOptions: dictionary, Default {}
+            A list of options to be passed to the internal OBOGODictionary function that provides the GO annotations
+
+        MultipleListCorrection: boolean, Default None
+            Specifies whether or not to correct for multi-omics analysis. The choices are None, Automatic, 
+            or a custom number, e.g protein+RNA
+
+        MultipleList: boolean, Default False
+            Specifies whether the input accessions list constituted a multi-omics list input that is annotated so
+
+        GeneDictionary: str, Default None
+            Points to an existing variable to use as a gene dictionary in annotations. If set to None 
+            the default ConstantGeneDictionary will be used
 
     Returns:
-        Enrichment dictionary
+        dictionary
+            Enrichment dictionary
 
     Usage:
         goExample1 = GOAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", 
@@ -863,16 +977,26 @@ def GeneTranslation(InputList, TargetIDList, GeneDictionary, InputID = None, Spe
 
     """Use geneDictionary to convert inputList IDs to different annotations as indicated by targetIDList.
     
-    Args:
-        InputList: list of names
-        TargetIDList: target ID list
-        GeneDictionary: an existing variable to use as a gene dictionary in annotations. 
-    If set to None the default ConstantGeneDictionary will be used
-        InputID: the kind of identifiers/accessions used as input
-        Species: the species considered in the calculation, by default corresponding to human
+    Parameters:
+        InputList: list
+            List of names
+
+        TargetIDList: list
+            Target ID list
+
+        GeneDictionary: dictionary
+            An existing variable to use as a gene dictionary in annotations.
+            If set to None the default ConstantGeneDictionary will be used
+
+        InputID: str, Default None
+            The kind of identifiers/accessions used as input
+
+        Species: str, Default "human"
+            The species considered in the calculation, by default corresponding to human
     
     Returns:
-        Dictionary
+        dictionary
+            Gene dictionary
 
     Usage:
         GenDict = GeneTranslation(data, "UniProt ID", ConstantGeneDictionary, InputID = ["UniProt ID","Gene Symbol"],  Species = "human")
@@ -919,23 +1043,39 @@ def KEGGAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, B
     """Create KEGG: Kyoto Encyclopedia of Genes and Genomes pathway associations, 
     restricted to required background set, downloading the data if necessary.
 
-    Args: 
-        PyIOmicaDataDirectory: directory where the default package data is stored
-        ImportDirectly: import from URL regardles is the file already exists
-        BackgroundSet: a list of IDs (e.g. gene accessions) that should be considered as the background for the calculation
-        KEGGQuery1: make KEGG API calls, and sets string query1 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
-    Typically this will be used as the target database to find related entries by using database cross-references
-        KEGGQuery2: KEGG API calls, and sets string query2 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
-    Typically this will be used as the source database to find related entries by using database cross-references
-        LengthFilterFunction: option for functions that perform computations of membership in 
-    pathways/ontologies/groups/sets, that specifies which function to use to filter the number of members a reported 
-    category has compared to the number typically provided by LengthFilter
-        LengthFilter: allows the selection of how many members each category can have, as typically 
-    restricted by the LengthFilterFunction
-        Labels: a string list for how keys in a created association will be named
+    Parameters: 
+        PyIOmicaDataDirectory: str, Default None
+            Directory where the default package data is stored
+
+        ImportDirectly: boolean, Default False
+            Import from URL regardles is the file already exists
+
+        BackgroundSet: list, Default []
+            A list of IDs (e.g. gene accessions) that should be considered as the background for the calculation
+
+        KEGGQuery1: str, Default "pathway"
+            Make KEGG API calls, and sets string query1 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
+            Typically this will be used as the target database to find related entries by using database cross-references
+
+        KEGGQuery2: str, Default "hsa"
+            KEGG API calls, and sets string query2 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
+            Typically this will be used as the source database to find related entries by using database cross-references
+
+        LengthFilterFunction: function, Default np.greater_equal
+            Option for functions that perform computations of membership in 
+            pathways/ontologies/groups/sets, that specifies which function to use to filter the number of members a reported 
+            category has compared to the number typically provided by LengthFilter
+
+        LengthFilter: int, Default None
+            Allows the selection of how many members each category can have, as typically 
+            restricted by the LengthFilterFunction
+
+        Labels: list, Default ["IDToPath", "PathToID"]
+            A string list for how keys in a created association will be named
 
     Returns:
-        IDToPath and PathToID dictionary
+        dictionary
+            IDToPath and PathToID dictionary
 
     Usage:
         KEGGassignment = KEGGAnalysisAssigner()
@@ -1016,16 +1156,24 @@ def KEGGDictionary(PyIOmicaDataDirectory = None, ImportDirectly = False, KEGGQue
     """Create a dictionary from KEGG: Kyoto Encyclopedia of Genes and Genomes terms - 
     typically association of pathways and members therein.
     
-    Args: 
-        PyIOmicaDataDirectory: directory where the default package data is stored
-        ImportDirectly: import from URL regardles is the file already exists
-        KEGGQuery1: make KEGG API calls, and sets string query1 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
-    Typically this will be used as the target database to find related entries by using database cross-references
-        KEGGQuery2: KEGG API calls, and sets string query2 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
-    Typically this will be used as the source database to find related entries by using database cross-references
+    Parameters: 
+        PyIOmicaDataDirectory: str, Default None
+            directory where the default package data is stored
+
+        ImportDirectly: boolean, Default False
+            import from URL regardles is the file already exists
+
+        KEGGQuery1: str, Default "pathway"
+            make KEGG API calls, and sets string query1 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
+            Typically this will be used as the target database to find related entries by using database cross-references
+
+        KEGGQuery2: str, Default "hsa"
+            KEGG API calls, and sets string query2 in http://rest.kegg.jp/link/<> query1 <> / <> query2. 
+            Typically this will be used as the source database to find related entries by using database cross-references
 
     Returns:
-        Dictionary of definitions
+        dictionary
+            Dictionary of definitions
 
     Usage:
         KEGGDict = KEGGDictionary()
@@ -1081,48 +1229,107 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
     """Calculate input data over-representation analysis for KEGG: Kyoto Encyclopedia of Genes and Genomes pathways.
     Input can be a list, a dictionary of lists or a clustering object.
 
-    Args:
-        data: data to analyze
-        AnalysisType: analysis methods that may be used, "Genomic", "Molecular" or "All"
-        GetGeneDictionaryOptions: a list of options that will be passed to this internal GetGeneDictionary function
-        AugmentDictionary: a choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
-        InputID: the kind of identifiers/accessions used as input
-        OutputID: a string value that specifies what kind of IDs/accessions to convert the input IDs/accession 
-    numbers in the function's analysis
-        MolecularInputID: a string list to indicate the kind of ID to use for the input molecule entries
-        KEGGAnalysisAssignerOptions: a list of options that will be passed to this internal KEGGAnalysisAssigner function
-        BackgroundSet: a list of IDs (e.g. gene accessions) that should be considered as the background for the calculation
-        KEGGOrganism: indicates which organism (org) to use for \"Genomic\" type of analysis (default is human analysis: org=\"hsa\")
-        KEGGMolecular: which database to use for molecular analysis (default is the compound database: cpd)
-        KEGGDatabase: KEGG database to use as the target database
-        PathwayLengthFilter: pathways to consider in the computation, by excluding pathways that have fewer items 
-    compared to the PathwayLengthFilter value
-        ReportFilter: provides a cutoff for membership in ontologies/pathways/groups in selecting which terms/categories 
-    to return. It is typically used in conjunction with ReportFilterFunction
-        ReportFilterFunction: operator form will be used to compare against ReportFilter option value in selecting 
-    which terms/categories to return
-        pValueCutoff: a cutoff p-value for (adjusted) p-values to assess statistical significance 
-        TestFunction: a function used to calculate p-values
-        HypothesisFunction: allows the choice of function for implementing multiple hypothesis testing considerations
-        FilterSignificant: can be set to True to filter data based on whether the analysis result is statistically significant, 
-    or if set to False to return all membership computations
-        KEGGDictionaryVariable: KEGG dictionary, and provides a KEGG annotation variable. If set to None, KEGGDictionary 
-    will be used internally to automatically generate the default KEGG annotation
-        KEGGDictionaryOptions: a list of options to be passed to the internal KEGGDictionary function that provides the KEGG annotations
-        MultipleListCorrection: specifies whether or not to correct for multi-omics analysis. 
-    The choices are None, Automatic, or a custom number
-        MultipleList: whether the input accessions list constituted a multi-omics list input that is annotated so
-        GeneDictionary: existing variable to use as a gene dictionary in annotations. If set to None the default ConstantGeneDictionary will be used
-        Species: the species considered in the calculation, by default corresponding to human
-        MolecularSpecies: the kind of molecular input
-        NonUCSC: if UCSC browser was used in determining an internal GeneDictionary used in ID translations,
-    where the KEGG identifiers for genes are number strings (e.g. 4790).The NonUCSC option can be set to True 
-    if standard KEGG accessions are used in a user provided GeneDictionary variable, 
-    in the form OptionValue[KEGGOrganism] <>:<>numberString, e.g. hsa:4790
-        PyIOmicaDataDirectory: directory where the default package data is stored
+    Parameters:
+        data: pandas.DetaFrame or list
+            Data to analyze
+
+        AnalysisType: str, Default "Genomic"
+            Analysis methods that may be used, "Genomic", "Molecular" or "All"
+
+        GetGeneDictionaryOptions: dictionary, Default {}
+            A list of options that will be passed to this internal GetGeneDictionary function
+
+        AugmentDictionary: boolean, Default True
+            A choice whether or not to augment the current ConstantGeneDictionary global variable or create a new one
+
+        InputID: list, Default ["UniProt ID", "Gene Symbol"]
+            The kind of identifiers/accessions used as input
+
+        OutputID: str, Default "KEGG Gene ID"
+            A string value that specifies what kind of IDs/accessions to convert the input IDs/accession 
+            numbers in the function's analysis
+
+        MolecularInputID: list, Default ["cpd"]
+            A string list to indicate the kind of ID to use for the input molecule entries
+
+        MolecularOutputID: str, Default "cpd"
+            A string list to indicate the kind of ID to use for the input molecule entries
+
+        KEGGAnalysisAssignerOptions: dictionary, Default {}
+            A list of options that will be passed to this internal KEGGAnalysisAssigner function
+
+        BackgroundSet: list, Default []
+            A list of IDs (e.g. gene accessions) that should be considered as the background for the calculation
+
+        KEGGOrganism: str, Default "hsa"
+            Indicates which organism (org) to use for \"Genomic\" type of analysis (default is human analysis: org=\"hsa\")
+
+        KEGGMolecular: str, Default "cpd"
+            Which database to use for molecular analysis (default is the compound database: cpd)
+
+        KEGGDatabase: str, Default "pathway"
+            KEGG database to use as the target database
+
+        PathwayLengthFilter: int, Default 2
+            Pathways to consider in the computation, by excluding pathways that have fewer items 
+            compared to the PathwayLengthFilter value
+
+        ReportFilter: int, Default 1
+            Provides a cutoff for membership in ontologies/pathways/groups in selecting which terms/categories 
+            to return. It is typically used in conjunction with ReportFilterFunction
+
+        ReportFilterFunction: function, Default np.greater_equal
+            Operator form will be used to compare against ReportFilter option value in selecting 
+            which terms/categories to return
+
+        pValueCutoff: float, Default 0.05
+            A cutoff p-value for (adjusted) p-values to assess statistical significance
+
+        TestFunction: function, Default lambda n, N, M, x: 1. - scipy.stats.hypergeom.cdf(x-1, M, n, N)
+            A function used to calculate p-values
+
+        HypothesisFunction: function, Default lambda data, SignificanceLevel: BenjaminiHochbergFDR(data, SignificanceLevel=SignificanceLevel)["Results"]
+            Allows the choice of function for implementing multiple hypothesis testing considerations
+
+        FilterSignificant: boolean, Default True
+            Can be set to True to filter data based on whether the analysis result is statistically significant, 
+            or if set to False to return all membership computations
+
+        KEGGDictionaryVariable: str, Default None
+            KEGG dictionary, and provides a KEGG annotation variable. If set to None, KEGGDictionary 
+            will be used internally to automatically generate the default KEGG annotation
+
+        KEGGDictionaryOptions: dictionary, Default {}
+            A list of options to be passed to the internal KEGGDictionary function that provides the KEGG annotations
+
+        MultipleListCorrection: boolean, Default None
+            Specifies whether or not to correct for multi-omics analysis. 
+            The choices are None, Automatic, or a custom number
+
+        MultipleList: boolean, Default False 
+            Whether the input accessions list constituted a multi-omics list input that is annotated so
+
+        GeneDictionary: str, Default None
+            Existing variable to use as a gene dictionary in annotations. If set to None the default ConstantGeneDictionary will be used
+
+        Species: str, Default "human"
+            The species considered in the calculation, by default corresponding to human
+
+        MolecularSpecies: str, Default "compound"
+            The kind of molecular input
+
+        NonUCSC: , Default 
+            If UCSC browser was used in determining an internal GeneDictionary used in ID translations,
+            where the KEGG identifiers for genes are number strings (e.g. 4790).The NonUCSC option can be set to True 
+            if standard KEGG accessions are used in a user provided GeneDictionary variable, 
+            in the form OptionValue[KEGGOrganism] <>:<>numberString, e.g. hsa:4790
+
+        PyIOmicaDataDirectory: str, Default None
+            Directory where the default package data is stored
 
     Returns:
-        Enrichment dictionary
+        dictionary
+            Enrichment dictionary
 
     Usage:
         keggExample1 = KEGGAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", "LYN", "MYD88", 
@@ -1270,15 +1477,23 @@ def MassMatcher(data, accuracy, MassDictionaryVariable = None, MolecularSpecies 
     """Assign putative mass identification to input data based on monoisotopic mass 
     (using PyIOmica's mass dictionary). The accuracy in parts per million. 
     
-    Args: 
-        data: input data
-        accuracy: accuracy
-        MassDictionaryVariable: mass dictionary variable. If set to None, inbuilt 
-    mass dictionary (MassDictionary) will be loaded and used
-        MolecularSpecies: the kind of molecular input
+    Parameters: 
+        data: np.array
+            Input data
+
+        accuracy: float
+            Accuracy
+
+        MassDictionaryVariable: boolean, Default None
+            Mass dictionary variable. If set to None, inbuilt 
+            mass dictionary (MassDictionary) will be loaded and used
+
+        MolecularSpecies: str, Default "cpd"
+            The kind of molecular input
 
     Returns:
-        List of IDs 
+        list
+            List of IDs 
 
     Usage:
        result = MassMatcher(18.010565, 2)
@@ -1296,11 +1511,13 @@ def MassDictionary(PyIOmicaDataDirectory=None):
 
     """Load PyIOmica's current mass dictionary.
     
-    Args:
-        PyIOmicaDataDirectory: directory where the default package data is stored
+    Parameters:
+        PyIOmicaDataDirectory: str, Default None
+            Directory where the default package data is stored
 
     Returns:
-        Mass dictionary
+        dictionary
+            Mass dictionary
 
     Usage:
         MassDict = MassDictionary()
@@ -1346,10 +1563,15 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
     """Export results from enrichment analysis to Excel spreadsheets.
     
-    Args:
-        data: enrichment results
-        AppendString: custom report name, if empty then time stamp will be used
-        OutputDirectory: path of directories where the report will be saved
+    Parameters:
+        data: dictionary
+            Enrichment results
+
+        AppendString: str, Default ""
+            Custom report name, if empty then time stamp will be used
+
+        OutputDirectory: boolean, Default None
+            Path of directories where the report will be saved
 
     Returns:
         None
@@ -1456,9 +1678,12 @@ def chop(expr, tolerance=1e-10):
 
     """Equivalent of Mathematica.Chop Function.
 
-    Args:
-        expr: a number or a pyhton sequence of numbers
-        tolerance: default is the same as in Mathematica
+    Parameters:
+        expr: float, tuple, list or numpy.array
+            A number or a pyhton sequence of numbers
+
+        tolerance: 
+            Default is the same as in Mathematica
 
     Returns:
         Chopped data
@@ -1480,14 +1705,15 @@ def chop(expr, tolerance=1e-10):
 
 def modifiedZScore(subset):
 
-    """Calculate modified z-score of a 1D array based on "Median absolute deviation".
-    Use on 1-D arrays only.
+    """Calculate modified z-score based on "Median absolute deviation".
 
-    Args:
-        subset: data to transform
+    Parameters:
+        subset: pandas.Series
+            Data to transform
 
     Returns:
-        Transformed subset
+        pandas.Series
+            Transformed subset
 
     Usage:
         data = modifiedZScore(data)
@@ -1497,12 +1723,16 @@ def modifiedZScore(subset):
 
         """1D, 2D Median absolute deviation of a sequence of numbers or pd.Series.
 
-        Args:
-            expr: data for analysis
-            axis: default is None: multidimentional arrays are flattened, 0: use if data in columns, 1: use if data in rows
+        Parameters:
+            expr: pandas.Series, pandas.DataFrame or numpy.array
+                Data for analysis
+
+            axis: int, Default None
+                Multidimentional arrays are flattened, 0: use if data in columns, 1: use if data in rows
 
         Returns:
-            Median absolute deviation (M.A.D.)
+            float
+                Median absolute deviation (M.A.D.)
 
         Usage:
             MedianAD = medianAbsoluteDeviation(data, axis=None)
@@ -1563,13 +1793,19 @@ def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
 
     """Power transform from scipy.stats
 
-    Args:
-        subset: pandas Series.
-        lmbda: Lambda parameter, if not specified optimal value will be determined
-        giveLmbda: also return Lambda value
+    Parameters:
+        subset: pandas.Series
+            Data to transform
+
+        lmbda: float, Default None
+            Lambda parameter, if not specified optimal value will be determined
+
+        giveLmbda: boolean, Default False
+            Also return Lambda value
 
     Returns:
-        Transformed subset and Lambda parameter
+        pandas.Series
+            Transformed data and Lambda parameter
 
     Usage:
         myData = boxCoxTransform(myData)
@@ -1602,17 +1838,25 @@ def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
 
 def ampSquaredNormed(func, freq, times, data):
 
-    """Lomb-Scargle core function
-    Calculate the different frequency components of our spectrum: project the cosine/sine component and normalize it:
+    """Lomb-Scargle core function. For internal use only.
+    Calculate the different frequency components of our spectrum: project the cosine/sine component and normalize it
 
-    Args:
-        func: Sin or Cos
-        freq: frequencies (1D array of floats)
-        times: input times (starting point adjusted w.r.t.dataset times), Zero-padded
-        data: input Data with the mean subtracted from it, before zero-padding.
+    Parameters:
+        func: function
+            One of two functions, i.e. Sin or Cos
+
+        freq: float
+            Frequency
+
+        times: 1d numpy.array
+            Input times (starting point adjusted w.r.t.dataset times), Zero-padded
+
+        data: 1d numpy.array
+            Input Data with the mean subtracted from it, before zero-padding.
 
     Returns:
-        Squared amplitude normalized.
+        float
+            Squared amplitude normalized.
 
     Usage:
         coef = ampSquaredNormed(np.cos, freguency, inputTimesNormed, inputDataCentered)
@@ -1632,13 +1876,22 @@ def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1
     
     """Autocorrelation function
 
-    Args:
-        inputTimes: times corresponding to provided data points (1D array of floats)
-        inputData: data points (1D array of floats)
-        inputSetTimes: a complete set of all possible N times during which data could have been collected.
+    Parameters:
+        inputTimes: 1d numpy.array
+            Times corresponding to provided data points
+
+        inputData: 1d numpy.array
+            Data points
+
+        inputSetTimes: 1d numpy.array
+            A complete set of all possible N times during which data could have been collected.
+
+        UpperFrequencyFactor: int, Default 1
+            Upper frequency factor.
 
     Returns:
-        Array of time lags with corresponding autocorrelations
+        2d numpy.array
+            Array of time lags with corresponding autocorrelations
 
     Usage:
         result = autocorrelation(inputTimes, inputData, inputSetTimes)
@@ -1701,11 +1954,21 @@ def pAutocorrelation(args):
 
     """Wrapper of Autocorrelation function for use with Multiprocessing.
 
-    Args:
-        args: a tuple of arguments in the form (inputTimes, inputData, inputSetTimes)
+    Parameters:
+        args: tuple
+            A tuple of arguments in the form (inputTimes, inputData, inputSetTimes):
+                inputTimes: 1d numpy.array
+                    Times corresponding to provided data points
+
+                inputData: 1d numpy.array
+                    Data points
+
+                inputSetTimes: 1d numpy.array
+                    A complete set of all possible N times during which data could have been collected.
 
     Returns:
-        Array of time lags with corresponding autocorrelations
+        2d numpy.array
+            Array of time lags with corresponding autocorrelations
 
     Usage:
         result = pAutocorrelation((inputTimes, inputData, inputSetTimes))
@@ -1721,13 +1984,19 @@ def getSpikes(inputData, func, cutoffs):
     """Get sorted index of signals with statistically significant spikes,
     i.e. those that pass the provided cutoff.
 
-    Args:
-        inputData: data points (2D array of floats) where rows are normalized signals
-        func: np.max or np.min
-        cutoffs: a dictionary of cutoff values
+    Parameters:
+        inputData: 2d numpy.array
+            Data points where rows are normalized signals
+
+        func: function
+            Function np.max or np.min
+
+        cutoffs: dictionary
+            A dictionary of cutoff values
 
     Returns:
-        Index of data with statistically significant spikes
+        list
+            Index of data with statistically significant spikes
 
     Usage:
         index = getSpikes(inputData, np.max, cutoffs)
@@ -1753,13 +2022,19 @@ def getSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
     """Calculate spikes cuttoffs from a bootstrap of provided data,
     gived the significance cutoff p_cutoff.
 
-    Args:
-        df_data: pandas DataFrame where rows are normalized signals
-        p_cutoff: p-Value cutoff, e.g. 0.01
-        NumberOfRandomSamples: size of the bootstrap distribution
+    Parameters:
+        df_data: pandas.DataFrame 
+            Data where rows are normalized signals
+
+        p_cutoff: float
+            p-Value cutoff, e.g. 0.01
+
+        NumberOfRandomSamples: int, Default 1000
+            Size of the bootstrap distribution
 
     Returns:
-        Dictionary of spike cutoffs.
+        dictionary
+            Dictionary of spike cutoffs.
 
     Usage:
         cutoffs = getSpikesCutoffs(df_data, 0.01)
@@ -1791,17 +2066,31 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
 
     """Calculate Lomb-Scargle periodogram.
 
-    Args:
-        inputTimes: times corresponding to provided data points (1D array of floats)
-        inputData: data points (1D array of floats)
-        inputSetTimes: a complete set of all possible N times during which data could have been collected
-        FrequenciesOnly: return frequencies only
-        NormalizeIntensities: normalize intensities to unity
-        OversamplingRate: oversampling rate
-        UpperFrequencyFactor: upper frequency factor
+    Parameters:
+        inputTimes: 1d numpy.array 
+            Times corresponding to provided data points (1D array of floats)
+
+        inputData: 1d numpy.array 
+            Data points
+
+        inputSetTimes: 1d numpy.array 
+            A complete set of all possible N times during which data could have been collected
+
+        FrequenciesOnly: boolean, Default False
+            Return frequencies only
+
+        NormalizeIntensities: boolean, Default False
+            Normalize intensities to unity
+
+        OversamplingRate: int, Default 1
+            Oversampling rate
+
+        UpperFrequencyFactor: float, Default 1
+            Upper frequency factor
 
     Returns:
-        Periodogram with a list of frequencies.
+        2d numpy.array
+            Periodogram with a list of frequencies.
 
     Usage:
         pgram = LombScargle(inputTimes, inputData, inputSetTimes)
@@ -1854,11 +2143,21 @@ def pLombScargle(args):
 
     """Wrapper of LombScargle function for use with Multiprocessing.
 
-    Args:
-        args: a tuple of arguments in the form (inputTimes, inputData, inputSetTimes)
+    Parameters:
+        args: 
+            A tuple of arguments in the form (inputTimes, inputData, inputSetTimes):
+                inputTimes: 1d numpy.array
+                    Times corresponding to provided data points
+
+                inputData: 1d numpy.array
+                    Data points
+
+                inputSetTimes: 1d numpy.array
+                    A complete set of all possible N times during which data could have been collected.
 
     Returns:
-        Array of frequencies with corresponding intensities
+        2d numpy.array
+            Array of frequencies with corresponding intensities
 
     Usage:
         result = pLombScargle((inputTimes, inputData, inputSetTimes))
@@ -1874,13 +2173,15 @@ def getAutocorrelationsOfData(params):
     """Calculate autocorrelation using Lomb-Scargle Autocorrelation.
     NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
 
-    Args:
-        params: a tuple of parameters in the form (df_data, setAllInputTimes), where
-        df_data is a pandas Series or Dataframe, 
-        setAllInputTimes is a complete set of all possible N times during which data could have been collected.
+    Parameters:
+        params: tuple
+            A tuple of parameters in the form (df_data, setAllInputTimes), where
+            df_data is a pandas Series or Dataframe, 
+            setAllInputTimes is a complete set of all possible N times during which data could have been collected.
 
     Returns:
-        Array of autocorrelations of data.
+        2d numpy.array
+            Array of autocorrelations of data.
 
     Usage:
         result  = autocorrelation(df_data, setAllInputTimes)
@@ -1910,13 +2211,18 @@ def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs
     """Generate autocorrelation null-distribution from permutated data using Lomb-Scargle Autocorrelation.
     NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
 
-    Args:
-        df_data: pandas Series or Dataframe
-        NumberOfRandomSamples: size of the distribution to generate
-        NumberOfCPUs: number of processes to run simultaneously
+    Parameters:
+        df_data: pandas.Series or pandas.Dataframe
+
+        NumberOfRandomSamples: int, Default 10**5
+            Size of the distribution to generate
+
+        NumberOfCPUs: int, Default 4
+            Number of processes to run simultaneously
 
     Returns:
-        DataFrame containing autocorrelations of null-distribution of data.
+        pandas.DataFrame
+            Dataframe containing autocorrelations of null-distribution of data.
 
     Usage:
         result = getRandomAutocorrelations(df_data)
@@ -1940,13 +2246,18 @@ def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
 
     """Generate periodograms null-distribution from permutated data using Lomb-Scargle function.
 
-    Args:
-        df_data: pandas Series or Dataframe
-        NumberOfRandomSamples: size of the distribution to generate
-        NumberOfCPUs: number of processes to run simultaneously
+    Parameters:
+        df_data: pandas.Series or pandas.Dataframe
+
+        NumberOfRandomSamples: int, Default 10**5
+            Size of the distribution to generate
+
+        NumberOfCPUs: int, Default 4
+            Number of processes to run simultaneously
 
     Returns:
-        New Pandas DataFrame containing periodograms
+        pandas.DataFrame
+            Dataframe containing periodograms
 
     Usage:
         result = getRandomPeriodograms(df_data)
@@ -1968,12 +2279,16 @@ def BenjaminiHochbergFDR(pValues, SignificanceLevel=0.05):
 
     """HypothesisTesting BenjaminiHochbergFDR correction
 
-    Args:
-        pValues: p-values (1D array of floats)
-        SignificanceLevel: default = 0.05.
+    Parameters:
+        pValues: 1d numpy.array
+            Array of p-values
+
+        SignificanceLevel: float, Default 0.05
+            Significance level
 
     Returns:
-        Corrected p-Values, p- and q-Value cuttoffs
+        dictionary
+            Corrected p-Values, p- and q-Value cuttoffs
 
     Usage:
         result = BenjaminiHochbergFDR(pValues)
@@ -2028,12 +2343,16 @@ def metricCommonEuclidean(u,v):
     """Metric to calculate 'euclidean' distance between vectors u and v 
     using only common non-missing points (not NaNs).
 
-    Args:
-        u: Numpy 1-D array
-        v: Numpy 1-D array
+    Parameters:
+        u: 1d numpy.array
+            Numpy 1-D array
+
+        v: 1d numpy.array
+            Numpy 1-D array
 
     Returns:
-        Measure of the distance between u and v
+        float
+            Measure of the distance between u and v
 
     Usage:
         dist = metricCommonEuclidean(u,v)
@@ -2052,17 +2371,31 @@ def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_
 
     """ Get estimated number of clusters using ARI with KMeans
 
-    Args:
-        data: data to analyze
-        cluster_num_min: minimum possible number of clusters
-        cluster_num_max: maximum possible number of clusters
-        trials_to_do: number of trials to do in ARI function
-        numberOfAvailableCPUs: number of processes to run in parallel
-        plotID: label for the plot of peaks
-        printScores: print all scores
+    Parameters:
+        data: 2d numpy.array
+            Data to analyze
+
+        cluster_num_min: int
+            Minimum possible number of clusters
+
+        cluster_num_max: int
+            Maximum possible number of clusters
+
+        trials_to_do: int
+            Number of trials to do in ARI function
+
+        numberOfAvailableCPUs: int, Default 4
+            Number of processes to run in parallel
+
+        plotID: str, Default None
+            Label for the plot of peaks
+
+        printScores: boolean, Default False
+            Whether to print all scores
 
     Returns: 
-        Largest peak, other possible peaks.
+        tuple
+            Largest peak, other possible peaks.
 
     Usage:
         n_clusters = getEstimatedNumberOfClusters(data, 1, 20, 25)
@@ -2119,11 +2452,13 @@ def get_optimal_number_clusters_from_linkage_Elbow(Y):
     """ Get optimal number clusters from linkage.
     A point of the highest accelleration of the fusion coefficient of the given linkage.
 
-    Args:
-        Y: linkage matrix
+    Parameters:
+        Y: 2d numpy.array
+            Linkage matrix
 
     Returns:
-        Optimal number of clusters
+        int
+            Optimal number of clusters
 
     Usage:
         n_clusters = get_optimal_number_clusters_from_linkage_Elbow(Y)
@@ -2136,13 +2471,19 @@ def get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric):
 
     """Determine the optimal number of cluster in data maximizing the Silhouette score.
 
-    Args:
-        Y: linkage matrix
-        data: data to analyze
-        metric: distance measure
+    Parameters:
+        Y: 2d numpy.array
+            Linkage matrix
+
+        data: 2d numpy.array
+            Data to analyze
+
+        metric: str or function
+            Distance measure
 
     Returns:
-        Optimal number of clusters
+        int
+            Optimal number of clusters
 
     Usage:
         n_clusters = get_optimal_number_clusters_from_linkage_Elbow(Y, data, 'euclidean')
@@ -2171,15 +2512,22 @@ def runForClusterNum(arguments):
     
     """Calculate Adjusted Rand Index of the data for a range of cluster numbers.
 
-    Args:
-        arguments: a tuple of three parameters int the form
-        (cluster_num, data_array, trials_to_do), where
-        cluster_num: maximum number of clusters
-        data_array: data to test
-        trials_to_do: number of trials for each cluster number
+    Parameters:
+        arguments: tuple
+            A tuple of three parameters int the form
+            (cluster_num, data_array, trials_to_do), where
+                cluster_num: int
+                    Maximum number of clusters
+
+                data_array: 2d numpy.array
+                    Data to test
+
+                trials_to_do: int
+                    Number of trials for each cluster number
 
     Returns:
-        Numpy array
+        1d numpy.array
+            Numpy array
 
     Usage:
         instPool = multiprocessing.Pool(processes = NumberOfAvailableCPUs)
@@ -2212,15 +2560,25 @@ def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation
     """Cluster data into N groups, if N is provided, else determine N
     return: linkage matrix, cluster labels, possible cluster labels.
 
-    Args:
-        data: data to analyze
-        n_groups: number of groups to split data into
-        method: linkage calculation method
-        metric: distance measure
-        significance: method for determining optimal number of groups and subgroups
+    Parameters:
+        data: 2d numpy.array
+            Data to analyze
+
+        n_groups: int, Default None
+            Number of groups to split data into
+
+        method: str, Default 'weighted'
+            Linkage calculation method
+
+        metric: str, Default 'correlation'
+            Distance measure
+
+        significance: str, Default 'Elbow'
+            Method for determining optimal number of groups and subgroups
 
     Returns:
-        Linkage matrix, cluster index, possible groups
+        tuple
+            Linkage matrix, cluster index, possible groups
 
     Usage:
         x, y, z = getGroupingIndex(data, method='weighted', metric='correlation', significance='Elbow')
@@ -2249,13 +2607,19 @@ def makeClusteringObject(df_data, df_data_autocorr, significance='Elbow'):
 
     """Make a clustering Groups-Subgroups dictionary object.
 
-    Args:
-        df_data: data to analyze in DataFrame format
-        df_data_autocorr: autocorrelations or periodograms in DataFrame format
-        significance: method for determining optimal number of groups and subgroups
+    Parameters:
+        df_data: pandas.DataFrame
+            Data to analyze in DataFrame format
+
+        df_data_autocorr: pandas.DataFrame
+            Autocorrelations or periodograms in DataFrame format
+
+        significance: str, Default 'Elbow'
+            Method for determining optimal number of groups and subgroups
 
     Returns:
-        Clustering object
+        dictionary
+            Clustering object
 
     Usage:
         myObj = makeClusteringObject(df_data, df_data_autocorr, significance='Elbow')
@@ -2299,15 +2663,25 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
     """Export a clustering Groups-Subgroups dictionary object to a SpreadSheet.
     Linkage data is not exported.
 
-    Args:
-        ClusteringObject: clustering object
-        saveDir: path of directories to save the object to
-        dataName: label to include in the file name
-        includeData: export data 
-        includeAutocorr: export autocorrelations of data
+    Parameters:
+        ClusteringObject: dictionary
+            Clustering object
+
+        saveDir: str
+            Path of directories to save the object to
+
+        dataName: str
+            Label to include in the file name
+
+        includeData: boolean, Default True
+            Export data
+
+        includeAutocorr: boolean, Default True
+            Export autocorrelations of data
 
     Returns:
-        File name of the exported clustering object
+        str
+            File name of the exported clustering object
 
     Usage:
         exportClusteringObject(myObj, '/dir1', 'myObj')
@@ -2356,12 +2730,16 @@ def getAdjacencyMatrixOfVisibilityGraph(data, times):
     JIT-accelerated version (a bit faster than NumPy-accelerated version).
     Allows use of Multiple CPUs.
 
-    Args:
-        data: Numpy 2-D array of floats
-        times: Numpy 1-D array of floats
+    Parameters:
+        data: 2d numpy.array
+            Numpy array of floats
+
+        times: 1d numpy.array
+            Numpy array of floats
 
     Returns:
-        Adjacency matrix
+        2d numpy.array
+            Adjacency matrix
 
     Usage:
         A = getAdjacencyMatrixOfVisibilityGraph_serial(data, times)
@@ -2398,12 +2776,16 @@ def getAdjacencyMatrixOfVisibilityGraph_NUMPY(data, times):
     NumPy-accelerated version. Somewhat slower than JIT-accelerated version.
     Use in serial applications.
 
-    Args:
-        data: Numpy 2-D array of floats
-        times: Numpy 1-D array of floats
+    Parameters:
+        data: 2d numpy.array
+            Numpy array of floats
+
+        times: 1d numpy.array
+            Numpy array of floats
 
     Returns:
-        Adjacency matrix
+        2d numpy.array
+            Adjacency matrix
 
     Usage:
         A = getAdjacencyMatrixOfVisibilityGraph_serial(data, times)
@@ -2434,11 +2816,13 @@ def getAdjacencyMatrixOfHorizontalVisibilityGraph(data):
     Single-threaded beats NumPy up to 2k data sizes.
     Allows use of Multiple CPUs.
 
-    Args:
-        data: Numpy 2-D array of floats
+    Parameters:
+        data: 2d numpy.array
+            Numpy array of floats
 
     Returns:
-        Adjacency matrix
+        2d numpy.array
+            Adjacency matrix
 
     Usage:
         A = getAdjacencyMatrixOfHorizontalVisibilityGraph(data)
@@ -2468,11 +2852,13 @@ def getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY(data):
     Use with datasets larger than 2k.
     Use in serial applications.
 
-    Args:
-        data: Numpy 2-D array of floats
+    Parameters:
+        data: 2d numpy.array
+            Numpy array of floats
 
     Returns:
-        Adjacency matrix
+        2d numpy.array
+            Adjacency matrix
 
     Usage:
         A = getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY(data)
@@ -2501,10 +2887,15 @@ def makeDataHistograms(df, saveDir, dataName):
 
     """Make a histogram for each pandas Series (time point) in a pandas Dataframe.
 
-    Args:
-        df: DataFrame containing data to visualize
-        saveDir: path of directories to save the object to
-        dataName: label to include in the file name
+    Parameters:
+        df: pandas.DataFrame
+            Data to visualize
+
+        saveDir: str
+            Path of directories to save the object to
+
+        dataName: str
+            Label to include in the file name
 
     Returns:
         None
@@ -2557,10 +2948,15 @@ def makeLombScarglePeriodograms(df, saveDir, dataName):
     """Make a combined plot of the signal and its Lomb-Scargle periodogram
     for each pandas Series (time point) in a pandas Dataframe.
 
-    Args:
-        df: DataFrame containing data to visualize
-        saveDir: path of directories to save the object to
-        dataName: label to include in the file name
+    Parameters:
+        df: pandas.DataFrame
+            Data to visualize
+
+        saveDir: str
+            Path of directories to save the object to
+
+        dataName: str
+            Label to include in the file name
 
     Returns:
         None
@@ -2626,25 +3022,67 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
 
     """Draw a Visibility graph of data on a provided Matplotlib figure.
 
-    Args:
-        data: array of data to visualize
-        times: times corresponding to each data point, used for labels
-        dataName: label to include in file name
-        coords: coordinates of location of the plot on the figure
-        numberOfVGs: number of plots to add to this figure
-        groups_ac_colors: colors corresponding to different groups of graphs
-        fig: figure object
-        printCommunities: print communities details to screen
-        fontsize: size of labels
-        nodesize: size of nodes
-        level: distance of the community lines to nodes
-        commLineWidth: width of the community lines
-        lineWidth: width of the edges between nodes
-        withLabel: include label on plot
-        withTitle: include title on plot
+    Parameters:
+        data: 2d numpy.array
+            Array of data to visualize
+
+        times: 1d numpy.array
+            Times corresponding to each data point, used for labels
+
+        dataName: str, Default 'G1S1'
+            label to include in file name
+
+        coords: list, Default [0.05,0.95,0.05,0.95]
+            Coordinates of location of the plot on the figure
+
+        numberOfVGs: int, Default 1
+            Number of plots to add to this figure
+
+        groups_ac_colors: list, Default ['b']
+            Colors corresponding to different groups of graphs
+
+        fig: matplotlib.figure, Default None
+            Figure object
+
+        numberOfCommunities: int, Default 6
+            Number of communities
+
+        printCommunities: boolean, Default False
+            Whether to print communities details to screen
+
+        fontsize: float, Default None
+            Size of labels
+
+        nodesize: float, Default None
+            Size of nodes
+
+        level: float, Default 0.55
+            Distance of the community lines to nodes
+
+        commLineWidth: float, Default 0.5
+            Width of the community lines
+
+        lineWidth: float, Default 1.0
+            Width of the edges between nodes
+
+        withLabel: boolean, Default True
+            Whether to include label on plot
+
+        withTitle: boolean, Default False
+            Whether to include title on plot
+
+        layout: str, Default 'circle'
+            Type of the layout. Other option is 'line'
+
+        radius: float, Default 0.07
+            Radius of the circle
+
+        noplot: boolean, Default False
+            Whether to make a plot or only calculate communities
 
     Returns:
-        None
+        tuple
+            (graph_nx, data, communities)
 
     Usage:
         addVisibilityGraph(exampleData, exampleTimes, fig=fig, fontsize=16, nodesize=700, 
@@ -2793,13 +3231,24 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
 
     """Make Dendrogram-Heatmap plot along with VIsibility graphs.
 
-    Args:
-        ClusteringObject: clustering object
-        saveDir: path of directories to save the object to
-        dataName: label to include in the file name
-        AutocorrNotPeriodogr: export data
-        textScale: scaling of text size
-        vectorImage: Boolean for exporting vector graphics or PNG format 
+    Parameters:
+        ClusteringObject: 
+            Clustering object
+
+        saveDir: str
+            Path of directories to save the object to
+
+        dataName: str
+            Label to include in the file name
+
+        AutocorrNotPeriodogr: boolean, Default True
+            Whether to use autocorrelation method instead of periodograms
+
+        textScale: float, Default 1.0
+            scaling of text size
+
+        vectorImage: boolean, Default True
+            Whether to make vector graphics instead of raster 
 
     Returns:
         None
@@ -3035,12 +3484,21 @@ def PlotVisibilityGraph(A, data, times, fileName, id):
 
     """Bar-plot style visibility graph.
 
-    Args:
-        A: Adjacency matrix
-        data: Numpy 2-D array of floats
-        times: Numpy 1-D array of floats
-        fileName: name of the figure file to save
-        id: label to add to the figure title
+    Parameters:
+        A: 2d numpy.array
+            Adjacency matrix
+
+        data: 2d numpy.array
+            Numpy array of floats
+
+        times: 2d numpy.array
+            Numpy array of floats
+
+        fileName: str
+            Name of the figure file to save
+
+        id: str or int
+            Label to add to the figure title
 
     Returns:
         None
@@ -3082,12 +3540,21 @@ def PlotHorizontalVisibilityGraph(A, data, times, fileName, id):
     
     """Bar-plot style horizontal visibility graph.
 
-    Args:
-        A: Adjacency matrix
-        data: Numpy 2-D array of floats
-        times: Numpy 1-D array of floats
-        fileName: name of the figure file to save
-        id: label to add to the figure title
+    Parameters:
+        A: 2d numpy.array
+            Adjacency matrix
+
+        data: 2d numpy.array
+            Numpy array of floats
+
+        times: 2d numpy.array
+            Numpy array of floats
+
+        fileName: str
+            Name of the figure file to save
+
+        id: str or int
+            Label to add to the figure title
 
     Returns:
         None
@@ -3134,13 +3601,19 @@ def prepareDataframe(dataDir, dataFileName, AlltimesFileName):
 
     """Make a DataFrame from CSV files.
     
-    Args:
-        dataDir: path of directories pointing to data
-        dataFileName: file name in dataDir
-        AlltimesFileName: file name in dataDir
+    Parameters:
+        dataDir: srt
+            Path of directories pointing to data
+
+        dataFileName: str
+            File name in dataDir
+
+        AlltimesFileName:  str
+            File name in dataDir
 
     Returns:
-        Pandas Dataframe
+        pandas.Dataframe
+            Dataframe
 
     Usage:
         df_data = prepareDataframe(dataDir, dataFileName, AlltimesFileName)
@@ -3162,11 +3635,13 @@ def filterOutAllZeroSignalsDataframe(df):
 
     """Filter out all-zero signals from a DataFrame.
     
-    Args:
-        df: pandas DataFrame
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = filterOutAllZeroSignalsDataframe(df_data)
@@ -3188,12 +3663,16 @@ def filterOutFractionZeroSignalsDataframe(df, max_fraction_of_allowed_zeros):
        
     """Filter out fraction-zero signals from a DataFrame.
     
-    Args:
-        df: pandas DataFrame
-        max_fraction_of_allowed_zeros: maximum fraction of allowed zeros
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
+
+        max_fraction_of_allowed_zeros: float
+            Maximum fraction of allowed zeros
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = filterOutFractionZeroSignalsDataframe(df_data, 0.75)
@@ -3217,11 +3696,13 @@ def filterOutFirstPointZeroSignalsDataframe(df):
 
     """Filter out out first time point zeros signals from a DataFrame.
     
-    Args:
-        df: pandas DataFrame
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = filterOutFirstPointZeroSignalsDataframe(df_data)
@@ -3244,11 +3725,13 @@ def tagMissingValuesDataframe(df):
 
     """Tag missing (i.e. zero) values with NaN.
     
-    Args:
-        df: pandas DataFrame
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = tagMissingValuesDataframe(df_data)
@@ -3265,13 +3748,19 @@ def tagLowValuesDataframe(df, cutoff, replacement):
 
     """Tag low values with replacement value.
     
-    Args:
-        df: pandas DataFrame
-        cutoff: values below the "cutoff" are replaced with "replacement" value
-        replacement: replacement value
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
+
+        cutoff: float
+            Values below the "cutoff" are replaced with "replacement" value
+                
+        replacement: float
+            Replacement value
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = tagLowValuesDataframe(df_data, 1., 1.)
@@ -3287,14 +3776,21 @@ def tagLowValuesDataframe(df, cutoff, replacement):
 def removeConstantSignalsDataframe(df, theta_cutoff):
 
     """Remove constant signals.
-    
-    Args:
-        df: pandas DataFrame
-        theta_cutoff: parameter for filtering the signals
+      
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
+
+        theta_cutoff: float
+            Parameter for filtering the signals
+                
+        replacement: float
+            Replacement value
 
     Returns:
-        Processed pandas Dataframe
-
+        pandas.Dataframe
+            Processed data
+            
     Usage:
         df_data = removeConstantSignalsDataframe(df_data, 0.3)
     """
@@ -3315,11 +3811,13 @@ def boxCoxTransformDataframe(df):
 
     """Box-cox transform data.
     
-    Args:
-        df: pandas DataFrame
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = boxCoxTransformDataframe(df_data)
@@ -3338,11 +3836,13 @@ def modifiedZScoreDataframe(df):
 
     """Z-score (Median-based) transform data.
     
-    Args:
-        df: pandas DataFrame
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = modifiedZScoreDataframe(df_data)
@@ -3361,11 +3861,13 @@ def normalizeSignalsToUnityDataframe(df):
 
     """Normalize signals to unity.
     
-    Args:
-        df: pandas DataFrame
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = normalizeSignalsToUnityDataframe(df_data)
@@ -3388,11 +3890,13 @@ def quantileNormalizeDataframe(df):
 
     """Quantile Normalize signals to normal distribution.
     
-    Args:
-        df: pandas DataFrame
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = quantileNormalizeDataframe(df_data)
@@ -3409,12 +3913,16 @@ def compareTimeSeriesToPointDataframe(df, point='first'):
 
     """Subtract a particular point of each time series (row) of a Dataframe.
     
-    Args:
-        df: pandas DataFrame
-        point: 'first', 'last', 0, 1, ... , 10, or a value.
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
+        
+        point: str, int or float
+            Possible options are 'first', 'last', 0, 1, ... , 10, or a value.
 
     Returns:
-        Processed pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = compareTimeSeriesToPointDataframe(df_data)
@@ -3446,15 +3954,27 @@ def compareTwoTimeSeriesDataframe(df1, df2, function=np.subtract, compareAllLeve
 
     """Create a new Dataframe based on comparison of two existing Dataframes.
     
-    Args:
-        df1: pandas DataFrame
-        df2: pandas DataFrame
-        function: np.subtract (default), np.add, np.divide, or another <ufunc>.
-        compareAllLevelsInIndex: True (default), if False only "source" and "id" will be compared,
-        mergeFunction: input Dataframes are merged with this function, i.e. np.mean (default), np.median, np.max, or another <ufunc>.
+    Parameters:
+        df1: pandas.DataFrame
+            Data to compare
+
+        df2: pandas.DataFrame
+            Data to compare
+
+        function: function, Default np.subtract 
+            Other options are np.add, np.divide, or another <ufunc>.
+
+        compareAllLevelsInIndex: boolean, Default True
+            Whether to compare all levels in index.
+            If False only "source" and "id" will be compared
+
+        mergeFunction: function, Default np.mean
+            Input Dataframes are merged with this function, 
+            i.e. np.mean (default), np.median, np.max, or another <ufunc>.
 
     Returns:
-        New merged pandas Dataframe
+        pandas.DataFrame
+            Processed data
 
     Usage:
         df_data = compareTwoTimeSeriesDataframe(df_dataH2, df_dataH1, function=np.subtract, compareAllLevelsInIndex=False, mergeFunction=np.median)
@@ -3483,11 +4003,13 @@ def mergeDataframes(listOfDataframes):
 
     """Merge a list of Dataframes (outer join).
     
-    Args:
-        listOfDataframes: list of pandas DataFrames
+    Parameters:
+        listOfDataframes: list
+            List of pandas.DataFrames
 
     Returns:
-        New pandas Dataframe
+        pandas.Dataframe
+            Processed data
 
     Usage:
         df_data = mergeDataframes([df_data1, df_data2])
@@ -3507,13 +4029,19 @@ def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True)
 
     """Calculate Lobm-Scargle periodogram of DataFrame.
     
-    Args:
-        df: pandas DataFrame
-        parallel: calculate in parallel mode (>1 process)
-        NumberOfCPUs: number of processes to create if parallel
+    Parameters:
+        df: pandas.DataFrame
+            Data to process
+
+        parallel: boolean, Default True
+            Whether to calculate in parallel mode (>1 process)
+
+        NumberOfCPUs: int, Default 4
+            Number of processes to create if parallel is True
 
     Returns:
-        New pandas Dataframe
+        pandas.Dataframe
+            Lomb-Scargle periodograms
 
     Usage:
         df_periodograms = getLobmScarglePeriodogramOfDataframe(df_data)
@@ -3547,7 +4075,7 @@ def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True)
 
 def hdf5_usage_information():
 
-    """Store/export any lagge datasets in hdf5 format via 'pandas' or 'h5py'
+    """Quick info on how to Store/export any large datasets in HDF5 format via 'pandas' or 'h5py'
 
     # mode='w' creates/recreates file from scratch
     # mode='a' creates (if no file exists) or appends to the existing file, and reads it
@@ -3601,17 +4129,36 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
         
     """Time series classification.
     
-    Args:
-        df_data: pandas DataFrame
-        dataName: data name, e.g. "myData_1"
-        saveDir: path of directories poining to data storage
-        hdf5fileName: preferred hdf5 file name and location
-        p_cutoff: significance cutoff signals selection
-        NumberOfRandomSamples: size of the bootstrap distribution to generate
-        NumberOfCPUs: number of processes allowed to use in calculations
-        frequencyBasedClassification: whether Autocorrelation of Frequency based
-        calculateAutocorrelations: whether to recalculate Autocorrelations
-        calculatePeriodograms: whether to recalculate Periodograms
+    Parameters:
+        df_data: pandas.DataFrame
+            Data to process
+
+        dataName: str
+            Data name, e.g. "myData_1"
+
+        saveDir: str
+            Path of directories poining to data storage
+
+        hdf5fileName: str, Default None
+            Preferred hdf5 file name and location
+
+        p_cutoff: float, Default 0.05
+            Significance cutoff signals selection
+
+        NumberOfRandomSamples: int, Default 10**5
+            Size of the bootstrap distribution to generate
+
+        NumberOfCPUs: int, Default 4
+            Number of processes allowed to use in calculations
+
+        frequencyBasedClassification: boolean, Default False
+            Whether Autocorrelation of Frequency based
+
+        calculateAutocorrelations: boolean, Default False
+            Whether to recalculate Autocorrelations
+
+        calculatePeriodograms: boolean, Default False
+            Whether to recalculate Periodograms
 
     Returns:
         None
@@ -3747,24 +4294,40 @@ def timeSeriesClassification(df_data, dataName, saveDir, hdf5fileName=None, p_cu
     return None
 
 
-def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=False, AutocorrNotPeriodogr=True, vectorImage=True):
+def clusterTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=True, AutocorrNotPeriodogr=True, vectorImage=True):
 
     """Visualize time series classification.
     
-    Args:
-        dataName: data name
-        saveDir: path of directories poining to data storage
-        numberOfLagsToDraw: first top-N lags (or frequencies) to draw
-        hdf5fileName: HDF5 storage path and name
-        exportClusteringObjects: export clustering objects to xlsx files
-        writeClusteringObjectToBinaries: export clustering objects to binary (pickle) files
-        AutocorrNotPeriodogr: label to print on the plots
+    Parameters:
+        dataName: str
+            Data name, e.g. "myData_1"
+
+        saveDir: str
+            Path of directories poining to data storage
+
+        numberOfLagsToDraw: int, Default 3
+            First top-N lags (or frequencies) to draw
+
+        hdf5fileName: str, Default None
+            HDF5 storage path and name
+
+        exportClusteringObjects: boolean, Default False
+            Whether to export clustering objects to xlsx files
+
+        writeClusteringObjectToBinaries: boolean, Default True
+            Whether to export clustering objects to binary (pickle) files
+
+        AutocorrNotPeriodogr: boolean, Default True
+            Whether to label to print on the plots
+
+        vectorImage: boolean, Default True
+            Whether to make vector image instead of raster
 
     Returns:
         None
 
     Usage:
-        visualizeTimeSeriesClassification('myData_1', '/dir1/dir2/', AutocorrNotPeriodogr=True, writeClusteringObjectToBinaries=True)
+        clusterTimeSeriesClassification('myData_1', '/dir1/dir2/', AutocorrNotPeriodogr=True, writeClusteringObjectToBinaries=True)
     """
 
     info = 'Autocorrelations' if AutocorrNotPeriodogr else 'Periodograms'
@@ -3772,7 +4335,7 @@ def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, h
     if hdf5fileName is None:
         hdf5fileName = saveDir + dataName + '.h5'
 
-    def internalDraw(className):
+    def internal(className):
         print('\n\n%s of Time Series:'%(className)) 
         df_data_selected = read(saveDir + dataName + '_selectedTimeSeries%s_%s'%(info,className), hdf5fileName=hdf5fileName)
         df_classifier_selected = read(saveDir + dataName + '_selected%s_%s'%(info,className), hdf5fileName=hdf5fileName)
@@ -3794,17 +4357,65 @@ def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, h
         if exportClusteringObjects:
             exportClusteringObject(clusteringObject, saveDir + 'consolidatedGroupsSubgroups/', dataName + '_%s_%s'%(className,info))
 
+        return
+
+    for lag in range(1,numberOfLagsToDraw + 1):
+        internal('LAG%s'%(lag))
+            
+    internal('SpikeMax')
+    internal('SpikeMin')
+
+    return None
+
+
+def visualizeTimeSeriesClassification(dataName, saveDir, numberOfLagsToDraw=3, AutocorrNotPeriodogr=True, vectorImage=True):
+
+    """Visualize time series classification.
+    
+    Parameters:
+        dataName: str
+            Data name, e.g. "myData_1"
+
+        saveDir: str
+            Path of directories poining to data storage
+
+        numberOfLagsToDraw: boolean, Default 3
+            First top-N lags (or frequencies) to draw
+
+        AutocorrNotPeriodogr: boolean, Default True
+            Whether to label to print on the plots
+
+        vectorImage: boolean, Default True
+            Whether to raster or vector image
+
+    Returns:
+        None
+
+    Usage:
+        visualizeTimeSeriesClassification('myData_1', '/dir1/dir2/', AutocorrNotPeriodogr=True)
+    """
+
+    info = 'Autocorrelations' if AutocorrNotPeriodogr else 'Periodograms'
+
+    def internal(className):
+        print('\n\n%s of Time Series:'%(className)) 
+
+        clusteringObject = read(saveDir + 'consolidatedGroupsSubgroups/' + dataName + '_%s_%s'%(className,info) + '_GroupsSubgroups')
+
+        if clusteringObject is None:
+            print('Cluster time series classification first.')
+            return 
+        
         print('Plotting Dendrogram with Heatmaps.')
         makeDendrogramHeatmap(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=AutocorrNotPeriodogr, vectorImage=vectorImage)
 
         return
 
     for lag in range(1,numberOfLagsToDraw + 1):
-        internalDraw('LAG%s'%(lag))
+        internal('LAG%s'%(lag))
             
-    internalDraw('SpikeMax')
-    internalDraw('SpikeMin')
+    internal('SpikeMax')
+    internal('SpikeMin')
 
     return None
-
 ###################################################################################################
