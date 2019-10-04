@@ -1333,7 +1333,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
 
     Usage:
         keggExample1 = KEGGAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", "LYN", "MYD88", 
-                                            "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", "IRAK4", "PIAS4", "PLAU", "POLR3B", "NME1", "CTPS1", "POLR3A"])
+                                    "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", "IRAK4", "PIAS4", "PLAU", "POLR3B", "NME1", "CTPS1", "POLR3A"])
     """
 
     argsLocal = locals().copy()
@@ -1860,6 +1860,7 @@ def ampSquaredNormed(func, freq, times, data):
 
     Usage:
         coef = ampSquaredNormed(np.cos, freguency, inputTimesNormed, inputDataCentered)
+
         Intended for internal use only.
     """
 
@@ -2514,8 +2515,7 @@ def runForClusterNum(arguments):
 
     Parameters:
         arguments: tuple
-            A tuple of three parameters int the form
-            (cluster_num, data_array, trials_to_do), where
+            A tuple of three parameters int the form (cluster_num, data_array, trials_to_do), where
                 cluster_num: int
                     Maximum number of clusters
 
@@ -2531,8 +2531,11 @@ def runForClusterNum(arguments):
 
     Usage:
         instPool = multiprocessing.Pool(processes = NumberOfAvailableCPUs)
+
         scores = instPool.map(runForClusterNum, [(cluster_num, copy.deepcopy(data), trials_to_do) for cluster_num in range(cluster_num_min, cluster_num_max + 1)])
+
         instPool.close()
+
         instPool.join()
     """
 
@@ -3617,9 +3620,10 @@ def prepareDataframe(dataDir, dataFileName, AlltimesFileName):
 
     Usage:
         df_data = prepareDataframe(dataDir, dataFileName, AlltimesFileName)
+
         df_data.index = pd.MultiIndex.from_tuples([(item.split(':')[1], item.split(':')[0].split('_')[0],
-                                                    (' '.join(item.split(':')[0].split('_')[1:]),)) for item in df_data.index.values], 
-                                                    names=['source', 'id', 'metadata'])
+        (' '.join(item.split(':')[0].split('_')[1:]),)) for item in df_data.index.values], 
+        names=['source', 'id', 'metadata'])
     """
 
     df = pd.read_csv(os.path.join(dataDir, dataFileName), delimiter=',', header=None)
@@ -4073,50 +4077,50 @@ def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True)
     return df_periodograms
 
 
-def hdf5_usage_information():
+#def hdf5_usage_information():
 
-    """Quick info on how to Store/export any large datasets in HDF5 format via 'pandas' or 'h5py'
+#    """Quick info on how to Store/export any large datasets in HDF5 format via 'pandas' or 'h5py'
 
-    # mode='w' creates/recreates file from scratch
-    # mode='a' creates (if no file exists) or appends to the existing file, and reads it
-    # mode='r' is read only
+#    # mode='w' creates/recreates file from scratch
+#    # mode='a' creates (if no file exists) or appends to the existing file, and reads it
+#    # mode='r' is read only
 
-    # Save data to file using 'pandas': 
-    df_example = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['a', 'b', 'c'])
-    df_example.to_hdf('data.h5', key='my_df1', mode='a')
-    or
-    series_example = pd.Series([1, 2, 3, 4])
-    series_example.to_hdf('data.h5', key='my_series', mode='a')
+#    # Save data to file using 'pandas': 
+#    df_example = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['a', 'b', 'c'])
+#    df_example.to_hdf('data.h5', key='my_df1', mode='a')
+#    or
+#    series_example = pd.Series([1, 2, 3, 4])
+#    series_example.to_hdf('data.h5', key='my_series', mode='a')
 
-    # Create groups and datasets using 'h5py' and 'numpy' arrays:
-    tempFile = h5py.File('data.h5', 'a')
-    tempArray = np.array([[1,2,3,4,5],[6,7,8,9,10]]).astype(float)
-    if not 'arrays/my_array' in tempFile:
-        dataset_example = tempFile.create_dataset('arrays/my_array', data=tempArray, maxshape=(None,2), dtype=tempArray.dtype, 
-                                                    chunks=True) #auto-chunked, else use e.g. chunks=(100, 2)
-                                                    #compression='gzip', compression_opts=6
-    else:
-        dataset_example = tempFile['arrays/my_array']
+#    # Create groups and datasets using 'h5py' and 'numpy' arrays:
+#    tempFile = h5py.File('data.h5', 'a')
+#    tempArray = np.array([[1,2,3,4,5],[6,7,8,9,10]]).astype(float)
+#    if not 'arrays/my_array' in tempFile:
+#        dataset_example = tempFile.create_dataset('arrays/my_array', data=tempArray, maxshape=(None,2), dtype=tempArray.dtype, 
+#                                                    chunks=True) #auto-chunked, else use e.g. chunks=(100, 2)
+#                                                    #compression='gzip', compression_opts=6
+#    else:
+#        dataset_example = tempFile['arrays/my_array']
 
-    group_example = tempFile.create_group('more_data/additional')
+#    group_example = tempFile.create_group('more_data/additional')
 
-    # Modify values by slicing the dataset or replacing etire one using [...]
-    dataset_example[:] = np.array([[10,2,3,4,1],[60,7,8,9,1]])
+#    # Modify values by slicing the dataset or replacing etire one using [...]
+#    dataset_example[:] = np.array([[10,2,3,4,1],[60,7,8,9,1]])
 
-    # New shapes cannot be broadcasted, the dataset needs to be resized explicitly
-    dataset_example.resize(dataset_example.shape[0]+10, axis=0) #add more rows (initiated with zeros)
+#    # New shapes cannot be broadcasted, the dataset needs to be resized explicitly
+#    dataset_example.resize(dataset_example.shape[0]+10, axis=0) #add more rows (initiated with zeros)
 
 
-    # Read data from h5 file:
-    df_example = pd.read_hdf('data.h5', 'my_df1')
+#    # Read data from h5 file:
+#    df_example = pd.read_hdf('data.h5', 'my_df1')
 
-    tempFile = h5py.File('data.h5', 'r')
-    array_example = tempFile['arrays/my_array'].value
-    """
+#    tempFile = h5py.File('data.h5', 'r')
+#    array_example = tempFile['arrays/my_array'].value
+#    """
 
-    print(hdf5_usage_information.__doc__)
+#    print(hdf5_usage_information.__doc__)
 
-    return None
+#    return None
 
 ###################################################################################################
 
