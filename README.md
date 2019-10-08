@@ -43,6 +43,7 @@ After installation you can run:
 ## C. DOCUMENTATION
 
 Documentation for PyIOmica is built-in and is available through the help() functionality in Python.
+Also documentation is available at Read the Docs: https://pyiomica.readthedocs.io/en/latest/
 
 ## D. ADDITIONAL INFORMATION
 
