@@ -1,9 +1,8 @@
 Examples
 ========
 
+Submodule **pyiomica.examples**
 
-Submodule pyiomica.examples
----------------------------
 
 .. automodule:: pyiomica.examples
     :members:

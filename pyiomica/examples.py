@@ -1,98 +1,129 @@
-﻿from pyiomica import pyiomica
+﻿'''Examples'''
+
+from .globalVariables import *
+from . import pyiomica as pio
 
 ## Examples of GO Analysis ################################################################################################################################################
 def testGOAnalysis(EnrichmentOutputDirectory):
 
+    '''Collection of multiple examples utilizing GOAnalysis function
+
+    Parameters:
+        EnrichmentOutputDirectory: str
+            Path directory
+
+    Returns:
+        None
+
+    Usage:
+        testGOAnalysis("/pathToFolder1/pathToSubFolder2")
+
+    '''
+
     #Let's do a GO analysis for a group of genes, annotated with their "Gene Symbol":
-    goExample1 = pyiomica.GOAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", 
+    goExample1 = pio.GOAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", 
                                     "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", 
                                     "LYN", "MYD88", "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", 
                                     "IRAK4", "PIAS4", "PLAU"])
 
-    pyiomica.ExportEnrichmentReport(goExample1, AppendString='goExample1', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
+    pio.ExportEnrichmentReport(goExample1, AppendString='goExample1', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
 
     #The information can be computed for multiple groups, if these are provided as an association:
-    analysisGOAssociation = pyiomica.GOAnalysis({"Group1": ["C6orf57", "CD46", "DHX58", "HMGB3", "MAP3K5", "NFKB2", "NOS2", "PYCARD", "PYDC1", "SSC5D"], 
+    analysisGOAssociation = pio.GOAnalysis({"Group1": ["C6orf57", "CD46", "DHX58", "HMGB3", "MAP3K5", "NFKB2", "NOS2", "PYCARD", "PYDC1", "SSC5D"], 
                                                     "Group2": ["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", 
                                                                 "LYN", "MYD88", "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", "IRAK4", "PIAS4", "PLAU"]})
 
-    pyiomica.ExportEnrichmentReport(analysisGOAssociation, AppendString='analysisGOAssociation', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
+    pio.ExportEnrichmentReport(analysisGOAssociation, AppendString='analysisGOAssociation', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
 
     #The data can be computed with or without a label. If labeled, the gene ID must be the first element for each ID provided. The data is in the form {ID,label}:
-    analysisGOLabel = pyiomica.GOAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
+    analysisGOLabel = pio.GOAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
                                             ["NFKB2", "Protein"], ["NOS2", "Protein"], ["PYCARD", "Protein"], ["PYDC1","Protein"], ["SSC5D", "Protein"]])
 
-    pyiomica.ExportEnrichmentReport(analysisGOLabel, AppendString='analysisGOLabel', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
+    pio.ExportEnrichmentReport(analysisGOLabel, AppendString='analysisGOLabel', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
 
     #The data can be mixed, e.g. proteins and RNA with different labels:
-    analysisGOMixed = pyiomica.GOAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "RNA"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
+    analysisGOMixed = pio.GOAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "RNA"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
                                             ["NFKB2", "RNA"], ["NFKB2", "Protein"], ["NOS2", "RNA"], ["PYCARD", "RNA"], ["PYDC1", "Protein"], ["SSC5D", "Protein"]])
 
-    pyiomica.ExportEnrichmentReport(analysisGOMixed, AppendString='analysisGOMixed', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
+    pio.ExportEnrichmentReport(analysisGOMixed, AppendString='analysisGOMixed', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
 
     #We can instead treat the data as different by setting the MultipleList and MultipleListCorrection options:
-    analysisGOMixedMulti = pyiomica.GOAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "RNA"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
+    analysisGOMixedMulti = pio.GOAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "RNA"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
                                                 ["NFKB2", "RNA"], ["NFKB2", "Protein"], ["NOS2", "RNA"], ["PYCARD", "RNA"], ["PYDC1", "Protein"], ["SSC5D", "Protein"]],
                                                 MultipleList=True, MultipleListCorrection='Automatic')
 
-    pyiomica.ExportEnrichmentReport(analysisGOMixedMulti, AppendString='analysisGOMixedMulti', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
+    pio.ExportEnrichmentReport(analysisGOMixedMulti, AppendString='analysisGOMixedMulti', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
 
     #Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
-    ExampleClusteringObject = pyiomica.read(os.path.join(pyiomica.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
+    ExampleClusteringObject = pio.read(os.path.join(pio.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
 
     if not ExampleClusteringObject is None:
         #We calculate the GOAnalysis for each group in each class:
-        ExampleClusteringObjectGO = pyiomica.GOAnalysis(ExampleClusteringObject, MultipleListCorrection='Automatic')
+        ExampleClusteringObjectGO = pio.GOAnalysis(ExampleClusteringObject, MultipleListCorrection='Automatic')
 
-        pyiomica.ExportEnrichmentReport(ExampleClusteringObjectGO, AppendString='ExampleClusteringObjectGO', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
+        pio.ExportEnrichmentReport(ExampleClusteringObjectGO, AppendString='ExampleClusteringObjectGO', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
 
     return
 
 ## Examples of KEGG Analysis ##############################################################################################################################################
 def testKEGGAnalysis(EnrichmentOutputDirectory):
+    
+    '''Collection of multiple examples utilizing KEGGAnalysis function
+
+    Parameters:
+        EnrichmentOutputDirectory: str
+            Path directory
+
+    Returns:
+        None
+
+    Usage:
+        testKEGGAnalysis("/pathToFolder1/pathToSubFolder2")
+
+    '''
 
     #Let's do a KEGG pathway analysis for a group of genes (most in the NFKB pathway), annotated with their "Gene Symbol":
-    keggExample1 = pyiomica.KEGGAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", "LYN", "MYD88", 
+    keggExample1 = pio.KEGGAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", "LYN", "MYD88", 
                                             "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", "IRAK4", "PIAS4", "PLAU", "POLR3B", "NME1", "CTPS1", "POLR3A"])
 
-    pyiomica.ExportEnrichmentReport(keggExample1, AppendString='keggExample1', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+    pio.ExportEnrichmentReport(keggExample1, AppendString='keggExample1', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #The information can be computed for multiple groups, if these are provided as an association:
-    analysisKEGGAssociation = pyiomica.KEGGAnalysis({"Group1": ["C6orf57", "CD46", "DHX58", "HMGB3", "MAP3K5", "NFKB2", "NOS2", "PYCARD", "PYDC1", "SSC5D"], 
+    analysisKEGGAssociation = pio.KEGGAnalysis({"Group1": ["C6orf57", "CD46", "DHX58", "HMGB3", "MAP3K5", "NFKB2", "NOS2", "PYCARD", "PYDC1", "SSC5D"], 
                                                         "Group2": ["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", 
                                                     "LYN", "MYD88", "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", "IRAK4", "PIAS4", "PLAU", "POLR3B", "NME1", "CTPS1", "POLR3A"]})
         
-    pyiomica.ExportEnrichmentReport(analysisKEGGAssociation, AppendString='analysisKEGGAssociation', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+    pio.ExportEnrichmentReport(analysisKEGGAssociation, AppendString='analysisKEGGAssociation', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #The data can be computed with or without a label. If labeled, the gene ID must be the first element for each ID provided. The data is in the form {ID,label}:
-    analysisKEGGLabel = pyiomica.KEGGAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
+    analysisKEGGLabel = pio.KEGGAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
                                                 ["NFKB2", "Protein"], ["NOS2", "Protein"], ["PYCARD", "Protein"], ["PYDC1","Protein"], ["SSC5D", "Protein"]])
 
-    pyiomica.ExportEnrichmentReport(analysisKEGGLabel, AppendString='analysisKEGGLabel', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+    pio.ExportEnrichmentReport(analysisKEGGLabel, AppendString='analysisKEGGLabel', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #The same result is obtained if IDs are enclosed in list brackets:
-    analysisKEGGNoLabel = pyiomica.KEGGAnalysis([["C6orf57"], ["CD46"], ["DHX58"], ["HMGB3"], ["MAP3K5"], ["NFKB2"], ["NOS2"], ["PYCARD"], ["PYDC1"], ["SSC5D"]])
+    analysisKEGGNoLabel = pio.KEGGAnalysis([["C6orf57"], ["CD46"], ["DHX58"], ["HMGB3"], ["MAP3K5"], ["NFKB2"], ["NOS2"], ["PYCARD"], ["PYDC1"], ["SSC5D"]])
 
-    pyiomica.ExportEnrichmentReport(analysisKEGGNoLabel, AppendString='analysisKEGGNoLabel', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+    pio.ExportEnrichmentReport(analysisKEGGNoLabel, AppendString='analysisKEGGNoLabel', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #The same result is obtained if IDs are input as strings:
-    analysisKEGGstrings = pyiomica.KEGGAnalysis(["C6orf57", "CD46", "DHX58", "HMGB3", "MAP3K5", "NFKB2", "NOS2", "PYCARD", "PYDC1", "SSC5D"])
+    analysisKEGGstrings = pio.KEGGAnalysis(["C6orf57", "CD46", "DHX58", "HMGB3", "MAP3K5", "NFKB2", "NOS2", "PYCARD", "PYDC1", "SSC5D"])
 
-    pyiomica.ExportEnrichmentReport(analysisKEGGstrings, AppendString='analysisKEGGstrings', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+    pio.ExportEnrichmentReport(analysisKEGGstrings, AppendString='analysisKEGGstrings', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #The data can be mixed, e.g. proteins and RNA with different labels:
-    analysisKEGGMixed = pyiomica.KEGGAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "RNA"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
+    analysisKEGGMixed = pio.KEGGAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "RNA"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
                                                 ["NFKB2", "RNA"], ["NFKB2", "Protein"], ["NOS2", "RNA"], ["PYCARD", "RNA"], ["PYDC1", "Protein"], ["SSC5D", "Protein"]])
 
-    pyiomica.ExportEnrichmentReport(analysisKEGGMixed, AppendString='analysisKEGGMixed', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+    pio.ExportEnrichmentReport(analysisKEGGMixed, AppendString='analysisKEGGMixed', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #The data in this case treated as originating from a single population. Protein and RNA labeled data for the same identifier are treated as equivalent.
     #We can instead treat the data as different by setting the MultipleList and MultipleListCorrection options:
-    analysisKEGGMixedMulti = pyiomica.KEGGAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "RNA"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
+    analysisKEGGMixedMulti = pio.KEGGAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "RNA"], ["HMGB3", "Protein"], ["MAP3K5", "Protein"], 
                                                     ["NFKB2", "RNA"], ["NFKB2", "Protein"], ["NOS2", "RNA"], ["PYCARD", "RNA"], ["PYDC1", "Protein"], ["SSC5D", "Protein"]], 
                                                     MultipleList=True, MultipleListCorrection='Automatic')
 
-    pyiomica.ExportEnrichmentReport(analysisKEGGMixedMulti, AppendString='analysisKEGGMixedMulti', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+    pio.ExportEnrichmentReport(analysisKEGGMixedMulti, AppendString='analysisKEGGMixedMulti', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #We can carry out a "Molecular" analysis for compound data. We consider the following metabolomics data, which has labels "Meta" 
     #and additional mass and retention time information in the form {identifier,mass, retention time, label}:
@@ -105,9 +136,9 @@ def testKEGGAnalysis(EnrichmentOutputDirectory):
                         ["cpd:C08564", 324.0948, 10.281, "Meta"], ["cpd:C19426", 338.2818, 13.758765, "Meta"], ["cpd:C02943", 468.3218, 14.263261, "Meta"], 
                         ["cpd:C04882", 1193.342, 14.707576, "Meta"]]
 
-    compoundsExampleKEGG = pyiomica.KEGGAnalysis(compoundsExample, FilterSignificant=True, AnalysisType='Molecular')
+    compoundsExampleKEGG = pio.KEGGAnalysis(compoundsExample, FilterSignificant=True, AnalysisType='Molecular')
 
-    pyiomica.ExportEnrichmentReport(compoundsExampleKEGG, AppendString='compoundsExampleKEGG', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+    pio.ExportEnrichmentReport(compoundsExampleKEGG, AppendString='compoundsExampleKEGG', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #We can carry out multiomics data analysis. We consider the following simple example:
     multiOmicsData = [["C6orf57", "Protein"], ["CD46", "Protein"], ["DHX58", "Protein"], ["HMGB3", "RNA"], ["HMGB3", "Protein"], 
@@ -125,17 +156,17 @@ def testKEGGAnalysis(EnrichmentOutputDirectory):
                         ["cpd:C02943", 468.3218, 14.263261, "Meta"], ["cpd:C04882", 1193.342, 14.707576, "Meta"]]
 
     #We can carry out "Genomic" and "Molecular" analysis concurrently by setting AnalysisType = "All":
-    multiOmicsDataKEGG = pyiomica.KEGGAnalysis(multiOmicsData, AnalysisType='All', MultipleList=True, MultipleListCorrection='Automatic') 
+    multiOmicsDataKEGG = pio.KEGGAnalysis(multiOmicsData, AnalysisType='All', MultipleList=True, MultipleListCorrection='Automatic') 
 
-    pyiomica.ExportEnrichmentReport(multiOmicsDataKEGG, AppendString='multiOmicsDataKEGG', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+    pio.ExportEnrichmentReport(multiOmicsDataKEGG, AppendString='multiOmicsDataKEGG', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     #Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
-    pyiomica.read(os.path.join(pyiomica.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
+    pio.read(os.path.join(pio.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
 
     if not ExampleClusteringObject is None:
         #We calculate the KEGGAnalysis for each group in each class:
-        ExampleClusteringObject = pyiomica.KEGGAnalysis(ExampleClusteringObject)
+        ExampleClusteringObject = pio.KEGGAnalysis(ExampleClusteringObject)
 
-        pyiomica.ExportEnrichmentReport(ExampleClusteringObject, AppendString='ExampleClusteringObject', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
+        pio.ExportEnrichmentReport(ExampleClusteringObject, AppendString='ExampleClusteringObject', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
     return

@@ -1,7 +1,7 @@
 .. pyiomica documentation master file, created by
    sphinx-quickstart on Fri Oct  4 14:17:19 2019.
    You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+   contain the root `toctree` directive. 
 
 Welcome to PyIOmica's documentation!
 ====================================
@@ -11,7 +11,7 @@ Welcome to PyIOmica's documentation!
    :caption: Contents:
 
    overview
-   pyiomica
+   packageFunctionality
    examples
    pyiomica.data
 

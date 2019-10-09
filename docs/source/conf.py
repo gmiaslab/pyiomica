@@ -17,6 +17,23 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
 
+# Sort members by type
+#autodoc_member_order = 'groupwise'
+autodoc_member_order = 'bysource'
+autosummary_generate = True
+
+
+# Ensure that the __init__ method gets documented.
+def skip(app, what, name, obj, skip, options):
+    #print(app, what, name, obj, skip, options)
+    if name == "__init__":
+        return False
+    return skip
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)
+
+
 # -- Project information -----------------------------------------------------
 
 project = 'pyiomica'
