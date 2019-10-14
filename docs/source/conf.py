@@ -16,9 +16,9 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
-autodoc_default_options = {
-    'autosummary': True,
-}
+#autodoc_default_options = {
+#    'autosummary': True,
+#}
 
 # Sort members by type
 #autodoc_member_order = 'groupwise'
@@ -61,7 +61,6 @@ release = '1.0.2'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'autodocsumm',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
@@ -71,6 +70,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxcontrib.images',
     'sphinx.ext.autosummary',
+    'autodocsumm',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
