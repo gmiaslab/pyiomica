@@ -1,11 +1,66 @@
 '''Visualization functions'''
 
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.patheffects as path_effects
+import matplotlib.patches
+import matplotlib.collections
+from matplotlib import cm
+
 from .globalVariables import *
 
-def makeDataHistograms(df, saveDir, dataName):
+from . import (visibilityGraphAuxilaryFunctions,
+               clusteringFunctions,
+               coreFunctions,
+               extendedDataFrame)
 
-    """Make a histogram for each pandas Series (time point) in a pandas Dataframe.
+def saveFigure(saveDir, label, extension, dpi, close=True):
+
+    """Function primarily used internally to save and close figures
+
+    Parameters:
+        saveDir: str
+            Path of directories to save the object to
+
+        dataName: str
+            Label to include in the file name
+
+        extension: str, Default '.png'
+            Path of directories to save the object to
+            
+        dpi: int, Default 300
+            Figure resolution if rasterized
+
+        close: boolean: Default True
+            Whether to close the figure after saving
+
+    Returns:
+        None
+
+    Usage:
+        saveFigure(saveDir, label, extension, dpi)
+    """
+
+    if extension in ['.png', '.jpeg', '.tiff']:
+
+        fig.savefig(os.path.join(saveDir, dataName + label + extension), dpi=dpi)
+    
+    elif extension in ['.svg', '.eps', '.pdf']:
+
+        fig.savefig(os.path.join(saveDir, dataName + label + extension))
+
+    else:
+        print('Unsupported format. Figure not saved')
+
+    plt.close(fig)
+
+    return None
+
+def makeDataHistograms(df, saveDir, dataName, figsize=(8,8), range_min=np.min, range_max=np.max, includeTitle=True, title='Data @ timePoint:', fontsize=8, fontcolor='b', N_bins=100, color='b', extension='.png', dpi=300):
+
+    """Make a histogram for each Series (time point) in a Dataframe.
 
     Parameters:
         df: pandas.DataFrame
@@ -16,6 +71,39 @@ def makeDataHistograms(df, saveDir, dataName):
 
         dataName: str
             Label to include in the file name
+
+        figsize: tuple, Default (8,8)
+            Size of the figure in inches
+
+        range_min: str, Default 
+            How to determine data minimum
+
+        range_max: int, float or function, Default 
+            How to determine data maximum
+
+        includeTitle: boolean, Default True
+            Path of directories to save the object to
+
+        title: str, Default 'Data @ timePoint:'
+            Text of the title
+
+        fontsize: str, Default 8
+            Fontsize of the labels
+            
+        fontcolor: str, Default 'b'
+            Color of the title font
+            
+        N_bins: int, Default 100
+            Number of bins in the histogram
+            
+        color: str, Default 'b'
+            Color of the bars
+            
+        extension: str, Default '.png'
+            Path of directories to save the object to
+            
+        dpi: int, Default 300
+            Figure resolution if rasterized
 
     Returns:
         None
@@ -29,43 +117,45 @@ def makeDataHistograms(df, saveDir, dataName):
 
     for timePoint in df.columns[:]:
 
-        timeLabel = (str(np.round(timePoint,3)) + '000000')[:5]
+        label = str(timePoint)
 
         subset = df[timePoint]
         subset = subset[~np.isnan(subset.values)].values
 
-        N_bins = 100
+        if type(range_min) is types.FunctionType:
+            range_min = range_min(subset)
 
-        range_min = np.min(subset)
-        range_max = np.max(subset)
+        if type(range_max) is types.FunctionType:
+            range_max = range_max(subset)
 
         hist_of_subset = scipy.stats.rv_histogram(np.histogram(subset, bins=N_bins, range=(range_min,range_max)))
         hist_data = hist_of_subset._hpdf / N_bins
         hist_bins = hist_of_subset._hbins
 
-        fig, ax = plt.subplots(figsize=(8,8))
+        fig, ax = plt.subplots(figsize=figsize)
 
         bar_bin_width = range_max / N_bins
 
-        ax.bar(hist_bins, hist_data[:-1], width=0.9 * bar_bin_width, color='b', align='center')
+        ax.bar(hist_bins, hist_data[:-1], width=0.9 * bar_bin_width, color=color, align='center')
 
-        ax.set_title('Data @ timePoint: ' + timeLabel, fontdict={'color': 'b'})
-        ax.set_xlabel('Gene expression', fontsize=8)
-        ax.set_ylabel('Density', fontsize=8)
+        if includeTitle:
+            ax.set_title(title + label, fontdict={'color': fontcolor})
+
+        ax.set_xlabel('Values', fontsize=fontsize)
+        ax.set_ylabel('Density', fontsize=fontsize)
 
         ax.set_xlim(range_min - 0.5 * bar_bin_width, range_max + 0.5 * bar_bin_width)
 
         fig.tight_layout()
-        fig.savefig(saveDir + dataName + '_' + timeLabel + '_histogram_of_expression.png', dpi=600)
 
-        plt.close(fig)
+        saveFigure(saveDir, dataName + '_' + label + '_histogram', extension, dpi)
 
     return None
 
-def makeLombScarglePeriodograms(df, saveDir, dataName):
+def makeLombScarglePeriodograms(df, saveDir, dataName, minNumberOfNonzeroPoints=5, oversamplingRate=100, figsize=(5,5), title1='TimeSeries Data', title2='Lomb-Scargle periodogram' , extension='.png', dpi=300):
         
     """Make a combined plot of the signal and its Lomb-Scargle periodogram
-    for each pandas Series (time point) in a pandas Dataframe.
+    for each pandas Series (time point) in a Dataframe.
 
     Parameters:
         df: pandas.DataFrame
@@ -76,6 +166,27 @@ def makeLombScarglePeriodograms(df, saveDir, dataName):
 
         dataName: str
             Label to include in the file name
+
+        minNumberOfNonzeroPoints: int, Default 5
+            Minimum number of non-zero points in signal to use it
+            
+        oversamplingRate: int, Default 100
+            Periodogram oversampling rate
+
+        figsize: tuple, Default (8,8)
+            Size of the figure in inches
+
+        title1: str, Default 'TimeSeries Data'
+            Text of the upper title
+
+        title2: str, Default 'Lomb-Scargle periodogram'
+            Text of the lower title
+
+        extension: str, Default '.png'
+            Path of directories to save the object to
+            
+        dpi: int, Default 300
+            Figure resolution if rasterized
 
     Returns:
         None
@@ -96,21 +207,20 @@ def makeLombScarglePeriodograms(df, saveDir, dataName):
 
         setTimes, setValues, inputSetTimes = subset.index.values, subset.values, df.columns.values
 
-        if len(subset) < 5:
+        if len(subset) < minNumberOfNonzeroPoints:
 
             print(geneName, ' skipped (only %s non-zero point%s), ' % (len(subset), 's' if len(subset) != 1 else ''), end=' ', flush=True)
 
             continue
 
-        pgram = LombScargle(setTimes, setValues, inputSetTimes, OversamplingRate=100)
+        pgram = coreFunctions.LombScargle(setTimes, setValues, inputSetTimes, OversamplingRate=oversamplingRate)
 
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(5, 5))
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=figsize)
 
         ax1.plot(setTimes, setValues, 'bo', linewidth=3, markersize=5, markeredgecolor='k', markeredgewidth=2)
 
         zero_points = np.array(list(set(inputSetTimes) - set(setTimes)))
         ax1.plot(zero_points, np.zeros((len(zero_points),)), 'ro', linewidth=3, markersize=3, markeredgecolor='k', markeredgewidth=0)
-
         ax1.set_aspect('auto')
 
         minTime = np.min(inputSetTimes)
@@ -118,25 +228,22 @@ def makeLombScarglePeriodograms(df, saveDir, dataName):
         extraTime = (maxTime - minTime) / 10
 
         ax1.set_xlim(minTime - extraTime, maxTime + extraTime)
-        ax1.set_title('TimeSeries Data')
+        ax1.set_title(title1)
     
         ax2.plot(2 * np.pi * pgram[0], pgram[1], 'r-', linewidth=1)
-
         ax2.set_aspect('auto')
-        ax2.set_title('Lomb-Scargle periodogram')
+        ax2.set_title(title2)
 
         fig.tight_layout()
 
-        fig.savefig(saveDir + dataName + '_' + geneName + '_Lomb_Scargle_periodogram.png', dpi=600)
-
-        plt.close(fig)
+        saveFigure(saveDir, dataName + '_' + geneName + '_Lomb_Scargle_periodogram', extension, dpi)
 
     return None
 
 def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95], 
                        numberOfVGs=1, groups_ac_colors=['b'], fig=None, numberOfCommunities=6, printCommunities=False, 
                        fontsize=None, nodesize=None, level=0.55, commLineWidth=0.5, lineWidth=1.0,
-                       withLabel=True, withTitle=False, layout='circle', radius=0.07, noplot=False):
+                       withLabel=True, withTitle=False, layout='circle', radius=0.07, noplot=False, horizontal=False):
 
     """Draw a Visibility graph of data on a provided Matplotlib figure.
 
@@ -207,36 +314,10 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
                             level=0.85, commLineWidth=3.0, lineWidth=2.0, withLabel=False)
     """
 
-    def imputeWithMedian(data):
-
-        data[np.isnan(data)] = np.median(data[np.isnan(data) == False])
-
-        return data
-
     if len(data.shape)>1:
-        data = pd.DataFrame(data=data).apply(imputeWithMedian, axis=1).apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
+        data = extendedDataFrame.DataFrame(data=data).imputeMissingWithMedian().apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
 
-    graph_nx = nx.from_numpy_matrix(getAdjacencyMatrixOfVisibilityGraph(data, times))
-    
-    def find_and_remove_node(graph_nx):
-        bc = nx.betweenness_centrality(graph_nx)
-        node_to_remove = list(bc.keys())[np.argmax(list(bc.values()))]
-        graph_nx.remove_node(node_to_remove)
-        return graph_nx, node_to_remove
-
-    list_of_nodes = []
-    graph_nx_inv = nx.from_numpy_matrix(getAdjacencyMatrixOfVisibilityGraph(-data, times))
-    for i in range(numberOfCommunities):
-        graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
-        list_of_nodes.append(node)
-        
-    if not 0 in list_of_nodes:
-        list_of_nodes.append(0)
-
-    list_of_nodes.append(list(graph_nx.nodes)[-1] + 1)
-    list_of_nodes.sort()
-
-    communities = [list(range(list_of_nodes[i],list_of_nodes[i + 1])) for i in range(len(list_of_nodes) - 1)]
+    communities, graph_nx = clusteringFunctions.getCommunitiesOfTimeSeries(data, times, numberOfCommunities, horizontal=horizontal)
 
     if printCommunities:
         print(list_of_nodes, '\n')
@@ -344,7 +425,248 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
 
     return graph_nx, data, communities
 
-def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0, vectorImage=True):
+def makeVisibilityGraph(intensities, positions, saveDir, fileName, fontsize=16, nodesize=500, level=0.5, commLineWidth=3.0, lineWidth=2.0, layout='circle', horizontal=False, radius=0.03,
+                        figsize=(10,10), addColorbar=True, colorbarAxisCoordinates=[0.90,0.7,0.02,0.2], colorbarLabelsize=12, colorbarPrecision=2, extension='.png', dpi=300):
+
+    '''Make either horizonral or normal visibility graph of a time series
+
+    Parameters:
+        intensities: 
+            Data to plot
+    
+        positions: 
+            Time points corresponding to data
+
+        saveDir: str
+            Path of directories to save the object to
+
+        dataName: str
+            Label to include in the file name
+        
+        fontsize: float, Default 16
+            Labels fontsize
+                    
+        nodesize: int, Default 500
+            Node size
+                    
+        level: float, Default 0.5
+            Level
+                    
+        commLineWidth: float, Default 3.0
+            Communities lines width
+                    
+        lineWidth: float, Default 2.0
+            Edge lines width
+                    
+        layout: str, Default 'circle'
+            Type of layout, 'circle' or 'line'
+                    
+        horizontal: boolean, Default False
+            Whether to make horizontal of normal visibility graph
+                                
+        radius: float, Default 0.03
+            Rounding of the lines
+                                
+        figsize: tuple, Default (10,10)
+            Figure size in inches
+                                
+        addColorbar: boolean, Default True
+            Whether to add colorbar
+                                
+        colorbarAxisCoordinates: list, Default [0.90,0.7,0.02,0.2]
+            colorbar axis coordinates
+                                            
+        colorbarLabelsize: float, Default 12
+            Colorbar labels size
+                                            
+        colorbarPrecision: int, Default 2
+            colorbar labels rounding
+                                            
+        extension: str, Default '.png'
+            Figure extension
+                                                        
+        dpi: int, Default 300
+            Figure resolution
+
+    Returns:
+        None
+
+    Usage:
+        makeVisibilityGraph(data, times, 'dir1/', 'myData')
+    '''
+    
+    fig = plt.figure(figsize=figsize)
+
+    addVisibilityGraph(intensities, positions, fig=fig, fontsize=fontsize, nodesize=nodesize, level=level, 
+                        commLineWidth=commLineWidth, lineWidth=lineWidth, withLabel=False, layout=layout, 
+                        printCommunities=False, radius=radius, horizontal=horizontal)
+
+    addColorbarToFigure(fig, intensities, axisCoordinates=colorbarAxisCoordinates, labelsize=colorbarLabelsize, precision=colorbarPrecision)
+
+    saveFigure(saveDir, ('horizontal_' if horizontal else 'normal_') + fileName, extension, dpi)
+
+    return
+
+def makeVisibilityBarGraph(data, times, saveDir, fileName, horizontal=False, barWidth=0.2, dotColor='b', barColor='r', arrowColor='k', id='', extension='.png', figsize=(8,4), dpi=300):
+
+    """Bar-plot style visibility graph.
+
+    Parameters:
+        data: 2d numpy.array
+            Numpy array of floats
+
+        times: 2d numpy.array
+            Numpy array of floats
+
+        fileName: str
+            Path where to save the figure file
+
+        fileName: str
+            Name of the figure file to save
+
+        horizontal: boolean, default False
+            Horizontal or normal visibility graph
+            
+        barWidth: float, default 0.2
+            Horizontal or normal visibility graph
+            
+        dotColor: str, default 'b'
+            Color of the data points
+                        
+        barColor: str, default 'r'
+            Color of the bars
+            
+        arrowColor: str, default 'k'
+            Color of lines
+
+        id: str or int, default ''
+            Label to add to the figure title
+            
+        extension: str, Default '.png'
+            Figure format
+            
+        figsize: tuple of int, Default (8,4)
+            Figure size in inches
+            
+        dpi: int, Default 300
+            Figure resolution
+
+    Returns:
+        None
+
+    Usage:
+        makeVisibilityBarGraph(A, data, times, 'my_figure')
+    """
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    if horizontal:
+        A = visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHorizontalVisibilityGraph(data)
+    else:
+        A = visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfVisibilityGraph(data, times)
+
+    ax.bar(times, data, width=barWidth, color=barColor, align='center', zorder=-np.inf)
+    ax.scatter(times, data, color=dotColor)
+
+    for i in range(A.shape[0]):
+        for j in range(A.shape[1]):
+            if i>j and A[i,j] == 1:
+                if horizontal:
+                    level1 = level2 = np.min([data[i],data[j]])
+                else:
+                    level1 = data[i]
+                    level2 = data[j]
+
+                ax.annotate(s='', xy=(times[i],level1), xytext=(times[j],level2), 
+                            arrowprops=dict(arrowstyle='<->', shrinkA=0, shrinkB=0, linestyle='--'))
+
+    ax.set_title('%s Time Series'%(id), fontdict={'color': arrowColor})
+    ax.set_xlabel('Times', fontsize=8)
+    ax.set_ylabel('Signal intensity', fontsize=8)
+    ax.set_xticks(times)
+    ax.set_xticklabels(times, fontsize=10, rotation=90)
+    ax.set_yticks([])
+
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(True)
+
+    fig.tight_layout()
+
+    saveFigure(saveDir, ('horizontal_' if horizontal else 'normal_') + fileName, extension, dpi)
+
+    return None
+
+def makePlotOfPeak(data_all, scores, selected_peak, selected_peak_value, plotID):
+
+    '''Plot peaks. Function used internally during certain data processing steps'''
+
+    fig, ax = plt.subplots()
+
+    ax.plot(data_all.T[0], data_all.T[1], 'g', lw=3)
+    ax.plot(scores.T[0], scores.T[1], 'ro', ms=5)
+    ax.plot(selected_peak, selected_peak_value, 'bo', alpha=0.5, ms=10)
+
+    saveFigure(saveDir, 'spline_%s' % ('' if plotID == None else str(plotID)), extension, dpi)
+
+    return
+
+def addColorbarToFigure(fig, data, axisCoordinates=[0.90,0.7,0.02,0.2], cmap=None, norm=None, labelsize=12, precision=2):
+
+    '''Add colorbar to figure
+    
+    Parameters:
+        fig: matplotlib.figure
+            Data to plot
+                  
+        cmap: matplotlib.colors.LinearSegmentedColormap, Default None
+            Colormap to use
+                                       
+        norm: matplotlib.colors.Normalize, Default None
+            Colormap normalization
+                                
+        axisCoordinates: list, Default [0.90,0.7,0.02,0.2]
+            colorbar axis coordinates
+                                            
+        labelsize: float, Default 12
+            Colorbar labels size
+                                            
+        precision: int, Default 2
+            Colorbar labels rounding
+                                            
+    Returns:
+        None
+
+    Usage:
+        addColorbarToFigure(fig, data)
+    '''
+
+    data = np.array(data)
+    dataMin = np.min(data)
+    dataMax = np.max(data)
+
+    axisColor = fig.add_axes(axisCoordinates)
+
+    if cmap is None:
+        cmap=matplotlib.colors.LinearSegmentedColormap.from_list('GR', [(0, 1, 0), (1, 0, 0)], N=100)
+
+    if norm is None:
+        norm=matplotlib.colors.Normalize(vmin=dataMin, vmax=dataMax)
+
+    mapp=cm.ScalarMappable(norm=norm, cmap=cmap)
+
+    mapp.set_array(data)
+
+    fig.colorbar(mapp, cax=axisColor, ticks=[dataMax,dataMin])
+
+    axisColor.tick_params(labelsize=labelsize)
+
+    axisColor.set_yticklabels([np.round(dataMax,precision), np.round(dataMin,precision)])
+    
+    return
+
+def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0, figsize=(12,8), extension='.png', dpi=300):
 
     """Make Dendrogram-Heatmap plot along with VIsibility graphs.
 
@@ -364,8 +686,14 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
         textScale: float, Default 1.0
             scaling of text size
 
-        vectorImage: boolean, Default True
-            Whether to make vector graphics instead of raster 
+        figsize: tuple, Default (12,8)
+            Figure size in inches 
+            
+        extension: str, Default '.png'
+            Figure format extension
+            
+        dpi: int, Default 300
+            Figure resolution 
 
     Returns:
         None
@@ -413,14 +741,10 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
         axisDendro.plot([posA, axisDendro.get_xlim()[1]], [0., 0.], '--', color='k', linewidth = 1.0)
         axisDendro.plot([posA, axisDendro.get_xlim()[1]], [-0. + axisDendro.get_ylim()[1], -0. + axisDendro.get_ylim()[1]], '--', color='k', linewidth = 1.0)
 
-
         axisMatrixAC = fig.add_axes([0.78 + 0.07,0.1,0.18 - 0.075,0.8])
-
-        cmap = plt.cm.bwr
-        imAC = axisMatrixAC.imshow(tempData, aspect='auto', vmin=np.min(tempData), vmax=np.max(tempData), origin='lower', cmap=cmap)
+        imAC = axisMatrixAC.imshow(tempData, aspect='auto', vmin=np.min(tempData), vmax=np.max(tempData), origin='lower', cmap=plt.cm.bwr)
         for i in range(n_clusters - 1):
             axisMatrixAC.plot([-0.5, tempData.shape[1] - 0.5], [cluster_line_positions[i + 1] - 0.5, cluster_line_positions[i + 1] - 0.5], '--', color='black', linewidth = 1.0)
-
         axisMatrixAC.set_xticks([i for i in range(tempData.shape[1] - 1)])
         axisMatrixAC.set_xticklabels([i + 1 for i in range(tempData.shape[1] - 1)], fontsize=6*textScale)
         axisMatrixAC.set_yticks([])
@@ -428,7 +752,6 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
         axisMatrixAC.set_title('Autocorrelation' if AutocorrNotPeriodogr else 'Periodogram', fontsize=axisMatrixAC.title._fontproperties._size*textScale)
 
         axisColorAC = fig.add_axes([0.9 + 0.065,0.55,0.01,0.35])
-
         axisColorAC.tick_params(labelsize=6*textScale)
         plt.colorbar(imAC, cax=axisColorAC, ticks=[np.round(np.min(tempData),2),np.round(np.max(tempData),2)])
 
@@ -531,7 +854,6 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
         for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
             signalsInClusteringObject += ClusteringObject[group][subgroup]['data'].shape[0]
 
-
     fig = plt.figure(figsize=(12,8))
 
     left = 0.02
@@ -588,134 +910,6 @@ def makeDendrogramHeatmap(ClusteringObject, saveDir, dataName, AutocorrNotPeriod
 
         addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, groupColors, fig)
     
-    if vectorImage:
-        fig.savefig(saveDir + dataName + '_DendrogramHeatmap.eps')
-        fig.savefig(saveDir + dataName + '_DendrogramHeatmap.svg')
-    else:
-        fig.savefig(saveDir + dataName + '_DendrogramHeatmap.png', dpi=300)
+    saveFigure(saveDir, saveDir + dataName + '_DendrogramHeatmap', extension, dpi)
 
     return None
-
-def PlotVisibilityGraph(A, data, times, fileName, id):
-
-    """Bar-plot style visibility graph.
-
-    Parameters:
-        A: 2d numpy.array
-            Adjacency matrix
-
-        data: 2d numpy.array
-            Numpy array of floats
-
-        times: 2d numpy.array
-            Numpy array of floats
-
-        fileName: str
-            Name of the figure file to save
-
-        id: str or int
-            Label to add to the figure title
-
-    Returns:
-        None
-
-    Usage:
-        PlotVisibilityGraph(A, data, times, 'FIgure.png', 'Test Data')
-    """
-
-    fig, ax = plt.subplots(figsize=(8,4))
-    ax.bar(times, data, width = 0.03, color='r', align='center', zorder=-np.inf)
-    ax.scatter(times, data, color='b')
-
-    for i in range(A.shape[0]):
-        for j in range(A.shape[1]):
-            if i>j and A[i,j] == 1:
-                ax.annotate(s='', xy=(times[i],data[i]), xytext=(times[j],data[j]), 
-                            arrowprops=dict(arrowstyle='<->', shrinkA=0, shrinkB=0,linestyle='--'))
-
-    ax.set_title('%s Time Series'%(id), fontdict={'color': 'k'})
-    ax.set_xlabel('Times', fontsize=8)
-    ax.set_ylabel('Signal intensity', fontsize=8)
-    ax.set_xticks(times)
-    ax.set_xticklabels([str(item)[:-2]+' hr' for item in np.round(times,0)],fontsize=10, rotation=90)
-    ax.set_yticks([])
-
-    ax.spines['left'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.spines['bottom'].set_visible(True)
-
-    fig.tight_layout()
-    fig.savefig(fileName, dpi=600)
-    plt.close(fig)
-
-    return None
-
-def PlotHorizontalVisibilityGraph(A, data, times, fileName, id):
-    
-    """Bar-plot style horizontal visibility graph.
-
-    Parameters:
-        A: 2d numpy.array
-            Adjacency matrix
-
-        data: 2d numpy.array
-            Numpy array of floats
-
-        times: 2d numpy.array
-            Numpy array of floats
-
-        fileName: str
-            Name of the figure file to save
-
-        id: str or int
-            Label to add to the figure title
-
-    Returns:
-        None
-
-    Usage:
-        PlotHorizontalVisibilityGraph(A, data, times, 'FIgure.png', 'Test Data')
-    """
-
-    fig, ax = plt.subplots(figsize=(8,4))
-    ax.bar(times, data, width = 0.03, color='r', align='center', zorder=-np.inf)
-    ax.scatter(times, data, color='b')
-
-    for i in range(A.shape[0]):
-        for j in range(A.shape[1]):
-            if i>j and A[i,j] == 1:
-                level = np.min([data[i],data[j]])
-                ax.annotate(s='', xy=(times[i],level), xytext=(times[j],level), 
-                            arrowprops=dict(arrowstyle='<->', shrinkA=0, shrinkB=0,linestyle='--'))
-
-    ax.set_title('%s Time Series'%(id), fontdict={'color': 'k'})
-    ax.set_xlabel('Times', fontsize=8)
-    ax.set_ylabel('Signal intensity', fontsize=8)
-    ax.set_xticks(times)
-    ax.set_xticklabels([str(item)[:-2]+' hr' for item in np.round(times,0)],fontsize=10, rotation=90)
-    ax.set_yticks([])
-
-    ax.spines['left'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.spines['bottom'].set_visible(True)
-
-    fig.tight_layout()
-    fig.savefig(fileName, dpi=600)
-    plt.close(fig)
-    
-    return None
-
-def makePlotOfPeak(data_all, scores, selected_peak, selected_peak_value, plotID):
-
-    fig, ax = plt.subplots()
-
-    ax.plot(data_all.T[0], data_all.T[1], 'g', lw=3)
-    ax.plot(scores.T[0], scores.T[1], 'ro', ms=5)
-    ax.plot(selected_peak, selected_peak_value, 'bo', alpha=0.5, ms=10)
-
-    fig.savefig('spline_%s.png' % ('' if plotID == None else str(plotID)), dpi=300)
-    plt.close(fig)
-
-    return

@@ -1,7 +1,7 @@
 ![logo](pyiomica/data/PyIOmica.png?raw=true)
 
 # PyIOmica (pyiomica)
-This repository contains PyIOmica, a Python package that provides bioinformatics utilities for analyzing (dynamic) omics datasets. PyIOmica extends MathIOmica usage to Python and implements new visualizations and computational tools for graph analyses.
+This repository contains PyIOmica, a Python package that provides bioinformatics utilities for analyzing (dynamic) omics datasets. PyIOmica extends MathIOmica usage to Python and implements new visualizations and computational tools for graph analyses. The documentation is available at Read the Docs: https://pyiomica.readthedocs.io/en/latest/
 
 ## PyIOmica Versions
 
@@ -43,7 +43,7 @@ After installation you can run:
 ## C. DOCUMENTATION
 
 Documentation for PyIOmica is built-in and is available through the help() functionality in Python.
-Also documentation is available at Read the Docs: https://pyiomica.readthedocs.io/en/latest/
+Also the documentation is available at Read the Docs: https://pyiomica.readthedocs.io/en/latest/
 
 ## D. ADDITIONAL INFORMATION
 

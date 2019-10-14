@@ -1,5 +1,5 @@
-Extended DataFrame and data-processing function
-===============================================
+Extended DataFrame and data-processing functions
+================================================
 
 Submodule **pyiomica.extendedDataFrame**
 

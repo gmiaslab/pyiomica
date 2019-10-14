@@ -1,8 +1,12 @@
 '''PyIOmica Dataframe extending Pandas DataFrame with new functions'''
 
+import sklearn.preprocessing
+
 from .globalVariables import *
-from .utilityFunctions import *
-from .coreFunctions import *
+
+from . import utilityFunctions
+from . import coreFunctions
+
 
 class DataFrame(pd.DataFrame):
 
@@ -257,7 +261,7 @@ class DataFrame(pd.DataFrame):
     
         print('Box-cox transforming raw data')
             
-        new_data = self.apply(boxCoxTransform, axis=0)
+        new_data = self.apply(coreFunctions.boxCoxTransform, axis=0)
 
         if inplace:
             self._update_inplace(new_data)
@@ -288,7 +292,7 @@ class DataFrame(pd.DataFrame):
             
         print('Z-score (Median-based) transforming box-cox transformed data')
 
-        new_data = self.apply(modifiedZScore, axis=0)
+        new_data = self.apply(coreFunctions.modifiedZScore, axis=0)
 
         if inplace:
             self._update_inplace(new_data)
@@ -452,7 +456,7 @@ class DataFrame(pd.DataFrame):
 
         return
 
-    def compareTwoTimeSeriesDataframe(self, df, function=np.subtract, compareAllLevelsInIndex=True, mergeFunction=np.mean):
+    def compareTwoTimeSeries(self, df, function=np.subtract, compareAllLevelsInIndex=True, mergeFunction=np.mean):
 
         """Create a new Dataframe based on comparison of two existing Dataframes.
     
@@ -476,7 +480,7 @@ class DataFrame(pd.DataFrame):
                 Processed data
 
         Usage:
-            df_data = compareTwoTimeSeriesDataframe(df_dataH2, df_dataH1, function=np.subtract, compareAllLevelsInIndex=False, mergeFunction=np.median)
+            df_data = compareTwoTimeSeries(df_dataH2, df_dataH1, function=np.subtract, compareAllLevelsInIndex=False, mergeFunction=np.median)
         """
 
         if self.index.names!=df.index.names:
@@ -497,38 +501,43 @@ class DataFrame(pd.DataFrame):
 
         return function(df1_grouped.loc[index], df2_grouped.loc[index])
 
+    def imputeMissingWithMedian(self, axis=1, inplace=False):
 
-def prepareDataframe(dataDir, dataFileName, ColumnsFileName):
-
-    """Make a DataFrame from CSV files.
+        """Normalize signals to unity.
     
-    Parameters:
-        dataDir: str
-            Path of directories pointing to data
+        Parameters:
+            axis: int, Default 1
+                Axis to apply trasnformation along
 
-        dataFileName: str
-            File name in dataDir
+            inplace: boolean, Default False
+                Whether to modify data in place or return a new one
 
-        ColumnsFileName:  str
-            File name in dataDir containing columns names
+        Returns:
+            Dataframe or None
+                Processed data
 
-    Returns:
-        Dataframe
-            Dataframe
+        Usage:
+            df_data = df_data.imputeMissingWithMedian()
 
-    Usage:
-        df_data = prepareDataframe(dataDir, dataFileName, AlltimesFileName)
+            or
 
-        df_data.index = pd.MultiIndex.from_tuples([(item.split(':')[1], item.split(':')[0].split('_')[0],
-        (' '.join(item.split(':')[0].split('_')[1:]),)) for item in df_data.index.values], 
-        names=['source', 'id', 'metadata'])
-    """
+            df_data.imputeMissingWithMedian(inplace=True)
+        """
 
-    df = pd.read_csv(os.path.join(dataDir, dataFileName), delimiter=',', index_col=0, header=0)
+        def tempFunction(data):
 
-    df.columns = pd.read_csv(os.path.join(dataDir, ColumnsFileName), delimiter=',', header=None).values.T[0]
+            data[np.isnan(data)] = np.median(data[np.isnan(data) == False])
 
-    return DataFrame(df)
+            return data
+
+        new_data = self.apply(tempFunction, axis=axis)
+
+        if inplace:
+            self._update_inplace(new_data)
+        else:
+            return self._constructor(new_data).__finalize__(self)
+
+        return data
 
 def mergeDataframes(listOfDataframes, axis=0):
 
@@ -582,7 +591,7 @@ def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True)
 
     if parallel:
 
-        results = runCPUs(NumberOfCPUs, pLombScargle, [(series.index[~np.isnan(series)].values, series[~np.isnan(series)].values, df_data.columns.values) for index, series in df_data.iterrows()])
+        results = utilityFunctions.runCPUs(NumberOfCPUs, coreFunctions.pLombScargle, [(series.index[~np.isnan(series)].values, series[~np.isnan(series)].values, df_data.columns.values) for index, series in df_data.iterrows()])
 
         df_periodograms = pd.DataFrame(data=results[1::2], index=df_data.index, columns=results[0])
 
@@ -594,7 +603,7 @@ def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True)
             values = series[~np.isnan(series)].values
             times = series.index[~np.isnan(series)].values
 
-            tempFrequencies, tempIntensities = LombScargle(times, values, series.index.values, OversamplingRate=1)
+            tempFrequencies, tempIntensities = coreFunctions.LombScargle(times, values, series.index.values, OversamplingRate=1)
 
             if frequencies is None:
                 frequencies = tempFrequencies
@@ -680,7 +689,7 @@ def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs
 
     print('\nCalculating autocorrelations of %s random samples (sampled with replacement)...'%(df_data_random.shape[0]))
 
-    results = runCPUs(NumberOfCPUs, pAutocorrelation, [(df_data_random.iloc[i].index.values, df_data_random.iloc[i].values, df_data.columns.values) for i in range(df_data_random.shape[0])])
+    results = utilityFunctions.runCPUs(NumberOfCPUs, coreFunctions.pAutocorrelation, [(df_data_random.iloc[i].index.values, df_data_random.iloc[i].values, df_data.columns.values) for i in range(df_data_random.shape[0])])
     
     return pd.DataFrame(data=results[1::2], columns=results[0])
 

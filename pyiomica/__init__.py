@@ -1,8 +1,19 @@
+"""
+PyIOmica is a general omics data analysis Python package, with a focus on the analysis and categorization of longitudinal datasets.
+
+Usage:
+    import pyiomica
+
+Notes:
+    For additional information visit: https://github.com/gmiaslab/pyiomica and https://mathiomica.org by G. Mias Lab
+"""
+
+print("Loading PyIOmica (https://github.com/gmiaslab/pyiomica by G. Mias Lab)")
+
+
 from .globalVariables import *
 
 if printPackageGlobalDefaults:
-
-    import types
 
     variables = locals().copy()
 

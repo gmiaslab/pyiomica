@@ -1,5 +1,7 @@
 '''Functions to generate adjacency matrix of visibility graphs'''
 
+import numba
+numba.config.NUMBA_DEFAULT_NUM_THREADS = 4
 
 from .globalVariables import *
 

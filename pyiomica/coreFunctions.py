@@ -3,6 +3,7 @@
 
 from .globalVariables import *
 
+
 def modifiedZScore(subset):
 
     """Calculate modified z-score based on "Median absolute deviation".

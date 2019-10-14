@@ -1,7 +1,15 @@
 '''Annotations and Enumerations'''
 
+
+import pymysql
+import datetime
+import urllib.request
+
 from .globalVariables import *
-from .utilityFunctions import *
+
+from . import utilityFunctions
+from . import dataStorage
+
 
 def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, Species, totalMembers,
                             pValueCutoff, ReportFilterFunction, ReportFilter, TestFunction, HypothesisFunction, FilterSignificant,
@@ -241,7 +249,7 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
         print("Did Not Find Gene Translation Files, Attempting to Download from UCSC...")
         ImportDirectly = True
     else:
-        termTable = read(geneUCSCTable, jsonFormat=True)[1]
+        termTable = dataStorage.read(geneUCSCTable, jsonFormat=True)[1]
         termTable = np.array(termTable)
 
     if ImportDirectly:
@@ -269,7 +277,7 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
         termTable[np.where(termTable=="")] = None
 
         #Get all the terms we are going to need, import with SQL the combined tables,and export with a time stamp
-        write((datetime.datetime.now().isoformat(), termTable.tolist()), geneUCSCTable, jsonFormat=True)
+        dataStorage.write((datetime.datetime.now().isoformat(), termTable.tolist()), geneUCSCTable, jsonFormat=True)
 
         #Close SQL connection
         ucscDatabase.close()
@@ -383,11 +391,11 @@ def GOAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, Bac
         IDs = df.values.T[0]
         geneOntAssoc = dict(zip(keys, [np.unique(IDs[value]).tolist() for value in values]))
 
-        identifierAssoc = createReverseDictionary(geneOntAssoc)
+        identifierAssoc = utilityFunctions.createReverseDictionary(geneOntAssoc)
 
         #Save created annotations geneOntAssoc, identifierAssoc
-        write((datetime.datetime.now().isoformat(), geneOntAssoc), fileGOAssociations[0], jsonFormat=True)
-        write((datetime.datetime.now().isoformat(), identifierAssoc), fileGOAssociations[1], jsonFormat=True)
+        dataStorage.write((datetime.datetime.now().isoformat(), geneOntAssoc), fileGOAssociations[0], jsonFormat=True)
+        dataStorage.write((datetime.datetime.now().isoformat(), identifierAssoc), fileGOAssociations[1], jsonFormat=True)
         
         os.remove(localFile)
 
@@ -398,8 +406,8 @@ def GOAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, Bac
             return
     else:
         #Otherwise we get from the user specified PyIOmicaDataDirectoryectory
-        geneOntAssoc = read(fileGOAssociations[0], jsonFormat=True)[-1]
-        identifierAssoc = read(fileGOAssociations[1], jsonFormat=True)[-1]
+        geneOntAssoc = dataStorage.read(fileGOAssociations[0], jsonFormat=True)[-1]
+        identifierAssoc = dataStorage.read(fileGOAssociations[1], jsonFormat=True)[-1]
 
     if BackgroundSet!=[]:
         #Using provided background list to create annotation projection to limited background space, also remove entries with only one and missing value
@@ -408,7 +416,7 @@ def GOAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, Bac
         identifierAssoc = dict(zip(keys[index],values[index]))
 
         #Create corresponding geneOntAssoc
-        geneOntAssoc = createReverseDictionary(identifierAssoc)
+        geneOntAssoc = utilityFunctions.createReverseDictionary(identifierAssoc)
 
     if LengthFilter!=None:
         keys, values = np.array(list(geneOntAssoc.keys())), np.array(list(geneOntAssoc.values()))
@@ -416,7 +424,7 @@ def GOAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, Bac
         geneOntAssoc = dict(zip(keys[index],values[index]))
 
         #Create corresponding identifierAssoc
-        identifierAssoc = createReverseDictionary(geneOntAssoc)
+        identifierAssoc = utilityFunctions.createReverseDictionary(geneOntAssoc)
 
     return {Species : {"IDToGO": identifierAssoc, "GOToID": geneOntAssoc}}
 
@@ -762,10 +770,10 @@ def KEGGAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, B
         keys, values = list(dfGrouped.indices.keys()), list(dfGrouped.indices.values())
         IDs = df.values.T[0]
         pathToID = dict(zip(keys, [np.unique(IDs[value]).tolist() for value in values]))
-        idToPath = createReverseDictionary(pathToID)
+        idToPath = utilityFunctions.createReverseDictionary(pathToID)
 
-        write((datetime.datetime.now().isoformat(), idToPath), fileAssociations[0], jsonFormat=True)
-        write((datetime.datetime.now().isoformat(), pathToID), fileAssociations[1], jsonFormat=True)
+        dataStorage.write((datetime.datetime.now().isoformat(), idToPath), fileAssociations[0], jsonFormat=True)
+        dataStorage.write((datetime.datetime.now().isoformat(), pathToID), fileAssociations[1], jsonFormat=True)
 
         os.remove(localFile)
 
@@ -776,8 +784,8 @@ def KEGGAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, B
             return
     else:
         #otherwise import the necessary associations from PyIOmicaDataDirectoryectory
-        idToPath = read(fileAssociations[0], jsonFormat=True)[1]
-        pathToID = read(fileAssociations[1], jsonFormat=True)[1]
+        idToPath = dataStorage.read(fileAssociations[0], jsonFormat=True)[1]
+        pathToID = dataStorage.read(fileAssociations[1], jsonFormat=True)[1]
 
     if BackgroundSet!=[]:
         #Using provided background list to create annotation projection to limited background space
@@ -786,7 +794,7 @@ def KEGGAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, B
         idToPath = dict(zip(keys[index],values[index]))
 
         #Create corresponding reverse dictionary
-        pathToID = createReverseDictionary(idToPath)
+        pathToID = utilityFunctions.createReverseDictionary(idToPath)
 
     if LengthFilter!=None:
         keys, values = np.array(list(pathToID.keys())), np.array(list(pathToID.values()))
@@ -794,7 +802,7 @@ def KEGGAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, B
         pathToID = dict(zip(keys[index],values[index]))
 
         #Create corresponding reverse dictionary
-        idToPath = createReverseDictionary(pathToID)
+        idToPath = utilityFunctions.createReverseDictionary(pathToID)
 
     return {KEGGQuery2 : {Labels[0]: idToPath, Labels[1]: pathToID}}
 
@@ -834,7 +842,7 @@ def KEGGDictionary(PyIOmicaDataDirectory = None, ImportDirectly = False, KEGGQue
     fileKEGGDict = os.path.join(PyIOmicaDataDirectory, KEGGQuery1 + "_" + KEGGQuery2 + "_KEGGDictionary.json.gz")
 
     if os.path.isfile(fileKEGGDict):
-        associationKEGG = read(fileKEGGDict, jsonFormat=True)[1]
+        associationKEGG = dataStorage.read(fileKEGGDict, jsonFormat=True)[1]
     else:
         print("Did Not Find Annotation Files, Attempting to Download...")
         ImportDirectly = True
@@ -854,7 +862,7 @@ def KEGGDictionary(PyIOmicaDataDirectory = None, ImportDirectly = False, KEGGQue
         
         associationKEGG = dict([line.strip('\n').split('\t') for line in tempLines])
 
-        write((datetime.datetime.now().isoformat(), associationKEGG), fileKEGGDict, jsonFormat=True)
+        dataStorage.write((datetime.datetime.now().isoformat(), associationKEGG), fileKEGGDict, jsonFormat=True)
 
         if os.path.isfile(fileKEGGDict):
             print("Created Annotation Files at ", fileKEGGDict)
@@ -1016,7 +1024,7 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
         fileMolDict = os.path.join(PyIOmicaDataDirectory, "PyIOmicaMolecularDictionary.json.gz")
 
         if os.path.isfile(fileMolDict):
-            GeneDictionary = read(fileMolDict, jsonFormat=True)[1]
+            GeneDictionary = dataStorage.read(fileMolDict, jsonFormat=True)[1]
         else:
             fileCSV = os.path.join(PackageDirectory, "data", "MathIOmicaMolecularDictionary.csv")
 
@@ -1028,12 +1036,12 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
             
                 tempData = np.array([line.strip('\n').replace('"', '').split(',') for line in tempLines]).T
                 tempData = {'compound': {'pumchem': tempData[0].tolist(), 'cpd': tempData[1].tolist()}}
-                write((datetime.datetime.now().isoformat(), tempData), fileMolDict, jsonFormat=True)
+                dataStorage.write((datetime.datetime.now().isoformat(), tempData), fileMolDict, jsonFormat=True)
             else:
                 print("Could not find annotation file at " + fileMolDict + " Please either obtain an annotation file from mathiomica.org or provide a GeneDictionary option variable.")
                 return
 
-            GeneDictionary = read(fileMolDict, jsonFormat=True)[1]
+            GeneDictionary = dataStorage.read(fileMolDict, jsonFormat=True)[1]
 
         obtainConstantGeneDictionary(GeneDictionary, {}, AugmentDictionary)
 
@@ -1174,7 +1182,7 @@ def MassDictionary(PyIOmicaDataDirectory=None):
     fileMassDict = os.path.join(PyIOmicaDataDirectory, "PyIOmicaMassDictionary.json.gz")
 
     if os.path.isfile(fileMassDict):
-        MassDict = read(fileMassDict, jsonFormat=True)[1]
+        MassDict = dataStorage.read(fileMassDict, jsonFormat=True)[1]
     else:
         fileCSV = os.path.join(PackageDirectory, "data", "MathIOmicaMassDictionary" +  ".csv")
 
@@ -1191,7 +1199,7 @@ def MassDictionary(PyIOmicaDataDirectory=None):
 
             fileMassDictData = np.loadtxt(fileCSV, delimiter=',', dtype=str)
             MassDict = {fileMassDictData[0][0].split(':')[0]: dict(zip(fileMassDictData.T[0],fileMassDictData.T[1].astype(float)))}
-            write((datetime.datetime.now().isoformat(), MassDict), fileMassDict, jsonFormat=True)
+            dataStorage.write((datetime.datetime.now().isoformat(), MassDict), fileMassDict, jsonFormat=True)
 
             print("Created mass dictionary at ", fileMassDict)
         else:
@@ -1303,7 +1311,7 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
     
     saveDir = os.path.join(os.getcwd(), "Enrichment reports") if OutputDirectory==None else OutputDirectory
 
-    createDirectories(saveDir)
+    utilityFunctions.createDirectories(saveDir)
 
     if AppendString=="":
         AppendString=(datetime.datetime.now().isoformat().replace(' ', '_').replace(':', '_').split('.')[0])

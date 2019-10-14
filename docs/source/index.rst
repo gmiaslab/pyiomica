@@ -3,22 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive. 
 
+.. image:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/pyiomica/data/PyIOmica.png
+
+
 Welcome to PyIOmica's documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
    overview
    packageFunctionality
-   examples
    pyiomica.data
-
-.. automodule:: pyiomica
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   Examples
 
 
 PyIOmica (pyiomica)
@@ -42,10 +40,8 @@ A. INSTALLATION
 Pre-Installation Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To install PyIOmica on any platform you need:
+To install PyIOmica on any platform you need Python version 3.7 or higher
 
-1. Python version 3.7 or higher
-2. Recommended: 16GB of RAM or higher
 
 Installation Instructions
 ~~~~~~~~~~~~~~~~~~~~~~~~~

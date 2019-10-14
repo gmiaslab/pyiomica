@@ -1,7 +1,19 @@
 '''Clustering-related functions'''
 
 
+import scipy.signal
+import scipy.spatial.distance
+from scipy.interpolate import UnivariateSpline
+
+from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans
+import sklearn.metrics
+
 from .globalVariables import *
+
+from . import (coreFunctions,
+               visibilityGraphAuxilaryFunctions,
+               utilityFunctions)
+
 
 def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_to_do, numberOfAvailableCPUs=4, plotID=None, printScores=False):
 
@@ -59,8 +71,8 @@ def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_
         selected_peak_value = scores.T[1][np.argwhere(scores.T[0] == selected_peak)[0][0]]
         peaks = np.round(data.T[0][peaks],0).astype(int) if len(peaks) != 0 else peaks
 
-        if makePlot:
-            makePlotOfPeak(data_all, scores, selected_peak, selected_peak_value, plotID)
+        #if makePlot:
+        #    makePlotOfPeak(data_all, scores, selected_peak, selected_peak_value, plotID)
 
         print(selected_peak, peaks)
 
@@ -68,7 +80,7 @@ def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_
 
     print('Testing data clustering in a range of %s-%s clusters' % (cluster_num_min,cluster_num_max))
                 
-    scores = runCPUs(numberOfAvailableCPUs, runForClusterNum, [(cluster_num, copy.deepcopy(data), trials_to_do) for cluster_num in range(cluster_num_min, cluster_num_max + 1)])
+    scores = utilityFunctions.runCPUs(numberOfAvailableCPUs, runForClusterNum, [(cluster_num, copy.deepcopy(data), trials_to_do) for cluster_num in range(cluster_num_min, cluster_num_max + 1)])
 
     if printScores: 
         print(scores)
@@ -119,7 +131,7 @@ def get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric):
     max_score = 0
     n_clusters = 1
 
-    distmatrix = squareform(pdist(data, metric=metric))
+    distmatrix = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(data, metric=metric))
 
     for temp_n_clusters in range(2,10):
         print(temp_n_clusters, end='a, ', flush=True)
@@ -176,7 +188,7 @@ def runForClusterNum(arguments):
 
     for i in range(trials_to_do):
         for j in range(trials_to_do):
-            agreement_matrix[i, j] = adjusted_rand_score(labels[i], labels[j]) if agreement_matrix[j, i] == 0 else agreement_matrix[j, i]
+            agreement_matrix[i, j] = sklearn.metrics.adjusted_rand_score(labels[i], labels[j]) if agreement_matrix[j, i] == 0 else agreement_matrix[j, i]
 
     selected_data = agreement_matrix[np.triu_indices(agreement_matrix.shape[0],1)]
 
@@ -229,7 +241,7 @@ def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation
 
     return Y, labelsClusterIndex, groups
 
-def makeClusteringObject(df_data, df_data_autocorr, significance='Elbow'):
+def makeClusteringObject(df_data, df_data_autocorr, method='weighted', metric='correlation', significance='Elbow'):
 
     """Make a clustering Groups-Subgroups dictionary object.
 
@@ -239,6 +251,12 @@ def makeClusteringObject(df_data, df_data_autocorr, significance='Elbow'):
 
         df_data_autocorr: pandas.DataFrame
             Autocorrelations or periodograms in DataFrame format
+
+        method: str, Default 'weighted'
+            Linkage calculation method
+
+        metric: str, Default 'correlation'
+            Distance measure
 
         significance: str, Default 'Elbow'
             Method for determining optimal number of groups and subgroups
@@ -253,7 +271,7 @@ def makeClusteringObject(df_data, df_data_autocorr, significance='Elbow'):
 
     def getSubgroups(df_data, metric, significance):
 
-        Y = hierarchy.linkage(df_data.values, method='weighted', metric=metric, optimal_ordering=True)
+        Y = hierarchy.linkage(df_data.values, method=method, metric=metric, optimal_ordering=True)
         leaves = hierarchy.dendrogram(Y, no_plot=True)['leaves']
 
         if significance=='Elbow':
@@ -269,12 +287,18 @@ def makeClusteringObject(df_data, df_data_autocorr, significance='Elbow'):
 
     ClusteringObject = {}
 
-    ClusteringObject['linkage'], labelsClusterIndex, groups = getGroupingIndex(df_data_autocorr.values, method='weighted', metric='correlation', significance=significance)
+    try:
+        grouping = getGroupingIndex(df_data_autocorr.values, method=method, metric=metric, significance=significance)
+    except:
+        print('Returning None')
+        return None
+        
+    ClusteringObject['linkage'], labelsClusterIndex, groups = grouping
 
     for group in groups:
         signals = df_data.index[labelsClusterIndex==group]
 
-        ClusteringObject[group], ClusteringObject[group]['linkage'] = ({1: signals}, None) if len(signals)==1 else getSubgroups(df_data.loc[signals], metricCommonEuclidean, significance)
+        ClusteringObject[group], ClusteringObject[group]['linkage'] = ({1: signals}, None) if len(signals)==1 else getSubgroups(df_data.loc[signals], coreFunctions.metricCommonEuclidean, significance)
 
         for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
             ClusteringObject[group][subgroup] = {'order':[np.where([temp==signal for temp in df_data.index.values])[0][0] for signal in list(ClusteringObject[group][subgroup])],
@@ -342,3 +366,56 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
     print('Saved clustering object to:', fileName)
 
     return fileName
+
+def getCommunitiesOfTimeSeries(data, times, numberOfCommunities=1, horizontal=False):
+
+    '''Get communities of time series
+
+    Parameters:
+        data: 1d numpy.array
+            Data array
+
+        times: 1d numpy.array
+            Times corresponding to data points
+
+        numberOfCommunities: int, Default 1
+            Number of communities to find
+
+        horizontal: boolean, Default False
+            Whether to use horizontal or normal visibility graph
+
+    Returns:
+        (list, graph)
+            List of communities and a networkx graph
+
+    Usage:
+        getCommunitiesOfTimeSeries(data, times, numberOfCommunities=5)
+    '''
+
+    if horizontal:
+        graph_nx = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHorizontalVisibilityGraph(data,))
+        graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHorizontalVisibilityGraph(-data))
+    else:
+        graph_nx = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfVisibilityGraph(data, times))
+        graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfVisibilityGraph(-data, times))
+    
+    def find_and_remove_node(graph_nx):
+        bc = nx.betweenness_centrality(graph_nx)
+        node_to_remove = list(bc.keys())[np.argmax(list(bc.values()))]
+        graph_nx.remove_node(node_to_remove)
+        return graph_nx, node_to_remove
+
+    list_of_nodes = []
+    for i in range(numberOfCommunities):
+        graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
+        list_of_nodes.append(node)
+        
+    if not 0 in list_of_nodes:
+        list_of_nodes.append(0)
+
+    list_of_nodes.append(list(graph_nx.nodes)[-1] + 1)
+    list_of_nodes.sort()
+
+    communities = [list(range(list_of_nodes[i],list_of_nodes[i + 1])) for i in range(len(list_of_nodes) - 1)]
+
+    return communities, graph_nx
