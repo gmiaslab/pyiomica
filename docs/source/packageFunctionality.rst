@@ -32,7 +32,7 @@ This graph was generated with **Python** module dependency visualization tool ``
 
 
 
-.. thumbnail:: ../pyiomica_pydeps_current.svg
+.. thumbnail:: ../pyiomica_pydeps_current.png
     :title: PyIOmica dependencies graph
     :alt: Cannot load image
     :align: center
