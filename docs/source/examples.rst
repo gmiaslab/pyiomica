@@ -9,10 +9,6 @@ Examples different uses of PyIOmica package API.
 Enrichment report
 -----------------
 
-.. autosummary::
-
-    pyiomica.enrichmentAnalyses.ExportEnrichmentReport
-
 
 Function ``ExportEnrichmentReport`` generates enrichment report in form of ".xlsx" file.
 

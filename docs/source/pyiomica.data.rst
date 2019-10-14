@@ -1,9 +1,7 @@
 Included data
 =============
 
-.. autosummary::
 
-    pyiomica.data
 
 
 PyIOmica is supplied with a set of examples that require data described here.
