@@ -4,6 +4,13 @@ Enrichment analyses functions
 Submodule **pyiomica.enrichmentAnalyses**
 
 
+.. autosummary::
+
+   pyiomica.enrichmentAnalyses.GOAnalysis
+   pyiomica.enrichmentAnalyses.KEGGAnalysis
+
+
+
 Example of use of a function described in this module:
 
 .. code-block:: python
