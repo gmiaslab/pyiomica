@@ -4,6 +4,12 @@ Categorization functions
 Submodule **pyiomica.categorizationFunctions**
 
 
+.. autosummary::
+
+   pyiomica.categorizationFunctions.calculateTimeSeriesCategorization
+   pyiomica.categorizationFunctions.clusterTimeSeriesCategorization
+   pyiomica.categorizationFunctions.visualizeTimeSeriesCategorization
+
 Example of use of a function described in this module:
 
 .. code-block:: python
