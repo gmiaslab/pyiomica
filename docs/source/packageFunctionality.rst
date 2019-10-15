@@ -16,17 +16,6 @@ Package structure
    utilityFunctions
 
 
-.. autosummary::
-
-   pyiomica.categorizationFunctions
-   pyiomica.enrichmentAnalyses
-   pyiomica.extendedDataFrame
-   pyiomica.clusteringFunctions
-   pyiomica.visibilityGraphAuxilaryFunctions
-   pyiomica.visualizationFunctions
-   pyiomica.utilityFunctions
-
-
 Dependencies
 ------------
 
