@@ -62,67 +62,80 @@ KEGG Analysis examples
 Visibility Graph examples
 -------------------------
 
-Normal visibility graph on a circular layout:
+Normal (left) and Horizontal (right) visibility graph on a circular layout:
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/normal_circle_VG.png
     :title: Visibility graph
     :alt: Cannot load this photo
-    :align: center
-    :width: 350
-    :height: 350
+    :align: left
+    :width: 300
+    :height: 300
     :download: false
-
-Horizontal visibility graph on a circular layout:
+    :group: groupCirlceVG
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/horizontal_circle_VG.png
     :title: Visibility graph
     :alt: Cannot load this photo
-    :align: center
-    :width: 350
-    :height: 350
+    :align: right
+    :width: 300
+    :height: 300
     :download: false
+    :group: groupCirlceVG
 
-Normal visibility graph on a linear layout:
+.. container:: clearfix
+
+   .. stuff
+
+Normal (left) and Horizontal (right) visibility graph on a linear layout:
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/normal_line_VG.png
     :title: Visibility graph
     :alt: Cannot load this photo
-    :align: center
-    :width: 350
-    :height: 350
+    :align: left
+    :width: 300
+    :height: 300
     :download: false
-
-Horizontal visibility graph on a linear layout:
+    :group: groupLineVG
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/horizontal_line_VG.png
     :title: Visibility graph
     :alt: Cannot load this photo
-    :align: center
-    :width: 350
-    :height: 350
+    :align: right
+    :width: 300
+    :height: 300
     :download: false
+    :group: groupLineVG
 
-Bar-style normal visibility graph:
+
+.. container:: clearfix
+
+   .. stuff
+
+
+Normal (left) and Horizontal (right) bar-style visibility graph:
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/normal_barVG.png
     :title: Visibility graph
     :alt: Cannot load this photo
-    :align: center
-    :width: 350
-    :height: 350
+    :align: left
+    :width: 300
+    :height: 300
     :download: false
-
-Bar-style horizontal visibility graph:
+    :group: groupBarVG
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/horizontal_barVG.png
     :title: Visibility graph
     :alt: Cannot load this photo
-    :align: center
-    :width: 350
-    :height: 350
+    :align: right
+    :width: 300
+    :height: 300
     :download: false
+    :group: groupBarVG
 
 
+.. container:: clearfix
+
+   .. stuff
 
 
 .. literalinclude:: ../examples/examplesVisibilityGraph.py
@@ -135,6 +148,7 @@ Extended DataFrame
 ------------------
 
 Quantile transform
+
 And it's new functions
 
 .. literalinclude:: ../examples/examplesExtendedDataFrame.py
@@ -152,6 +166,7 @@ Time Series Categorization
     :align: center
     :width: 600px
     :download: false
+    :group: heatMapDendroACbased
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/results%20SLV%20Delta/SLV_Delta_LAG2_AutocorrelationsBased_DendrogramHeatmap.png
     :title: Categorization example
@@ -159,6 +174,7 @@ Time Series Categorization
     :align: center
     :width: 600px
     :download: false
+    :group: heatMapDendroACbased
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/results%20SLV%20Delta/SLV_Delta_LAG3_AutocorrelationsBased_DendrogramHeatmap.png
     :title: Categorization example
@@ -166,6 +182,7 @@ Time Series Categorization
     :align: center
     :width: 600px
     :download: false
+    :group: heatMapDendroACbased
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/results%20SLV%20Delta/SLV_Delta_SpikeMax_AutocorrelationsBased_DendrogramHeatmap.png
     :title: Categorization example
@@ -173,6 +190,7 @@ Time Series Categorization
     :align: center
     :width: 600px
     :download: false
+    :group: heatMapDendroACbased
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/results%20SLV%20Delta/SLV_Delta_SpikeMin_AutocorrelationsBased_DendrogramHeatmap.png
     :title: Categorization example
@@ -180,6 +198,7 @@ Time Series Categorization
     :align: center
     :width: 600px
     :download: false
+    :group: heatMapDendroACbased
 
 
 
