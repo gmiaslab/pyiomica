@@ -16,14 +16,14 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
-autodoc_default_options = {
-    'autosummary': True,
-}
+#autodoc_default_options = {
+#    'autosummary': True,
+#}
 
 # Sort members by type
 #autodoc_member_order = 'groupwise'
 autodoc_member_order = 'bysource'
-#autosummary_generate = True
+autosummary_generate = True
 
 
 # Ensure that the __init__ method gets documented.
