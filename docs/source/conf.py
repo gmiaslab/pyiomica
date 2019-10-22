@@ -20,6 +20,8 @@ autodoc_default_options = {
     'autosummary': True,
 }
 
+add_module_names = False
+
 # Sort members by type
 #autodoc_member_order = 'groupwise'
 autodoc_member_order = 'bysource'
