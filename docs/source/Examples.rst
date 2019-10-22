@@ -62,6 +62,9 @@ KEGG Analysis examples
 Visibility Graph examples
 -------------------------
 
+.. literalinclude:: ../examples/examplesVisibilityGraph.py
+
+
 Normal (left) and Horizontal (right) visibility graph on a circular layout:
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/normal_circle_VG.png
@@ -138,18 +141,12 @@ Normal (left) and Horizontal (right) bar-style visibility graph:
    .. stuff
 
 
-.. literalinclude:: ../examples/examplesVisibilityGraph.py
-
-
-
 
 
 Extended DataFrame
 ------------------
 
-Quantile transform
-
-And it's new functions
+Usage of some of the functions added to a standard DataFrame.
 
 .. literalinclude:: ../examples/examplesExtendedDataFrame.py
 
