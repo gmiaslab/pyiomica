@@ -87,7 +87,7 @@ def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_
                 
     return getPeakPosition(scores, makePlot=True, plotID=plotID)[0]
 
-def get_optimal_number_clusters_from_linkage_Elbow(Y):
+def get_n_clusters_from_linkage_Elbow(Y):
 
     """ Get optimal number clusters from linkage.
     A point of the highest accelleration of the fusion coefficient of the given linkage.
@@ -101,12 +101,12 @@ def get_optimal_number_clusters_from_linkage_Elbow(Y):
             Optimal number of clusters
 
     Usage:
-        n_clusters = get_optimal_number_clusters_from_linkage_Elbow(Y)
+        n_clusters = get_n_clusters_from_linkage_Elbow(Y)
     """
 
     return np.diff(np.array([[nc, Y[-nc + 1][2]] for nc in range(2,min(50,len(Y)))]).T[1], 2).argmax() + 1 if len(Y) >= 5 else 1
 
-def get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric):
+def get_n_clusters_from_linkage_Silhouette(Y, data, metric):
 
     """Determine the optimal number of cluster in data maximizing the Silhouette score.
 
@@ -125,7 +125,7 @@ def get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric):
             Optimal number of clusters
 
     Usage:
-        n_clusters = get_optimal_number_clusters_from_linkage_Elbow(Y, data, 'euclidean')
+        n_clusters = get_n_clusters_from_linkage_Silhouette(Y, data, 'euclidean')
     """
 
     max_score = 0
@@ -227,9 +227,9 @@ def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation
 
     if n_groups == None:
         if significance=='Elbow':
-            n_groups = get_optimal_number_clusters_from_linkage_Elbow(Y)
+            n_groups = get_n_clusters_from_linkage_Elbow(Y)
         elif significance=='Silhouette':
-            n_groups = get_optimal_number_clusters_from_linkage_Silhouette(Y, data, metric)
+            n_groups = get_n_clusters_from_linkage_Silhouette(Y, data, metric)
 
     print('n_groups:', n_groups)
 
@@ -275,9 +275,9 @@ def makeClusteringObject(df_data, df_data_autocorr, method='weighted', metric='c
         leaves = hierarchy.dendrogram(Y, no_plot=True)['leaves']
 
         if significance=='Elbow':
-            n_clusters = get_optimal_number_clusters_from_linkage_Elbow(Y)
+            n_clusters = get_n_clusters_from_linkage_Elbow(Y)
         elif significance=='Silhouette':
-            n_clusters = get_optimal_number_clusters_from_linkage_Silhouette(Y, df_data.values, metric)
+            n_clusters = get_n_clusters_from_linkage_Silhouette(Y, df_data.values, metric)
 
         print('n_subgroups:', n_clusters)
 
@@ -367,7 +367,7 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
 
     return fileName
 
-def getCommunitiesOfTimeSeries(data, times, numberOfCommunities=1, horizontal=False):
+def getCommunitiesOfTimeSeries(data, times, numberOfCommunities=1, horizontal=False, method='betweenness_centrality'):
 
     '''Get communities of time series
 
@@ -384,6 +384,9 @@ def getCommunitiesOfTimeSeries(data, times, numberOfCommunities=1, horizontal=Fa
         horizontal: boolean, Default False
             Whether to use horizontal or normal visibility graph
 
+        method: str, Default 'betweenness_centrality'
+            Name of the method to use
+
     Returns:
         (list, graph)
             List of communities and a networkx graph
@@ -392,30 +395,38 @@ def getCommunitiesOfTimeSeries(data, times, numberOfCommunities=1, horizontal=Fa
         getCommunitiesOfTimeSeries(data, times, numberOfCommunities=5)
     '''
 
-    if horizontal:
-        graph_nx = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHorizontalVisibilityGraph(data,))
-        graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHorizontalVisibilityGraph(-data))
-    else:
-        graph_nx = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfVisibilityGraph(data, times))
-        graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfVisibilityGraph(-data, times))
+    if method=='betweenness_centrality':
+
+        if horizontal:
+            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHVG(data,))
+            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHVG(-data))
+        else:
+            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfNVG(data, times))
+            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfNVG(-data, times))
     
-    def find_and_remove_node(graph_nx):
-        bc = nx.betweenness_centrality(graph_nx)
-        node_to_remove = list(bc.keys())[np.argmax(list(bc.values()))]
-        graph_nx.remove_node(node_to_remove)
-        return graph_nx, node_to_remove
+        def find_and_remove_node(graph_nx):
+            bc = nx.betweenness_centrality(graph_nx)
+            node_to_remove = list(bc.keys())[np.argmax(list(bc.values()))]
+            graph_nx.remove_node(node_to_remove)
+            return graph_nx, node_to_remove
 
-    list_of_nodes = []
-    for i in range(numberOfCommunities):
-        graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
-        list_of_nodes.append(node)
+        list_of_nodes = []
+        for i in range(numberOfCommunities-1):
+            graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
+            list_of_nodes.append(node)
         
-    if not 0 in list_of_nodes:
-        list_of_nodes.append(0)
+        if not 0 in list_of_nodes:
+            list_of_nodes.append(0)
 
-    list_of_nodes.append(list(graph_nx.nodes)[-1] + 1)
-    list_of_nodes.sort()
+        list_of_nodes.append(list(graph_nx.nodes)[-1] + 1)
+        list_of_nodes.sort()
 
-    communities = [list(range(list_of_nodes[i],list_of_nodes[i + 1])) for i in range(len(list_of_nodes) - 1)]
+        communities = [list(range(list_of_nodes[i],list_of_nodes[i + 1])) for i in range(len(list_of_nodes) - 1)]
+
+    else:
+
+        print('Unknown method: %s'%(method))
+        
+        return None
 
     return communities, graph_nx

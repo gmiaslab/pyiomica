@@ -16,16 +16,13 @@ from . import (visibilityGraphAuxilaryFunctions,
                coreFunctions,
                extendedDataFrame)
 
-def saveFigure(saveDir, label, extension, dpi, close=True):
+def saveFigure(fig, saveDir, label, extension, dpi, close=True):
 
     """Function primarily used internally to save and close figures
 
     Parameters:
         saveDir: str
             Path of directories to save the object to
-
-        dataName: str
-            Label to include in the file name
 
         extension: str, Default '.png'
             Path of directories to save the object to
@@ -40,16 +37,16 @@ def saveFigure(saveDir, label, extension, dpi, close=True):
         None
 
     Usage:
-        saveFigure(saveDir, label, extension, dpi)
+        saveFigure(fig, saveDir, label, extension, dpi)
     """
 
     if extension in ['.png', '.jpeg', '.tiff']:
 
-        fig.savefig(os.path.join(saveDir, dataName + label + extension), dpi=dpi)
+        fig.savefig(os.path.join(saveDir, label + extension), dpi=dpi)
     
     elif extension in ['.svg', '.eps', '.pdf']:
 
-        fig.savefig(os.path.join(saveDir, dataName + label + extension))
+        fig.savefig(os.path.join(saveDir, label + extension))
 
     else:
         print('Unsupported format. Figure not saved')
@@ -148,7 +145,7 @@ def makeDataHistograms(df, saveDir, dataName, figsize=(8,8), range_min=np.min, r
 
         fig.tight_layout()
 
-        saveFigure(saveDir, dataName + '_' + label + '_histogram', extension, dpi)
+        saveFigure(fig, saveDir, dataName + '_' + label + '_histogram', extension, dpi)
 
     return None
 
@@ -236,7 +233,7 @@ def makeLombScarglePeriodograms(df, saveDir, dataName, minNumberOfNonzeroPoints=
 
         fig.tight_layout()
 
-        saveFigure(saveDir, dataName + '_' + geneName + '_Lomb_Scargle_periodogram', extension, dpi)
+        saveFigure(fig, saveDir, dataName + '_' + geneName + '_Lomb_Scargle_periodogram', extension, dpi)
 
     return None
 
@@ -503,7 +500,7 @@ def makeVisibilityGraph(intensities, positions, saveDir, fileName, fontsize=16, 
 
     addColorbarToFigure(fig, intensities, axisCoordinates=colorbarAxisCoordinates, labelsize=colorbarLabelsize, precision=colorbarPrecision)
 
-    saveFigure(saveDir, ('horizontal_' if horizontal else 'normal_') + fileName, extension, dpi)
+    saveFigure(fig, saveDir, ('horizontal_' if horizontal else 'normal_') + fileName, extension, dpi)
 
     return
 
@@ -561,9 +558,9 @@ def makeVisibilityBarGraph(data, times, saveDir, fileName, horizontal=False, bar
     fig, ax = plt.subplots(figsize=figsize)
 
     if horizontal:
-        A = visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHorizontalVisibilityGraph(data)
+        A = visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHVG(data)
     else:
-        A = visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfVisibilityGraph(data, times)
+        A = visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfNVG(data, times)
 
     ax.bar(times, data, width=barWidth, color=barColor, align='center', zorder=-np.inf)
     ax.scatter(times, data, color=dotColor)
@@ -594,7 +591,7 @@ def makeVisibilityBarGraph(data, times, saveDir, fileName, horizontal=False, bar
 
     fig.tight_layout()
 
-    saveFigure(saveDir, ('horizontal_' if horizontal else 'normal_') + fileName, extension, dpi)
+    saveFigure(fig, saveDir, ('horizontal_' if horizontal else 'normal_') + fileName, extension, dpi)
 
     return None
 
@@ -608,7 +605,7 @@ def makePlotOfPeak(data_all, scores, selected_peak, selected_peak_value, plotID)
     ax.plot(scores.T[0], scores.T[1], 'ro', ms=5)
     ax.plot(selected_peak, selected_peak_value, 'bo', alpha=0.5, ms=10)
 
-    saveFigure(saveDir, 'spline_%s' % ('' if plotID == None else str(plotID)), extension, dpi)
+    saveFigure(fig, saveDir, 'spline_%s' % ('' if plotID == None else str(plotID)), extension, dpi)
 
     return
 
@@ -910,6 +907,6 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
 
         addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, groupColors, fig)
     
-    saveFigure(saveDir, saveDir + dataName + '_DendrogramHeatmap', extension, dpi)
+    saveFigure(fig, saveDir, saveDir + dataName + '_DendrogramHeatmap', extension, dpi)
 
     return None

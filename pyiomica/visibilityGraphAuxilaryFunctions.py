@@ -6,7 +6,7 @@ numba.config.NUMBA_DEFAULT_NUM_THREADS = 4
 from .globalVariables import *
 
 @numba.jit(cache=True)
-def getAdjacencyMatrixOfVisibilityGraph(data, times):
+def getAdjacencyMatrixOfNVG(data, times):
 
     """Calculate adjacency matrix of visibility graph.
     JIT-accelerated version (a bit faster than NumPy-accelerated version).
@@ -24,7 +24,7 @@ def getAdjacencyMatrixOfVisibilityGraph(data, times):
             Adjacency matrix
 
     Usage:
-        A = getAdjacencyMatrixOfVisibilityGraph(data, times)
+        A = getAdjacencyMatrixOfNVG(data, times)
     """
 
     dimension = len(data)
@@ -51,7 +51,7 @@ def getAdjacencyMatrixOfVisibilityGraph(data, times):
 
     return A
 
-def getAdjacencyMatrixOfVisibilityGraph_NUMPY(data, times):
+def getAdjacencyMatrixOfNVGbyNUMPY(data, times):
 
     """Calculate adjacency matrix of visibility graph.
     NumPy-accelerated version. Somewhat slower than JIT-accelerated version.
@@ -69,7 +69,7 @@ def getAdjacencyMatrixOfVisibilityGraph_NUMPY(data, times):
             Adjacency matrix
 
     Usage:
-        A = getAdjacencyMatrixOfVisibilityGraph_serial(data, times)
+        A = getAdjacencyMatrixOfNVGbyNUMPY(data, times)
     """
 
     dimension = len(data)
@@ -89,7 +89,7 @@ def getAdjacencyMatrixOfVisibilityGraph_NUMPY(data, times):
     return A
 
 @numba.jit(cache=True)
-def getAdjacencyMatrixOfHorizontalVisibilityGraph(data):
+def getAdjacencyMatrixOfHVG(data):
 
     """Calculate adjacency matrix of horizontal visibility graph.
     JIT-accelerated version (a bit faster than NumPy-accelerated version).
@@ -105,7 +105,7 @@ def getAdjacencyMatrixOfHorizontalVisibilityGraph(data):
             Adjacency matrix
 
     Usage:
-        A = getAdjacencyMatrixOfHorizontalVisibilityGraph(data)
+        A = getAdjacencyMatrixOfHVG(data)
     """
 
     A = np.zeros((len(data),len(data)))
@@ -124,7 +124,7 @@ def getAdjacencyMatrixOfHorizontalVisibilityGraph(data):
 
     return A
 
-def getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY(data):
+def getAdjacencyMatrixOfHVGbyNUMPY(data):
 
     """Calculate adjacency matrix of horizontal visibility graph.
     NumPy-accelerated version.
@@ -140,7 +140,7 @@ def getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY(data):
             Adjacency matrix
 
     Usage:
-        A = getAdjacencyMatrixOfHorizontalVisibilityGraph_NUMPY(data)
+        A = getAdjacencyMatrixOfHVGbyNUMPY(data)
     """
 
     dimension = len(data)

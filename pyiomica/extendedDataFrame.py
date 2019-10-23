@@ -50,8 +50,8 @@ class DataFrame(pd.DataFrame):
 
         new_data = self.loc[self.index[np.count_nonzero(self, axis=1) > 0]]
 
-        print('Removed ', init - self.shape[0], 'signals out of %s.' % init) 
-        print('Remaining ', self.shape[0], 'signals!')
+        print('Removed ', init - new_data.shape[0], 'signals out of %s.' % init) 
+        print('Remaining ', new_data.shape[0], 'signals!')
 
         if inplace:
             self._update_inplace(new_data)
@@ -60,12 +60,12 @@ class DataFrame(pd.DataFrame):
 
         return
 
-    def filterOutFractionZeroSignals(self, max_fraction_of_allowed_zeros, inplace=False):
+    def filterOutFractionZeroSignals(self, min_fraction_of_non_zeros, inplace=False):
        
         """Filter out fraction-zero signals from a DataFrame.
     
         Parameters:
-            max_fraction_of_allowed_zeros: float
+            min_fraction_of_non_zeros: float
                 Maximum fraction of allowed zeros
 
             inplace: boolean, Default False
@@ -83,10 +83,49 @@ class DataFrame(pd.DataFrame):
             df_data.filterOutFractionZeroSignals(0.75, inplace=True)
        """
 
-        print('Filtering out low-quality signals (with more than %s%% missing points)' %(100.*(1.-max_fraction_of_allowed_zeros)))
+        print('Filtering out low-quality signals (with more than %s%% zero points)' %(np.round(100.*(1.-min_fraction_of_non_zeros), 3)))
 
-        min_number_of_non_zero_points = np.int(np.round(max_fraction_of_allowed_zeros * self.shape[1],0))
+        min_number_of_non_zero_points = np.int(np.ceil(min_fraction_of_non_zeros * self.shape[1]))
         new_data = self.loc[self.index[np.count_nonzero(self, axis=1) >= min_number_of_non_zero_points]]
+
+        if (self.shape[0] - new_data.shape[0]) > 0:
+            print('Removed ', self.shape[0] - new_data.shape[0], 'signals out of %s.'%(self.shape[0])) 
+            print('Remaining ', new_data.shape[0], 'signals!')
+
+        if inplace:
+            self._update_inplace(new_data)
+        else:
+            return self._constructor(new_data).__finalize__(self)
+
+        return
+    
+    def filterOutFractionMissingSignals(self, min_fraction_of_non_missing, inplace=False):
+       
+        """Filter out fraction-zero signals from a DataFrame.
+    
+        Parameters:
+            min_fraction_of_non_missing: float
+                Maximum fraction of allowed zeros
+
+            inplace: boolean, Default False
+                Whether to modify data in place or return a new one
+
+        Returns:
+            Dataframe or None
+                Processed data
+
+        Usage:
+            df_data = df_data.filterOutFractionMissingSignals(0.75)
+
+            or
+
+            df_data.filterOutFractionMissingSignals(0.75, inplace=True)
+       """
+
+        print('Filtering out low-quality signals (with more than %s%% missing points)' %(np.round(100.*(1.-min_fraction_of_non_missing), 3)))
+
+        min_number_of_non_zero_points = np.int(np.ceil(min_fraction_of_non_missing * self.shape[1]))
+        new_data = self.loc[self.index[(~np.isnan(self)).sum(axis=1) >= min_number_of_non_zero_points]]
 
         if (self.shape[0] - new_data.shape[0]) > 0:
             print('Removed ', self.shape[0] - new_data.shape[0], 'signals out of %s.'%(self.shape[0])) 
@@ -134,9 +173,9 @@ class DataFrame(pd.DataFrame):
 
         return self
 
-    def tagMissingValues(self, value=0.0, inplace=False):
+    def tagValueAsMissing(self, value=0.0, inplace=False):
 
-        """Tag missing (i.e. zero) values with NaN.
+        """Tag zero values with NaN.
     
         Parameters:
             inplace: boolean, Default False
@@ -147,16 +186,47 @@ class DataFrame(pd.DataFrame):
                 Processed data
 
         Usage:
-            df_data = df_data.tagMissingValues()
+            df_data = df_data.tagValueAsMissing()
 
             or
 
-            df_data.tagMissingValues(inplace=True)
+            df_data.tagValueAsMissing(inplace=True)
         """
 
-        print('Tagging missing (i.e. zero) values with NaN')
+        print('Tagging %s values with %s'%(value, np.NaN))
 
         new_data = self.replace(to_replace=value, value=np.NaN, inplace=False)
+
+        if inplace:
+            self._update_inplace(new_data)
+        else:
+            return self._constructor(new_data).__finalize__(self)
+
+        return
+
+    def tagMissingAsValue(self, value=0.0, inplace=False):
+
+        """Tag NaN with zero.
+    
+        Parameters:
+            inplace: boolean, Default False
+                Whether to modify data in place or return a new one
+
+        Returns:
+            Dataframe or None
+                Processed data
+
+        Usage:
+            df_data = df_data.tagMissingAsValue()
+
+            or
+
+            df_data.tagMissingAsValue(inplace=True)
+        """
+
+        print('Tagging %s values with %s'%(np.NaN, value))
+
+        new_data = self.replace(to_replace=np.NaN, value=value, inplace=False)
 
         if inplace:
             self._update_inplace(new_data)
@@ -239,11 +309,14 @@ class DataFrame(pd.DataFrame):
 
         return
 
-    def boxCoxTransform(self, inplace=False):
+    def boxCoxTransform(self, axis=1, inplace=False):
 
         """Box-cox transform data.
     
         Parameters:
+            axis: int, Default 1
+                Direction of processing, columns (1) or rows (0)
+            
             inplace: boolean, Default False
                 Whether to modify data in place or return a new one
 
@@ -261,7 +334,7 @@ class DataFrame(pd.DataFrame):
     
         print('Box-cox transforming raw data')
             
-        new_data = self.apply(coreFunctions.boxCoxTransform, axis=0)
+        new_data = self.apply(coreFunctions.boxCoxTransform, axis=axis)
 
         if inplace:
             self._update_inplace(new_data)
@@ -270,11 +343,14 @@ class DataFrame(pd.DataFrame):
 
         return
 
-    def modifiedZScore(self, inplace=False):
+    def modifiedZScore(self, axis=0, inplace=False):
 
         """Z-score (Median-based) transform data.
     
         Parameters:
+            axis: int, Default 1
+                Direction of processing, rows (1) or columns (0)
+
             inplace: boolean, Default False
                 Whether to modify data in place or return a new one
 
@@ -292,7 +368,8 @@ class DataFrame(pd.DataFrame):
             
         print('Z-score (Median-based) transforming box-cox transformed data')
 
-        new_data = self.apply(coreFunctions.modifiedZScore, axis=0)
+        new_data = self.copy()
+        new_data = new_data.apply(coreFunctions.modifiedZScore, axis=axis)
 
         if inplace:
             self._update_inplace(new_data)
@@ -391,7 +468,8 @@ class DataFrame(pd.DataFrame):
 
             weights = averaging(np.sort(self.values, axis=0), axis=1)
 
-            new_data = self.apply(lambda col: rankTransform(col, weights), axis=0) 
+            new_data = self.copy()
+            new_data = new_data.apply(lambda col: rankTransform(col, weights), axis=0)
 
         elif output_distribution=='normal' or output_distribution=='uniform': 
 

@@ -3,21 +3,13 @@
 # PyIOmica (pyiomica)
 This repository contains PyIOmica, a Python package that provides bioinformatics utilities for analyzing (dynamic) omics datasets. PyIOmica extends MathIOmica usage to Python and implements new visualizations and computational tools for graph analyses. The documentation is available at Read the Docs: https://pyiomica.readthedocs.io/en/latest/
 
-## PyIOmica Versions
-
-* 1.0.2 : Setup updates
-* 1.0.1 : Setup updates
-* 1.0.0 : Initial Release
-
 # PyIOmica Installation Instructions
 
 ## A. INSTALLATION 
   
 ### Pre-Installation Requirements
 
-     To install PyIOmica on any platform you need:
-     1. Python version 3.7 or higher
-     2. Recommended: 16GB of RAM or higher
+     To install PyIOmica on any platform you need Python version 3.7 or higher
   
 ### Installation Instructions
 

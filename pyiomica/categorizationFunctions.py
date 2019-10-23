@@ -70,7 +70,7 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
     df_data.filterOutAllZeroSignals(inplace=True)
     df_data.filterOutFirstPointZeroSignals(inplace=True)
     df_data.filterOutFractionZeroSignals(0.75, inplace=True)
-    df_data.tagMissingValues(inplace=True)
+    df_data.tagValueAsMissing(inplace=True)
     df_data.tagLowValues(1., 1., inplace=True)
     df_data.removeConstantSignals(0., inplace=True)
 

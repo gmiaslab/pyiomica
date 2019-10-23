@@ -1,5 +1,5 @@
-import importlib, sys
-sys.path.append("../..")
+#import sys
+#sys.path.append("../..")
 
 # Import PyIOmica
 import pyiomica as pio

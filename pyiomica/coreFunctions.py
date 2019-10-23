@@ -4,7 +4,7 @@
 from .globalVariables import *
 
 
-def modifiedZScore(subset):
+def modifiedZScore(subset, printValues=False):
 
     """Calculate modified z-score based on "Median absolute deviation".
 
@@ -79,17 +79,19 @@ def modifiedZScore(subset):
 
     if MedianAD == 0.:
         MeanAD = np.sum(np.abs(values - np.mean(values))) / len(values)
-        print('MeanAD:', MeanAD, '\tMedian:', np.median(values))
+        if printValues:
+            print('MeanAD:', MeanAD, '\tMedian:', np.median(values))
         coefficient = 0.7978846 / MeanAD
     else:
-        print('MedianAD:', MedianAD, '\tMedian:', np.median(values))
+        if printValues:
+            print('MedianAD:', MedianAD, '\tMedian:', np.median(values))
         coefficient = 0.6744897 / MedianAD
         
     subset.iloc[~np.isnan(subset.values)] = coefficient * (values - np.median(values))
 
     return subset
 
-def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
+def boxCoxTransform(subset, lmbda=None, giveLmbda=False, printLambda=True):
 
     """Power transform from scipy.stats
 
@@ -103,6 +105,9 @@ def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
         giveLmbda: boolean, Default False
             Also return Lambda value
 
+        printLmbda: boolean, Default False
+            Print Lambda value
+
     Returns:
         pandas.Series
             Transformed data and Lambda parameter
@@ -112,7 +117,7 @@ def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
     """
 
     where_negative = np.where(subset < 0)
-    if len(where_negative>0):
+    if len(where_negative[0]>0):
         errMsg = 'Warning: negative values are present in the data. Review the sequence of the data processing steps.'
         print(errMsg)
 
@@ -131,7 +136,8 @@ def boxCoxTransform(subset, lmbda=None, giveLmbda=False):
 
         return subset, lmbda
 
-    print('Fitted lambda:', lmbda)
+    if printLambda:
+        print('Fitted lambda:', lmbda)
 
     return subset
 
