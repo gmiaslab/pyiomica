@@ -19,6 +19,18 @@ Function ``ExportEnrichmentReport`` generates enrichment report in form of ".xls
     :align: center
     :download: false
 
+The are following columns in each Worksheet of the output ".xlsx" file
+
+* ID: Annotation term identifier
+* p-Value: Probability to find at least "Counts in members" number of genes when drawing "Counts in list" genes "Counts in family" times (without replacement) from "Counts in members" identifiers. Note: this is the behavior when using default setting, i.e. Hypergeometric distribution testing function
+* BH-corrected p-Value:  p-Value corrected for false discovery rate (FDR) via Benjamini-Hochberg procedure
+* Significant: Whether the "BH-corrected p-Value" is below the threshold (typically 0.05) specified for the enrichment analysis
+* Counts in list: Number of genes in the input list
+* Counts in family: Number of genes in a particular annotation term
+* Total members: Number of members (e.g. UniprotIDs) in the IDs to annotation terms dictionary
+* Counts in members: Number of annotation terms in which at least of gene from the input list appear
+* Description: Description of a particular annotation term, e.g. details/type
+* List of gene hits: Gene identifiers that are found in a particular annotation term. The identifiers are separated by a Vertical bar
 
 
 
@@ -35,8 +47,13 @@ Clustering object export example
 
 Example of a clustering object exported to ".xlsx" file.
 
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/ExampleClusteringObject_screen.png
+    :title: Clustering Object export
+    :alt: Cannot load this photo
+    :align: center
+    :download: false
 
-
+The file contains one Spreadsheet for each subgroup in a clustering object. The spreadsheet is structrured as follows. The first column indicates the data source, the second column has gene identifiers, all the remaining colummns contain data and autocorrelations. Note, this is the structure when using the default settings. User can modify output by setting various options.
 
 
 

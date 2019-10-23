@@ -19,15 +19,6 @@ visualizations and computational tools for graph analyses.
     :target: https://pyiomica.readthedocs.io
 
 
-
-PyIOmica Versions:
-
-- 1.1.0 : Restructured all modules. Developed ReadTheDocs documentation.
-- 1.0.2 : Setup updates
-- 1.0.1 : Setup updates
-- 1.0.0 : Initial Release
-
-
 .. toctree::
    :numbered: 1
    :maxdepth: 4
@@ -41,4 +32,9 @@ PyIOmica Versions:
    Examples
 
 
+Indices and tables
+==================
+
 * :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
