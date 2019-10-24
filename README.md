@@ -56,7 +56,7 @@ PyIOmica is released under an MIT License. Please also consult the folder LICENS
 * e-mail: mathiomica@gmail.com
 * twitter: @mathiomica
 
-## G. Funding
+## G. FUNDING
 
 PyIOmica development and associated research were supported by the Translational Research Institute 
 for Space Health through NASA Cooperative Agreement NNX16AO69A (Project Number T0412, PI: Mias). 
