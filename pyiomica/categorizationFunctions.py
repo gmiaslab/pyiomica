@@ -13,7 +13,8 @@ from . import (utilityFunctions,
 from .extendedDataFrame import DataFrame
 
 
-def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05, NumberOfRandomSamples=10**5, NumberOfCPUs=4, referencePoint=0, autocorrelationBased=True, calculateAutocorrelations=False, calculatePeriodograms=False, preProcessData=True):
+def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05, fraction=0.75, constantSignalsCutoff=0., lowValuesToTag=1., lowValuesToTagWith=1., 
+                                      NumberOfRandomSamples=10**5, NumberOfCPUs=4, referencePoint=0, autocorrelationBased=True, calculateAutocorrelations=False, calculatePeriodograms=False, preProcessData=True):
         
     """Time series classification.
     
@@ -32,6 +33,18 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
 
         p_cutoff: float, Default 0.05
             Significance cutoff signals selection
+
+        fraction: float, Default 0.75
+            Fraction of non-zero point in a signal
+
+        constantSignalsCutoff: float, Default 0.
+            Parameter to consider a signal constant
+
+        lowValuesToTag: float, Default 1.
+            Values below this are considered low
+
+        lowValuesToTagWith: float, Default 1.
+            Low values to tag with
 
         NumberOfRandomSamples: int, Default 10**5
             Size of the bootstrap distribution to generate
@@ -75,11 +88,11 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
 
     if preProcessData:
         df_data.filterOutAllZeroSignals(inplace=True)
-        df_data.filterOutReferencePointZeroSignals(inplace=True)
-        df_data.filterOutFractionZeroSignals(0.75, inplace=True)
+        df_data.filterOutReferencePointZeroSignals(referencePoint=referencePoint, inplace=True)
+        df_data.filterOutFractionZeroSignals(fraction, inplace=True)
         df_data.tagValueAsMissing(inplace=True)
-        df_data.tagLowValues(1., 1., inplace=True)
-        df_data.removeConstantSignals(0., inplace=True)
+        df_data.tagLowValues(lowValuesToTag, lowValuesToTagWith, inplace=True)
+        df_data.removeConstantSignals(constantSignalsCutoff, inplace=True)
 
     dataStorage.write(df_data, saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
 
@@ -106,7 +119,7 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
         df_data = dataStorage.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
 
         print('Calculating null distribution (periodogram) of %s samples...' %(NumberOfRandomSamples))
-        df_randomPeriodograms = extendedDataFrame.getRandomPeriodograms(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs, referencePoint=referencePoint)
+        df_randomPeriodograms = extendedDataFrame.getRandomPeriodograms(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs, fraction=fraction, referencePoint=referencePoint)
 
         dataStorage.write(df_randomPeriodograms, saveDir + dataName + '_randomPeriodograms', hdf5fileName=hdf5fileName)
 
@@ -122,7 +135,7 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
         df_data = dataStorage.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
 
         print('Calculating null distribution (autocorrelation) of %s samples...' %(NumberOfRandomSamples))
-        df_randomAutocorrelations = extendedDataFrame.getRandomAutocorrelations(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs, referencePoint=referencePoint)
+        df_randomAutocorrelations = extendedDataFrame.getRandomAutocorrelations(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs, fraction=fraction, referencePoint=referencePoint)
 
         dataStorage.write(df_randomAutocorrelations, saveDir + dataName + '_randomAutocorrelations', hdf5fileName=hdf5fileName)
 
