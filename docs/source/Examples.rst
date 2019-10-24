@@ -216,4 +216,16 @@ Time Series Categorization
 
 
 
+.. literalinclude:: ../examples/examplesProteomicsCategorization.py
+
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/results%20SLV%20Daily%20Protein/DailyTimeSeries_SLV_Protein_LAG1_AutocorrelationsBased_DendrogramHeatmap.png
+    :title: Proteomics categorization example
+    :alt: Cannot load this photo
+    :align: center
+    :width: 600px
+    :download: false
+    :group: heatMapDendroACbased
+
+
+
 

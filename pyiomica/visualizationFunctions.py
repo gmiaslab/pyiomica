@@ -907,6 +907,6 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
 
         addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, groupColors, fig)
     
-    saveFigure(fig, saveDir, saveDir + dataName + '_DendrogramHeatmap', extension, dpi)
+    saveFigure(fig, saveDir, dataName + '_DendrogramHeatmap', extension, dpi)
 
     return None

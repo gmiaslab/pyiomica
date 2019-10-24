@@ -13,7 +13,7 @@ from . import (utilityFunctions,
 from .extendedDataFrame import DataFrame
 
 
-def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05, NumberOfRandomSamples=10**5, NumberOfCPUs=4, autocorrelationBased=True, calculateAutocorrelations=False, calculatePeriodograms=False):
+def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05, NumberOfRandomSamples=10**5, NumberOfCPUs=4, referencePoint=0, autocorrelationBased=True, calculateAutocorrelations=False, calculatePeriodograms=False, preProcessData=True):
         
     """Time series classification.
     
@@ -38,6 +38,9 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
 
         NumberOfCPUs: int, Default 4
             Number of processes allowed to use in calculations
+            
+        referencePoint: int, Default 0
+            Reference point
 
         autocorrelationBased: boolean, Default True
             Whether Autocorrelation of Frequency based
@@ -47,6 +50,9 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
 
         calculatePeriodograms: boolean, Default False
             Whether to recalculate Periodograms
+
+        preProcessData: boolean, Default True
+            Whether to preprocess data, i.e. filter, normalize etc.
 
     Returns:
         None
@@ -67,12 +73,13 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
 
     df_data.columns = df_data.columns.astype(float)
 
-    df_data.filterOutAllZeroSignals(inplace=True)
-    df_data.filterOutFirstPointZeroSignals(inplace=True)
-    df_data.filterOutFractionZeroSignals(0.75, inplace=True)
-    df_data.tagValueAsMissing(inplace=True)
-    df_data.tagLowValues(1., 1., inplace=True)
-    df_data.removeConstantSignals(0., inplace=True)
+    if preProcessData:
+        df_data.filterOutAllZeroSignals(inplace=True)
+        df_data.filterOutReferencePointZeroSignals(inplace=True)
+        df_data.filterOutFractionZeroSignals(0.75, inplace=True)
+        df_data.tagValueAsMissing(inplace=True)
+        df_data.tagLowValues(1., 1., inplace=True)
+        df_data.removeConstantSignals(0., inplace=True)
 
     dataStorage.write(df_data, saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
 
@@ -99,12 +106,12 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
         df_data = dataStorage.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
 
         print('Calculating null distribution (periodogram) of %s samples...' %(NumberOfRandomSamples))
-        df_randomPeriodograms = extendedDataFrame.getRandomPeriodograms(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs)
+        df_randomPeriodograms = extendedDataFrame.getRandomPeriodograms(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs, referencePoint=referencePoint)
 
         dataStorage.write(df_randomPeriodograms, saveDir + dataName + '_randomPeriodograms', hdf5fileName=hdf5fileName)
 
         df_data = dataStorage.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
-        df_data = df_data.normalizeSignalsToUnity()
+        df_data = df_data.normalizeSignalsToUnity(referencePoint=referencePoint)
 
         print('Calculating each Time Series Periodogram...')
         df_dataPeriodograms = extendedDataFrame.getLobmScarglePeriodogramOfDataframe(df_data)
@@ -115,13 +122,13 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
         df_data = dataStorage.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
 
         print('Calculating null distribution (autocorrelation) of %s samples...' %(NumberOfRandomSamples))
-        df_randomAutocorrelations = extendedDataFrame.getRandomAutocorrelations(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs)
+        df_randomAutocorrelations = extendedDataFrame.getRandomAutocorrelations(df_data, NumberOfRandomSamples=NumberOfRandomSamples, NumberOfCPUs=NumberOfCPUs, referencePoint=referencePoint)
 
         dataStorage.write(df_randomAutocorrelations, saveDir + dataName + '_randomAutocorrelations', hdf5fileName=hdf5fileName)
 
         df_data = dataStorage.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)
 
-        df_data = df_data.normalizeSignalsToUnity()
+        df_data = df_data.normalizeSignalsToUnity(referencePoint=referencePoint)
 
         print('Calculating each Time Series Autocorrelations...')
         df_dataAutocorrelations = utilityFunctions.runCPUs(NumberOfCPUs, coreFunctions.getAutocorrelationsOfData, [(df_data.iloc[i], df_data.columns.values) for i in range(len(df_data.index))])
@@ -157,7 +164,7 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
     spike_cutoffs = extendedDataFrame.getRandomSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=NumberOfRandomSamples)
     print(spike_cutoffs)
 
-    df_data = df_data.normalizeSignalsToUnity()
+    df_data = df_data.normalizeSignalsToUnity(referencePoint=referencePoint)
 
     if not (df_data.index.values == df_classifier.index.values).all():
         raise ValueError('Index mismatch')
@@ -186,7 +193,7 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
                 
     return None
 
-def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=True, autocorrelationBased=True, vectorImage=True):
+def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=True, autocorrelationBased=True):
 
     """Visualize time series classification.
     
@@ -211,9 +218,6 @@ def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf
 
         autocorrelationBased: boolean, Default True
             Whether to label to print on the plots
-
-        vectorImage: boolean, Default True
-            Whether to make vector image instead of raster
 
     Returns:
         None
@@ -263,7 +267,7 @@ def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf
 
     return None
 
-def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, autocorrelationBased=True, vectorImage=False):
+def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, autocorrelationBased=True):
 
     """Visualize time series classification.
     
@@ -279,9 +283,6 @@ def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, a
 
         autocorrelationBased: boolean, Default True
             Whether autocorrelation or frequency based
-
-        vectorImage: boolean, Default True
-            Whether to raster or vector image
 
     Returns:
         None
@@ -302,7 +303,7 @@ def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, a
             return 
         
         print('Plotting Dendrogram with Heatmaps.')
-        visualizationFunctions.makeDendrogramHeatmapOfClusteringObject(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=autocorrelationBased, vectorImage=vectorImage)
+        visualizationFunctions.makeDendrogramHeatmapOfClusteringObject(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=autocorrelationBased)
 
         return
 

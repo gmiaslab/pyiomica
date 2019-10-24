@@ -27,7 +27,7 @@ df_data.filterOutAllZeroSignals(inplace=True)
 print(df_data, '\n')
 
 # Remove firt-point-zero signals from the data
-df_data.filterOutFirstPointZeroSignals(inplace=True)
+df_data.filterOutReferencePointZeroSignals(inplace=True)
 print(df_data, '\n')
 
 # Remove nearly-constant signals from the data

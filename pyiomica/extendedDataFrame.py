@@ -138,11 +138,14 @@ class DataFrame(pd.DataFrame):
 
         return
 
-    def filterOutFirstPointZeroSignals(self, inplace=False):
+    def filterOutReferencePointZeroSignals(self, referencePoint=0, inplace=False):
 
         """Filter out out first time point zeros signals from a DataFrame.
     
         Parameters:
+            referencePoint: int, Default 0
+                Index of the reference point
+            
             inplace: boolean, Default False
                 Whether to modify data in place or return a new one
 
@@ -160,7 +163,7 @@ class DataFrame(pd.DataFrame):
 
         print('Filtering out first time point zeros signals')
 
-        new_data = self.loc[~(self.iloc[:,0] == 0.0)]
+        new_data = self.loc[~(self.iloc[:,0] == 0.0)].copy()
 
         if (self.shape[0] - new_data.shape[0]) > 0:
             print('Removed ', self.shape[0] - new_data.shape[0], 'signals out of %s.'%(self.shape[0])) 
@@ -378,11 +381,14 @@ class DataFrame(pd.DataFrame):
 
         return
 
-    def normalizeSignalsToUnity(self, inplace=False):
+    def normalizeSignalsToUnity(self, referencePoint=0, inplace=False):
 
         """Normalize signals to unity.
     
         Parameters:
+            referencePoint: int, Default 0
+                Index of the reference point
+
             inplace: boolean, Default False
                 Whether to modify data in place or return a new one
 
@@ -400,9 +406,12 @@ class DataFrame(pd.DataFrame):
 
         print('Normalizing signals to unity')
 
-        #Subtract 0-time-point value from all time-points
-        new_data = self.copy()
-    
+        if not referencePoint is None:
+            #Subtract reference time-point value from all time-points
+            new_data = self.compareTimeSeriesToPoint(point=referencePoint, inplace=False).copy()
+        else:
+            new_data = self.copy()
+
         where_nan = np.isnan(new_data.values.astype(float))
         new_data[where_nan] = 0.0
         new_data = new_data.apply(lambda data: data / np.sqrt(np.dot(data,data)),axis=1)
@@ -736,7 +745,7 @@ def getRandomSpikesCutoffs(df_data, p_cutoff, NumberOfRandomSamples=10**3):
 
     return cutoffs
 
-def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
+def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4, fraction=0.75, referencePoint=0):
 
     """Generate autocorrelation null-distribution from permutated data using Lomb-Scargle Autocorrelation.
     NOTE: there should be already no missing or non-numeric points in the input Series or Dataframe
@@ -761,17 +770,21 @@ def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
 
     df_data_random = DataFrame(pd.DataFrame(data=data, index=range(NumberOfRandomSamples), columns=df_data.columns))
-    df_data_random.filterOutFractionZeroSignals(0.75, inplace=True)
-    df_data_random.normalizeSignalsToUnity(inplace=True)
+    df_data_random.filterOutFractionZeroSignals(fraction, inplace=True)
+    df_data_random.normalizeSignalsToUnity(inplace=True, referencePoint=referencePoint)
     df_data_random.removeConstantSignals(0., inplace=True)
 
     print('\nCalculating autocorrelations of %s random samples (sampled with replacement)...'%(df_data_random.shape[0]))
 
-    results = utilityFunctions.runCPUs(NumberOfCPUs, coreFunctions.pAutocorrelation, [(df_data_random.iloc[i].index.values, df_data_random.iloc[i].values, df_data.columns.values) for i in range(df_data_random.shape[0])])
+    results = utilityFunctions.runCPUs(NumberOfCPUs, coreFunctions.pAutocorrelation, [(df_data_random.iloc[i].index.values.copy(), 
+                                                                                       df_data_random.iloc[i].values.copy(), 
+                                                                                       df_data.columns.values.copy()) for i in range(df_data_random.shape[0])])
+
+    #input('..W..')
     
     return pd.DataFrame(data=results[1::2], columns=results[0])
 
-def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
+def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4, fraction=0.75, referencePoint=0):
 
     """Generate periodograms null-distribution from permutated data using Lomb-Scargle function.
 
@@ -795,8 +808,8 @@ def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4):
     data = np.vstack([np.random.choice(df_data.values[:,i], size=NumberOfRandomSamples, replace=True) for i in range(len(df_data.columns.values))]).T
 
     df_data_random = DataFrame(pd.DataFrame(data=data, index=range(NumberOfRandomSamples), columns=df_data.columns))
-    df_data_random.filterOutFractionZeroSignals(0.75, inplace=True)
-    df_data_random.normalizeSignalsToUnity(inplace=True)
+    df_data_random.filterOutFractionZeroSignals(fraction, inplace=True)
+    df_data_random.normalizeSignalsToUnity(inplace=True, referencePoint=referencePoint)
     df_data_random.removeConstantSignals(0., inplace=True)
 
     print('\nCalculating periodograms of %s random samples (sampled with replacement)...'%(df_data_random.shape[0]))
