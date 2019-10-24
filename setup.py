@@ -6,7 +6,7 @@ from codecs import open
 from os import path
 here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description=f.read()
 
 setup(
@@ -14,6 +14,7 @@ setup(
     packages=find_packages(),
     version='1.1.0',
     description='Omics Analysis Tool Suite',
+    long_description_content_type="text/markdown",
     long_description=long_description,
     include_package_data=True,
     author='S. Domanskyi, C. Piermarocchi, G. Mias',

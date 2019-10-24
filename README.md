@@ -1,6 +1,4 @@
-<p align="middle">
- <img src="pyiomica/data/PyIOmica.png?raw=true" height="200"/>
-</p>
+![logo](pyiomica/data/PyIOmica.png?raw=true)
 
 # PyIOmica (pyiomica)
 This repository contains PyIOmica, a Python package that provides bioinformatics utilities for analyzing (dynamic) omics datasets. PyIOmica extends MathIOmica usage to Python and implements new visualizations and computational tools for graph analyses. The documentation is available at Read the Docs: https://pyiomica.readthedocs.io/en/latest/
