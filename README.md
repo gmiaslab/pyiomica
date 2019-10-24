@@ -1,4 +1,6 @@
-![logo](pyiomica/data/PyIOmica.png?raw=true)
+<p align="middle">
+ <img src="pyiomica/data/PyIOmica.png?raw=true" height="200"/>
+</p>
 
 # PyIOmica (pyiomica)
 This repository contains PyIOmica, a Python package that provides bioinformatics utilities for analyzing (dynamic) omics datasets. PyIOmica extends MathIOmica usage to Python and implements new visualizations and computational tools for graph analyses. The documentation is available at Read the Docs: https://pyiomica.readthedocs.io/en/latest/
@@ -53,3 +55,10 @@ PyIOmica is released under an MIT License. Please also consult the folder LICENS
 * G. Mias Lab (https://georgemias.org)
 * e-mail: mathiomica@gmail.com
 * twitter: @mathiomica
+
+## G. Funding
+
+PyIOmica development and associated research were supported by the Translational Research Institute 
+for Space Health through NASA Cooperative Agreement NNX16AO69A (Project Number T0412, PI: Mias). 
+The content is solely the responsibility of the authors and does not necessarily 
+represent the official views of the supporting funding agencies.

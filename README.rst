@@ -35,3 +35,12 @@ CONTACT INFORMATION
 - G.MiasLab (https://georgemias.org)
 - e-mail: gmiaslab@gmail.com
 - twitter: @gmiaslab
+
+
+FUNDING
+=======
+
+PyIOmica development and associated research were supported by the Translational Research Institute 
+for Space Health through NASA Cooperative Agreement NNX16AO69A (Project Number T0412, PI: Mias). 
+The content is solely the responsibility of the authors and does not necessarily 
+represent the official views of the supporting funding agencies.
