@@ -17,8 +17,8 @@ visualizations and computational tools for graph analyses.
     :target: https://pypi.org/project/pyiomica
 .. image:: https://readthedocs.org/projects/pyiomica/badge/?version=latest&style=flat
     :target: https://pyiomica.readthedocs.io
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3518456.svg
-   :target: https://doi.org/10.5281/zenodo.3518456
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3519891.svg
+   :target: https://doi.org/10.5281/zenodo.3519891
 
 
 .. toctree::
