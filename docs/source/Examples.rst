@@ -99,7 +99,7 @@ time series temporal structure and can be used to identify trends.
 
 Normal (left) and Horizontal (right) visibility graph on a circular layout:
 
-.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/normal_circle_VG.png
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/normal_circle_VG.png
     :title: Visibility graph
     :alt: Cannot load this photo
     :align: left
@@ -108,7 +108,7 @@ Normal (left) and Horizontal (right) visibility graph on a circular layout:
     :download: false
     :group: groupCirlceVG
 
-.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/horizontal_circle_VG.png
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/horizontal_circle_VG.png
     :title: Visibility graph
     :alt: Cannot load this photo
     :align: right
@@ -123,7 +123,7 @@ Normal (left) and Horizontal (right) visibility graph on a circular layout:
 
 Normal (left) and Horizontal (right) visibility graph on a linear layout:
 
-.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/normal_line_VG.png
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/normal_line_VG.png
     :title: Visibility graph
     :alt: Cannot load this photo
     :align: left
@@ -132,7 +132,7 @@ Normal (left) and Horizontal (right) visibility graph on a linear layout:
     :download: false
     :group: groupLineVG
 
-.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/horizontal_line_VG.png
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/horizontal_line_VG.png
     :title: Visibility graph
     :alt: Cannot load this photo
     :align: right
@@ -149,7 +149,7 @@ Normal (left) and Horizontal (right) visibility graph on a linear layout:
 
 Normal (left) and Horizontal (right) bar-style visibility graph:
 
-.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/normal_barVG.png
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/normal_barVG.png
     :title: Visibility graph
     :alt: Cannot load this photo
     :align: left
@@ -158,7 +158,7 @@ Normal (left) and Horizontal (right) bar-style visibility graph:
     :download: false
     :group: groupBarVG
 
-.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/horizontal_barVG.png
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/horizontal_barVG.png
     :title: Visibility graph
     :alt: Cannot load this photo
     :align: right
