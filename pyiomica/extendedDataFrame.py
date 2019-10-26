@@ -779,8 +779,6 @@ def getRandomAutocorrelations(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs
     results = utilityFunctions.runCPUs(NumberOfCPUs, coreFunctions.pAutocorrelation, [(df_data_random.iloc[i].index.values.copy(), 
                                                                                        df_data_random.iloc[i].values.copy(), 
                                                                                        df_data.columns.values.copy()) for i in range(df_data_random.shape[0])])
-
-    #input('..W..')
     
     return pd.DataFrame(data=results[1::2], columns=results[0])
 

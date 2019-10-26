@@ -3,8 +3,11 @@
 Examples
 ========
 
-Examples different uses of PyIOmica package API.
+Examples of different uses of PyIOmica package API.
 
+A Jupyter notebook with all examples is available at:
+`https://github.com/gmiaslab/pyiomica/tree/master/docs/examples 
+<https://github.com/gmiaslab/pyiomica/tree/master/docs/examples/pyiomica_examples.ipynb>`_
 
 Enrichment report
 -----------------
@@ -78,6 +81,18 @@ KEGG Analysis examples
 
 Visibility Graph examples
 -------------------------
+
+We represent each timepoint in a series as a node.
+Temporal events are detected and indicated with solid blue 
+lines encompassing groups of points, or communities.
+The shortest path identifies nodes (i.e. timepoints) that display high 
+intensity, and thus dominate the global signal profile, are robust 
+to noise, and are likely drivers of the global temporal behavior.
+
+Representing the intensities as bars, this is equivalent to connecting the top 
+of each bar to another top if there is a direct line-of-sight to that top. 
+The resulting visibility graph has characteristics that reflect the equivalent 
+time series temporal structure and can be used to identify trends.
 
 .. literalinclude:: ../examples/examplesVisibilityGraph.py
 

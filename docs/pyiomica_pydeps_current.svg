@@ -693,14 +693,14 @@
 <path fill="none" stroke="black" d="M629.739,-192.832C640.617,-195.315 652.064,-197.634 662.861,-199.279 892.32,-234.247 955.46,-193.962 1183.86,-235.279 1189.24,-236.252 1194.8,-237.495 1200.31,-238.885"/>
 <polygon fill="black" stroke="black" points="1199.57,-242.31 1210.13,-241.52 1201.38,-235.549 1199.57,-242.31"/>
 </g>
-<!-- pyiomica_visibilityGraphAuxilaryFunctions -->
-<g id="node41" class="node"><title>pyiomica_visibilityGraphAuxilaryFunctions</title>
+<!-- pyiomica_visibilityGraphAuxiliaryFunctions -->
+<g id="node41" class="node"><title>pyiomica_visibilityGraphAuxiliaryFunctions</title>
 <ellipse fill="#c45931" stroke="black" cx="500.861" cy="-256.492" rx="109.703" ry="21.4286"/>
 <text text-anchor="middle" x="500.861" y="-259.492" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">pyiomica.</text>
-<text text-anchor="middle" x="500.861" y="-248.492" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">visibilityGraphAuxilaryFunctions</text>
+<text text-anchor="middle" x="500.861" y="-248.492" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">visibilityGraphAuxiliaryFunctions</text>
 </g>
-<!-- pyiomica_clusteringFunctions&#45;&gt;pyiomica_visibilityGraphAuxilaryFunctions -->
-<g id="edge77" class="edge"><title>pyiomica_clusteringFunctions&#45;&gt;pyiomica_visibilityGraphAuxilaryFunctions</title>
+<!-- pyiomica_clusteringFunctions&#45;&gt;pyiomica_visibilityGraphAuxiliaryFunctions -->
+<g id="edge77" class="edge"><title>pyiomica_clusteringFunctions&#45;&gt;pyiomica_visibilityGraphAuxiliaryFunctions</title>
 <path fill="none" stroke="black" d="M558.032,-198.748C548.941,-207.77 538.019,-218.611 528.167,-228.389"/>
 <polygon fill="black" stroke="black" points="525.523,-226.083 520.891,-235.612 530.454,-231.051 525.523,-226.083"/>
 </g>
@@ -825,14 +825,14 @@
 <path fill="none" stroke="black" d="M718.603,-117.791C746.534,-129.268 783.436,-144.431 812.925,-156.547"/>
 <polygon fill="black" stroke="black" points="811.638,-159.803 822.218,-160.366 814.298,-153.328 811.638,-159.803"/>
 </g>
-<!-- pyiomica_visualizationFunctions&#45;&gt;pyiomica_visibilityGraphAuxilaryFunctions -->
-<g id="edge112" class="edge"><title>pyiomica_visualizationFunctions&#45;&gt;pyiomica_visibilityGraphAuxilaryFunctions</title>
+<!-- pyiomica_visualizationFunctions&#45;&gt;pyiomica_visibilityGraphAuxiliaryFunctions -->
+<g id="edge112" class="edge"><title>pyiomica_visualizationFunctions&#45;&gt;pyiomica_visibilityGraphAuxiliaryFunctions</title>
 <path fill="none" stroke="black" d="M676.861,-179.066C672.323,-201.708 621.083,-222.24 575.054,-236.308"/>
 <polygon fill="black" stroke="black" points="573.911,-232.996 565.33,-239.21 575.913,-239.704 573.911,-232.996"/>
 <path fill="none" stroke="black" d="M679.017,-120.968C680.146,-136.492 680.615,-158.332 676.861,-177.066"/>
 </g>
-<!-- pyiomica_visibilityGraphAuxilaryFunctions&#45;&gt;pyiomica_globalVariables -->
-<g id="edge110" class="edge"><title>pyiomica_visibilityGraphAuxilaryFunctions&#45;&gt;pyiomica_globalVariables</title>
+<!-- pyiomica_visibilityGraphAuxiliaryFunctions&#45;&gt;pyiomica_globalVariables -->
+<g id="edge110" class="edge"><title>pyiomica_visibilityGraphAuxiliaryFunctions&#45;&gt;pyiomica_globalVariables</title>
 <path fill="none" stroke="black" d="M590.618,-268.809C661.041,-278.462 761.298,-293.915 847.861,-313.706 852.836,-314.843 857.982,-316.142 863.114,-317.52"/>
 <polygon fill="black" stroke="black" points="862.343,-320.938 872.915,-320.247 864.219,-314.194 862.343,-320.938"/>
 </g>
@@ -841,8 +841,8 @@
 <ellipse fill="#6e40c0" stroke="black" cx="553.861" cy="-410.132" rx="27.1572" ry="18"/>
 <text text-anchor="middle" x="553.861" y="-407.632" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">numba</text>
 </g>
-<!-- pyiomica_visibilityGraphAuxilaryFunctions&#45;&gt;numba -->
-<g id="edge109" class="edge"><title>pyiomica_visibilityGraphAuxilaryFunctions&#45;&gt;numba</title>
+<!-- pyiomica_visibilityGraphAuxiliaryFunctions&#45;&gt;numba -->
+<g id="edge109" class="edge"><title>pyiomica_visibilityGraphAuxiliaryFunctions&#45;&gt;numba</title>
 <path fill="none" stroke="black" d="M559.265,-274.539C578.121,-283.115 596.955,-295.656 607.861,-313.706 617.613,-329.844 615.158,-338.745 607.861,-356.132 602.149,-369.742 591.049,-381.614 580.39,-390.653"/>
 <polygon fill="black" stroke="black" points="578.067,-388.029 572.422,-396.995 582.426,-393.506 578.067,-388.029"/>
 </g>

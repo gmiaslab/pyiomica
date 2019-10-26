@@ -9,6 +9,6 @@ Functionality
    enrichmentAnalyses
    extendedDataFrame
    clusteringFunctions
-   visibilityGraphAuxilaryFunctions
+   visibilityGraphAuxiliaryFunctions
    visualizationFunctions
    utilityFunctions

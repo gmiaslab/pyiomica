@@ -11,10 +11,11 @@ from matplotlib import cm
 
 from .globalVariables import *
 
-from . import (visibilityGraphAuxilaryFunctions,
+from . import (visibilityGraphAuxiliaryFunctions,
                clusteringFunctions,
                coreFunctions,
-               extendedDataFrame)
+               extendedDataFrame,
+               utilityFunctions)
 
 def saveFigure(fig, saveDir, label, extension, dpi, close=True):
 
@@ -39,6 +40,8 @@ def saveFigure(fig, saveDir, label, extension, dpi, close=True):
     Usage:
         saveFigure(fig, saveDir, label, extension, dpi)
     """
+
+    utilityFunctions.createDirectories(saveDir)
 
     if extension in ['.png', '.jpeg', '.tiff']:
 
@@ -243,6 +246,12 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
                        withLabel=True, withTitle=False, layout='circle', radius=0.07, noplot=False, horizontal=False):
 
     """Draw a Visibility graph of data on a provided Matplotlib figure.
+    We represent each timepoint in a series as a node.
+    Temporal events are detected and indicated with solid blue 
+    lines encompassing groups of points, or communities.
+    The shortest path identifies nodes (i.e. timepoints) that display high 
+    intensity, and thus dominate the global signal profile, are robust 
+    to noise, and are likely drivers of the global temporal behavior.
 
     Parameters:
         data: 2d numpy.array
@@ -425,7 +434,13 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
 def makeVisibilityGraph(intensities, positions, saveDir, fileName, fontsize=16, nodesize=500, level=0.5, commLineWidth=3.0, lineWidth=2.0, layout='circle', horizontal=False, radius=0.03,
                         figsize=(10,10), addColorbar=True, colorbarAxisCoordinates=[0.90,0.7,0.02,0.2], colorbarLabelsize=12, colorbarPrecision=2, extension='.png', dpi=300):
 
-    '''Make either horizonral or normal visibility graph of a time series
+    '''Make either horizonral or normal visibility graph of a time series using function addVisibilityGraph.
+    We represent each timepoint in a series as a node.
+    Temporal events are detected and indicated with solid blue 
+    lines encompassing groups of points, or communities.
+    The shortest path identifies nodes (i.e. timepoints) that display high 
+    intensity, and thus dominate the global signal profile, are robust 
+    to noise, and are likely drivers of the global temporal behavior.
 
     Parameters:
         intensities: 
@@ -507,6 +522,10 @@ def makeVisibilityGraph(intensities, positions, saveDir, fileName, fontsize=16, 
 def makeVisibilityBarGraph(data, times, saveDir, fileName, horizontal=False, barWidth=0.2, dotColor='b', barColor='r', arrowColor='k', id='', extension='.png', figsize=(8,4), dpi=300):
 
     """Bar-plot style visibility graph.
+    Representing the intensities as bars, this is equivalent to connecting the top 
+    of each bar to another top if there is a direct line-of-sight to that top. 
+    The resulting visibility graph has characteristics that reflect the equivalent 
+    time series temporal structure and can be used to identify trends.
 
     Parameters:
         data: 2d numpy.array
@@ -558,9 +577,9 @@ def makeVisibilityBarGraph(data, times, saveDir, fileName, horizontal=False, bar
     fig, ax = plt.subplots(figsize=figsize)
 
     if horizontal:
-        A = visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHVG(data)
+        A = visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data)
     else:
-        A = visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfNVG(data, times)
+        A = visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times)
 
     ax.bar(times, data, width=barWidth, color=barColor, align='center', zorder=-np.inf)
     ax.scatter(times, data, color=dotColor)

@@ -11,7 +11,7 @@ import sklearn.metrics
 from .globalVariables import *
 
 from . import (coreFunctions,
-               visibilityGraphAuxilaryFunctions,
+               visibilityGraphAuxiliaryFunctions,
                utilityFunctions)
 
 
@@ -398,11 +398,11 @@ def getCommunitiesOfTimeSeries(data, times, numberOfCommunities=1, horizontal=Fa
     if method=='betweenness_centrality':
 
         if horizontal:
-            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHVG(data,))
-            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfHVG(-data))
+            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data,))
+            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(-data))
         else:
-            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfNVG(data, times))
-            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxilaryFunctions.getAdjacencyMatrixOfNVG(-data, times))
+            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
+            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(-data, times))
     
         def find_and_remove_node(graph_nx):
             bc = nx.betweenness_centrality(graph_nx)
