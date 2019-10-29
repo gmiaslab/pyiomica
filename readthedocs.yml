@@ -10,10 +10,6 @@ sphinx:
   configuration: docs/source/conf.py
   fail_on_warning: false
 
-# Build documentation with MkDocs
-#mkdocs:
-#  configuration: mkdocs.yml
-
 # Optionally build your docs in additional formats such as PDF and ePub
 formats:
   - pdf
