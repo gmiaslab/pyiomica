@@ -29,7 +29,7 @@ pip install git+https://github.com/gmiaslab/pyiomica/
 After installation you can run:
 
 ```python
->>> from pyiomica import pyiomica
+>>> import pyiomica
 ```
 
 ## C. DOCUMENTATION
