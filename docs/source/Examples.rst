@@ -146,7 +146,6 @@ Normal (left) and Horizontal (right) visibility graph on a linear layout:
 
    .. stuff
 
-
 Normal (left) and Horizontal (right) bar-style visibility graph:
 
 .. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/results/normal_barVG.png
@@ -171,6 +170,16 @@ Normal (left) and Horizontal (right) bar-style visibility graph:
 .. container:: clearfix
 
    .. stuff
+   
+   
+   
+   
+   
+
+Visibility Graph Community Detection examples
+---------------------------------------------
+
+.. literalinclude:: ../examples/examplesVisibilityGraphCommunityDetection.py
 
 
 
