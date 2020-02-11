@@ -33,20 +33,20 @@ filename = './B.eps'
 visualizationFunctions.PlotNVGBarGraph_Dual(A_NVG, data, tp,fileName = filename,
                                             title = 'Normal Visibility Graph',fontsize=20,figsize=(8,3))
 
-### plot reverse prespective weighted normal visibility graph, weight is  Euclidean distance
+### plot reverse perspective weighted normal visibility graph, weight is  Euclidean distance
 g_nx_revNVG, A_revNVG = visibilityGraphCommunityDetection.createVisibilityGraph(-data,tp,"general", weight = 'distance')
 filename = './C.eps'
 visualizationFunctions.PlotNVGBarGraph_Dual(A_revNVG, -data, tp,fileName = filename,
-                                            title='Reverse Prespective Normal Visibility Graph',fontsize=20,figsize=(8,3))
+                                            title='Reverse perspective Normal Visibility Graph',fontsize=20,figsize=(8,3))
 
-### plot dual prespective normal visibility graph, weight is Eyclidean distance
+### plot dual perspective normal visibility graph, weight is Euclidean distance
 g_nx_dualNVG, A_dualNVG = visibilityGraphCommunityDetection.createVisibilityGraph(data,tp,"dual_general", 
                                                                                   weight = 'distance', withsign=True)
 filename = './D.eps'
 visualizationFunctions.PlotNVGBarGraph_Dual(A_dualNVG, data, tp,fileName=filename,
-                                            title='Dual Prespective Normal Visibility Graph',fontsize=20,figsize=(10,4))
+                                            title='Dual perspective Normal Visibility Graph',fontsize=20,figsize=(10,4))
 
-### plot line layout dual prespective normal visibility graph with community structure, weight is Eyclidean distance
+### plot line layout dual perspective normal visibility graph with community structure, weight is Euclidean distance
 communities = visibilityGraphCommunityDetection.communityDetectByPathLength(g_nx_dualNVG, direction = None, cutoff='auto')
 com = (communities, g_nx_dualNVG)
 visualizationFunctions.makeVisibilityGraph(data, tp, './', 'E', layout='line',communities=com, 

@@ -5,7 +5,7 @@ import networkx as nx
 
 
 def createVisibilityGraph(data, times, graph_type='general', weight=None, withsign=False):
-    """Calculate adjacency matrix of visibility graph.
+    """Calculate adjacency matrix of visibility graph, create the networkx.Graph network.
 
     Args:
     
@@ -29,15 +29,15 @@ def createVisibilityGraph(data, times, graph_type='general', weight=None, withsi
             
             "general",General Visibility Graph
             
-            "dual_horizontal", dual prespective horizontal visibility graph
+            "dual_horizontal", dual perspective horizontal visibility graph
             
-            "dual_general", dual prespective general visibility graph            
+            "dual_general", dual perspective general visibility graph            
             
         withsign: boolean, Default False
         
-            Whether to return the sign of adjacency matrix, the link from normal prespective VG is positive,
+            Whether to return the sign of adjacency matrix, the link from normal perspective VG is positive,
             
-            the link from reverse prespective VG is negative 
+            the link from reverse perspective VG is negative 
 
     Returns: tuple
         networkx.Graph, Adjacency matrix
@@ -139,7 +139,7 @@ def __getAdjacencyMatrixOfHorizontalVisibilityGraph(data, times, weight=None):
 
 def __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times, weight=None, withsign=False):
 
-    """Calculate adjacency matrix of dual prespective horizontal visibility graph.
+    """Calculate adjacency matrix of dual perspective horizontal visibility graph.
 
     Args:
         data: Numpy 2-D array of floats
@@ -153,8 +153,8 @@ def __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times, weight=Non
             'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
             
         withsign: boolean, Default False
-            Whether to return the sign of adjacency matrix, the link from normal prespective VG is positive,
-            the link from reverse prespective VG is negative        
+            Whether to return the sign of adjacency matrix, the link from normal perspective VG is positive,
+            the link from reverse perspective VG is negative        
         
     Returns:
         Adjacency matrix
@@ -231,7 +231,7 @@ def __getAdjacencyMatrixOfVisibilityGraph(data, times,weight=None):
 
 def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsign=False):
 
-    """Calculate adjacency matrix of dual prespective general visibility graph.
+    """Calculate adjacency matrix of dual perspective general visibility graph.
 
     Args:
         data: Numpy 2-D array of floats
@@ -245,8 +245,8 @@ def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsig
             'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
             
         withsign: boolean, Default False
-            Whether to return the sign of adjacency matrix, the link from normal prespective VG is positive,
-            the link from reverse prespective VG is negative 
+            Whether to return the sign of adjacency matrix, the link from normal perspective VG is positive,
+            the link from reverse perspective VG is negative 
             
     Returns:
         Adjacency matrix
@@ -280,16 +280,25 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
     G: networkx.Graph
     
     direction:str, default is None, the direction that nodes aggregate to communities
+    
         None: no specfic direction, e.g. both sieds
-        left: nodes can only aggregate to the lefe side hubs, e.g. early hubs
-        right: nodes can only aggregate to the right side hubs, e.g. later hubs
         
+        left: nodes can only aggregate to the lefe side hubs, e.g. early hubs
+        
+        right: nodes can only aggregate to the right side hubs, e.g. later hubs
+    
     cutoff: will be used to combine initial communities, e.g. whenever the shortest path length of 
+    
         two adjacent hub nodes is smaller than cutoff, the communities with the two hub nodes will be combined.
+        
         the cutoff can be int,float or string
+        
         int or float: the percentile of all shortest path length distribution, between 0 ~ 100
+        
         'auto': use optimized cutoff
+        
         None: no cutoff
+        
         the default is None
         
     return: communities
