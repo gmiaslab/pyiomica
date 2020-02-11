@@ -10,5 +10,6 @@ Functionality
    extendedDataFrame
    clusteringFunctions
    visibilityGraphAuxiliaryFunctions
+   visibilityGraphCommunityDetection
    visualizationFunctions
    utilityFunctions

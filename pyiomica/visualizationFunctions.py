@@ -9,12 +9,15 @@ import matplotlib.patches
 import matplotlib.collections
 from matplotlib import cm
 
+import numpy as np
+
 from .globalVariables import *
 
 from . import (visibilityGraphAuxiliaryFunctions,
                clusteringFunctions,
                coreFunctions,
                extendedDataFrame,
+               visibilityGraphCommunityDetection,
                utilityFunctions)
 
 def saveFigure(fig, saveDir, label, extension, dpi, close=True):
@@ -240,11 +243,13 @@ def makeLombScarglePeriodograms(df, saveDir, dataName, minNumberOfNonzeroPoints=
 
     return None
 
-def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95], 
-                       numberOfVGs=1, groups_ac_colors=['b'], fig=None, numberOfCommunities=6, printCommunities=False, 
-                       fontsize=None, nodesize=None, level=0.55, commLineWidth=0.5, lineWidth=1.0,
-                       withLabel=True, withTitle=False, layout='circle', radius=0.07, noplot=False, horizontal=False):
 
+
+def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95], 
+                   numberOfVGs=1, groups_ac_colors=['b'], fig=None, numberOfCommunities=6, printCommunities=False, 
+                   fontsize=None, nodesize=None, level=0.55, commLineWidth=0.5, lineWidth=1.0,
+                   withLabel=True, withTitle=False, layout='circle', radius=0.07, noplot=False, horizontal=False, communities=None):
+    
     """Draw a Visibility graph of data on a provided Matplotlib figure.
     We represent each timepoint in a series as a node.
     Temporal events are detected and indicated with solid blue 
@@ -311,6 +316,11 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
         noplot: boolean, Default False
             Whether to make a plot or only calculate communities
 
+        communities: tuple, Default None
+            A tuple containing communities sturcture of network, and networkx Graph:
+                List of list, e.g. [[],[],...]
+                networkx.Graph 
+            
     Returns:
         tuple
             (graph_nx, data, communities)
@@ -322,8 +332,10 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
 
     if len(data.shape)>1:
         data = extendedDataFrame.DataFrame(data=data).imputeMissingWithMedian().apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
-
-    communities, graph_nx = clusteringFunctions.getCommunitiesOfTimeSeries(data, times, numberOfCommunities, horizontal=horizontal)
+    if communities is None:
+        communities, graph_nx = clusteringFunctions.getCommunitiesOfTimeSeries(data, times, numberOfCommunities, horizontal=horizontal)
+    else:
+        communities, graph_nx = communities
 
     if printCommunities:
         print(list_of_nodes, '\n')
@@ -431,7 +443,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
 
     return graph_nx, data, communities
 
-def makeVisibilityGraph(intensities, positions, saveDir, fileName, fontsize=16, nodesize=500, level=0.5, commLineWidth=3.0, lineWidth=2.0, layout='circle', horizontal=False, radius=0.03,
+def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=None, fontsize=16, nodesize=500, level=0.5, commLineWidth=3.0, lineWidth=2.0, layout='circle', horizontal=False, radius=0.03,
                         figsize=(10,10), addColorbar=True, colorbarAxisCoordinates=[0.90,0.7,0.02,0.2], colorbarLabelsize=12, colorbarPrecision=2, extension='.png', dpi=300):
 
     '''Make either horizonral or normal visibility graph of a time series using function addVisibilityGraph.
@@ -511,7 +523,7 @@ def makeVisibilityGraph(intensities, positions, saveDir, fileName, fontsize=16, 
 
     addVisibilityGraph(intensities, positions, fig=fig, fontsize=fontsize, nodesize=nodesize, level=level, 
                         commLineWidth=commLineWidth, lineWidth=lineWidth, withLabel=False, layout=layout, 
-                        printCommunities=False, radius=radius, horizontal=horizontal)
+                        printCommunities=False, radius=radius, horizontal=horizontal,communities=communities)
 
     addColorbarToFigure(fig, intensities, axisCoordinates=colorbarAxisCoordinates, labelsize=colorbarLabelsize, precision=colorbarPrecision)
 
@@ -519,7 +531,7 @@ def makeVisibilityGraph(intensities, positions, saveDir, fileName, fontsize=16, 
 
     return
 
-def makeVisibilityBarGraph(data, times, saveDir, fileName, horizontal=False, barWidth=0.2, dotColor='b', barColor='r', arrowColor='k', id='', extension='.png', figsize=(8,4), dpi=300):
+def makeVisibilityBarGraph(data, times, saveDir, fileName, AdjacencyMatrix=None,horizontal=False, barWidth=0.2, dotColor='b', barColor='r', arrowColor='k', id='', extension='.png', figsize=(8,4), dpi=300):
 
     """Bar-plot style visibility graph.
     Representing the intensities as bars, this is equivalent to connecting the top 
@@ -540,6 +552,10 @@ def makeVisibilityBarGraph(data, times, saveDir, fileName, horizontal=False, bar
         fileName: str
             Name of the figure file to save
 
+        AdjacencyMatrix: 2d numpy.array or None
+            default is None
+            Adjacency matrix of network
+        
         horizontal: boolean, default False
             Horizontal or normal visibility graph
             
@@ -575,11 +591,14 @@ def makeVisibilityBarGraph(data, times, saveDir, fileName, horizontal=False, bar
     """
 
     fig, ax = plt.subplots(figsize=figsize)
-
-    if horizontal:
-        A = visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data)
+    
+    if AdjacencyMatrix is None:
+        if horizontal:
+            A = visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data)
+        else:
+            A = visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times)
     else:
-        A = visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times)
+        A = AdjacencyMatrix
 
     ax.bar(times, data, width=barWidth, color=barColor, align='center', zorder=-np.inf)
     ax.scatter(times, data, color=dotColor)
@@ -929,3 +948,143 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
     saveFigure(fig, saveDir, dataName + '_DendrogramHeatmap', extension, dpi)
 
     return None
+    
+def PlotHVGBarGraph_Dual(A, data, times, fileName, title='',fontsize=8, barwidth=0.05, figsize=(8,4)):
+    
+    """Bar-plot style horizontal visibility graph with different link colors for different perspectives
+
+    Args:
+        A: Adjacency matrix
+        
+        data: Numpy 2-D array of floats
+        
+        times: Numpy 1-D array of floats
+        
+        fileName: name of the figure file to save
+        
+        title: label to add to the figure title
+        
+        figsize: tuple of int, Default (8,4)        
+            Figure size in inches
+            
+        barwidth: float, default:0.05
+            the bar width
+
+        fontsize:int, default=8, the text font size
+        
+    Returns:
+        None
+
+    Usage:
+        PlotHorizontalVisibilityGraph(A, data, times, 'FIgure.png', 'Test Data')
+    """
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.bar(times, data, width = barwidth, color='k', align='center', zorder=-np.inf)
+    ax.scatter(times, data, color='k')
+
+    for i in range(A.shape[0]):
+        for j in range(A.shape[1]):
+            if i>j and A[i,j] > 0:
+                if data[i] > 0 and data[j] >0:
+                    level = np.min([data[i],data[j]])
+                elif data[i] < 0 and data[j] < 0:
+                    level = np.max([data[i],data[j]])
+                else:
+                    level = 0
+                ax.annotate(s='', xy=(times[i],level), xytext=(times[j],level), 
+                        arrowprops=dict(arrowstyle='->', shrinkA=0, shrinkB=0,linestyle='--', color='r'))
+                            
+            if i>j and A[i,j] < 0:
+                if data[i] > 0 and data[j] >0:
+                    level = np.min([data[i],data[j]])
+                elif data[i] < 0 and data[j] < 0:
+                    level = np.max([data[i],data[j]])
+                else:
+                    level = 0
+                ax.annotate(s='', xy=(times[i],level), xytext=(times[j],level), 
+                                arrowprops=dict(arrowstyle='->', shrinkA=0, shrinkB=0,linestyle='--', color='b'))
+                    
+
+    ax.set_title('%s'%(id), fontdict={'color': 'k'},fontsize=fontsize)
+    ax.set_xlabel('Times', fontsize=fontsize)
+    ax.set_ylabel('Signal intensity', fontsize=fontsize)
+    ax.set_xticks(times)
+    ax.set_xticklabels([str(item) for item in np.round(times,2)],fontsize=fontsize, rotation=0)
+    ax.set_yticks([])
+    ax.axhline(y=0, color='k')
+
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(True)
+
+    fig.tight_layout()
+    fig.savefig(fileName, dpi=600)
+    plt.close(fig)
+    
+    return None
+
+def PlotNVGBarGraph_Dual(A, data, times, fileName, title='',fontsize=8, barwidth=0.05, figsize=(8,4)):
+
+    """Bar-plot style visibility graph with different link colors for different perspectives
+    
+    Args:
+        A: Adjacency matrix
+        
+        data: Numpy 2-D array of floats
+        
+        times: Numpy 1-D array of floats
+        
+        fileName: name of the figure file to save
+        
+        title: the figure title
+        
+        figsize: tuple of int, Default (8,4)
+            Figure size in inches
+            
+        barwidth: float, default:0.05
+            the bar width
+        
+        fontsize:int, default=8, the text font size
+        
+    Returns:
+        None
+
+    Usage:
+        PlotVisibilityGraph(A, data, times, 'FIgure.png', 'Test Data')
+    """
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.bar(times, data, width = barwidth, color='k', align='center', zorder=-np.inf)
+    ax.scatter(times, data, color='k')
+
+    for i in range(A.shape[0]):
+        for j in range(A.shape[1]):
+            if i>j and A[i,j] > 0:
+                ax.annotate(s='', xy=(times[i],data[i]), xytext=(times[j],data[j]), 
+                            arrowprops=dict(arrowstyle='->', shrinkA=0, shrinkB=0,linestyle='--',color='r'))
+                            
+            if i>j and A[i,j] < 0:
+                ax.annotate(s='', xy=(times[i],data[i]), xytext=(times[j],data[j]), 
+                            arrowprops=dict(arrowstyle='->', shrinkA=0, shrinkB=0,linestyle='--',color='b'))                
+
+    ax.set_title('%s'%(title), fontdict={'color': 'k'},fontsize=fontsize)
+    ax.set_xlabel('Times', fontsize=fontsize)
+    ax.set_ylabel('Signal intensity', fontsize=fontsize)
+    ax.set_xticks(times)
+    ax.set_xticklabels([str(item) for item in np.round(times,2)],fontsize=fontsize, rotation=0)
+    ax.set_yticks([])
+    ax.axhline(y=0, color='k')
+
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(True)
+
+    fig.tight_layout()
+    fig.savefig(fileName, dpi=600)
+    plt.close(fig)
+
+    return None
+    
