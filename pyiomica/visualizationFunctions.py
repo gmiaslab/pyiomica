@@ -1027,7 +1027,7 @@ def PlotHVGBarGraph_Dual(A, data, times, fileName, title='',fontsize=8, barwidth
 
 def PlotNVGBarGraph_Dual(A, data, times, fileName, title='',fontsize=8, barwidth=0.05, figsize=(8,4)):
 
-    """Bar-plot style visibility graph with different link colors for different perspectives
+    """Bar-plot style natural visibility graph with different link colors for different perspectives
     
     Args:
         A: Adjacency matrix
