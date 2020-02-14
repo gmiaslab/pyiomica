@@ -4,7 +4,7 @@ import numpy as np
 import networkx as nx
 
 
-def createVisibilityGraph(data, times, graph_type='general', weight=None, withsign=False):
+def createVisibilityGraph(data, times, graph_type='natural', weight=None, withsign=False):
     """Calculate adjacency matrix of visibility graph, create the networkx.Graph network.
 
     Args:
@@ -23,15 +23,15 @@ def createVisibilityGraph(data, times, graph_type='general', weight=None, withsi
             
             'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
             
-        graph_type: string, default: 'general'
+        graph_type: string, default: 'natural'
         
             "horizontal", Horizontal Visibility Graph
             
-            "general",General Visibility Graph
+            "natural",natural Visibility Graph
             
             "dual_horizontal", dual perspective horizontal visibility graph
             
-            "dual_general", dual perspective general visibility graph            
+            "dual_natural", dual perspective natural visibility graph            
             
         withsign: boolean, Default False
         
@@ -50,8 +50,8 @@ def createVisibilityGraph(data, times, graph_type='general', weight=None, withsi
     idx_nan = np.argwhere(np.isnan(data))
     ndata = np.delete(data, idx_nan)
     ntimes = np.delete(times, idx_nan)
-    if graph_type not in ['horizonral','dual_horizontal','dual_general','general']:
-        print('Unknown graph type: %s, adjust graph type to general'%(graph_type))
+    if graph_type not in ['horizonral','dual_horizontal','dual_natural','natural']:
+        print('Unknown graph type: %s, adjust graph type to natural'%(graph_type))
     else:
         print('graph type is: %s' %(graph_type))
         
@@ -64,7 +64,7 @@ def createVisibilityGraph(data, times, graph_type='general', weight=None, withsi
         AdMatrixOfVisibilityGraph = np.asmatrix(__getAdjacencyMatrixOfHorizontalVisibilityGraph(ndata, ntimes, weight=weight))
     elif graph_type == "dual_horizontal":
         AdMatrixOfVisibilityGraph = np.asmatrix(__getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(ndata, ntimes, weight=weight, withsign=withsign))
-    elif graph_type == "dual_general":
+    elif graph_type == "dual_natural":
         AdMatrixOfVisibilityGraph = np.asmatrix(__getAdjacencyMatrixOfVisibilityGraph_dual(ndata, ntimes, weight=weight, withsign=withsign))
     else:
         AdMatrixOfVisibilityGraph = np.asmatrix(__getAdjacencyMatrixOfVisibilityGraph(ndata, ntimes, weight=weight))
@@ -177,7 +177,7 @@ def __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times, weight=Non
 
 def __getAdjacencyMatrixOfVisibilityGraph(data, times,weight=None):
 
-    """Calculate adjacency matrix of visibility graph.
+    """Calculate adjacency matrix of natural visibility graph.
 
     Args:
         data: Numpy 2-D array of floats
@@ -231,7 +231,7 @@ def __getAdjacencyMatrixOfVisibilityGraph(data, times,weight=None):
 
 def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsign=False):
 
-    """Calculate adjacency matrix of dual perspective general visibility graph.
+    """Calculate adjacency matrix of dual perspective natural visibility graph.
 
     Args:
         data: Numpy 2-D array of floats
