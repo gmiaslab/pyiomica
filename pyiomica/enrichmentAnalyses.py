@@ -199,7 +199,7 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
             match the Species option value used (default: human). The value for the species corresponds to the actual MySQL command used
 
         UCSCSQLSelectLabels: str, Default None
-            An association to be used to assign key labels for the data improted from the UCSC Browser tables. 
+            An association to be used to assign key labels for the data imported from the UCSC Browser tables. 
             The key of the association must match the Species option value used (default: human). The value is a multi component string 
             list corresponding to the matrices in the data file, or the tables used in the MySQL query provided by UCSCSQLString
 

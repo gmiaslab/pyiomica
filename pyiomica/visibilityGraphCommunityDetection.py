@@ -54,7 +54,7 @@ def createVisibilityGraph(data, times, graph_type='natural', weight=None, withsi
     idx_nan = np.argwhere(np.isnan(data))
     ndata = np.delete(data, idx_nan)
     ntimes = np.delete(times, idx_nan)
-    if graph_type not in ['horizonral','dual_horizontal','dual_natural','natural']:
+    if graph_type not in ['horizontal','dual_horizontal','dual_natural','natural']:
         print('Unknown graph type: %s, adjust graph type to natural'%(graph_type))
     else:
         print('graph type is: %s' %(graph_type))
@@ -301,9 +301,9 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
     
         direction:str, default None
             The direction that nodes aggregate to communities:
-                None: no specfic direction, e.g. both sieds
+                None: no specific direction, e.g. both sides.
         
-                'left': nodes can only aggregate to the lefe side hubs, e.g. early hubs
+                'left': nodes can only aggregate to the left side hubs, e.g. early hubs
         
                 'right': nodes can only aggregate to the right side hubs, e.g. later hubs
     
@@ -337,7 +337,7 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
     for node1 in range(len(PL_dict)):
         pl_node1 = PL_dict[node1]
         for node2 in range((node1+1), len(PL_dict)):
-            value_PL_list.append(pl_node1[node2]) # get all path lenght value list
+            value_PL_list.append(pl_node1[node2]) # get all path length value list
     
     nodelist = list(G.nodes)
     nodelist.sort()
@@ -391,7 +391,7 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
             cut = None
             print('Cutoff %f is out of range, adjust cutoff to None'%(cutoff))
     elif cutoff == 'auto':
-        cut = __optimaze_cutoff(PL_dict, value_PL_list, sort_spl)
+        cut = __optimize_cutoff(PL_dict, value_PL_list, sort_spl)
         percentiles = (cut - min(value_PL_list)) / (max(value_PL_list) - min(value_PL_list)) * 100
         print('current cutoff is auto, the optimized percentiles cutoff is %f ' %(percentiles))
     elif cutoff is None:
@@ -422,7 +422,7 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
         
     return c
 
-def __optimaze_cutoff(PL_dict, value_PL_list, sort_spl):
+def __optimize_cutoff(PL_dict, value_PL_list, sort_spl):
 
     """Calculate the optimized cutoff, which will be used to combine initial communities. This function is used internally only.
     """

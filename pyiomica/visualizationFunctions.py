@@ -445,7 +445,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
 def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=None, fontsize=16, nodesize=500, level=0.5, commLineWidth=3.0, lineWidth=2.0, layout='circle', horizontal=False, radius=0.03,
                         figsize=(10,10), addColorbar=True, colorbarAxisCoordinates=[0.90,0.7,0.02,0.2], colorbarLabelsize=12, colorbarPrecision=2, extension='.png', dpi=300):
 
-    '''Make either horizonral or normal visibility graph of a time series using function addVisibilityGraph.
+    '''Make either horizontal or normal visibility graph of a time series using function addVisibilityGraph.
     We represent each timepoint in a series as a node.
     Temporal events are detected and indicated with solid blue 
     lines encompassing groups of points, or communities.
@@ -467,7 +467,7 @@ def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=N
             Label to include in the file name
 
         communities: tuple, Default None
-            A tuple containing communities sturcture of network, and networkx Graph:
+            A tuple containing communities structure of network, and networkx Graph:
                 List of list, e.g. [[],[],...]
 
                 networkx.Graph

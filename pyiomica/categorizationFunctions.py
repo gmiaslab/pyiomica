@@ -215,7 +215,7 @@ def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf
             Data name, e.g. "myData_1"
 
         saveDir: str
-            Path of directories poining to data storage
+            Path of directories pointing to data storage
 
         numberOfLagsToDraw: int, Default 3
             First top-N lags (or frequencies) to draw
@@ -289,7 +289,7 @@ def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, a
             Data name, e.g. "myData_1"
 
         saveDir: str
-            Path of directories poining to data storage
+            Path of directories pointing to data storage
 
         numberOfLagsToDraw: boolean, Default 3
             First top-N lags (or frequencies) to draw

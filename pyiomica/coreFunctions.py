@@ -29,7 +29,7 @@ def modifiedZScore(subset, printValues=False):
                 Data for analysis
 
             axis: int, Default None
-                Multidimentional arrays are flattened, 0: use if data in columns, 1: use if data in rows
+                Multidimensional arrays are flattened, 0: use if data in columns, 1: use if data in rows
 
         Returns:
             float
