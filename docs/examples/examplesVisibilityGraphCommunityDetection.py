@@ -33,11 +33,11 @@ filename = './B.eps'
 visualizationFunctions.PlotNVGBarGraph_Dual(A_NVG, data, tp,fileName = filename,
                                             title = 'Natural Visibility Graph',fontsize=20,figsize=(8,3))
 
-### plot reverse perspective weighted natural visibility graph, weight is  Euclidean distance
+### plot reflected perspective weighted natural visibility graph, weight is  Euclidean distance
 g_nx_revNVG, A_revNVG = visibilityGraphCommunityDetection.createVisibilityGraph(-data,tp,"natural", weight = 'distance')
 filename = './C.eps'
 visualizationFunctions.PlotNVGBarGraph_Dual(A_revNVG, -data, tp,fileName = filename,
-                                            title='Reverse perspective Natural Visibility Graph',fontsize=20,figsize=(8,3))
+                                            title='Reflected perspective Natural Visibility Graph',fontsize=20,figsize=(8,3))
 
 ### plot dual perspective natural visibility graph, weight is Euclidean distance
 g_nx_dualNVG, A_dualNVG = visibilityGraphCommunityDetection.createVisibilityGraph(data,tp,"dual_natural", 
