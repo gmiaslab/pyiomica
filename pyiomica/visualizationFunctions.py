@@ -243,8 +243,6 @@ def makeLombScarglePeriodograms(df, saveDir, dataName, minNumberOfNonzeroPoints=
 
     return None
 
-
-
 def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95], 
                    numberOfVGs=1, groups_ac_colors=['b'], fig=None, numberOfCommunities=6, printCommunities=False, 
                    fontsize=None, nodesize=None, level=0.55, commLineWidth=0.5, lineWidth=1.0,
@@ -319,6 +317,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
         communities: tuple, Default None
             A tuple containing communities sturcture of network, and networkx Graph:
                 List of list, e.g. [[],[],...]
+
                 networkx.Graph 
             
     Returns:
@@ -446,7 +445,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
 def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=None, fontsize=16, nodesize=500, level=0.5, commLineWidth=3.0, lineWidth=2.0, layout='circle', horizontal=False, radius=0.03,
                         figsize=(10,10), addColorbar=True, colorbarAxisCoordinates=[0.90,0.7,0.02,0.2], colorbarLabelsize=12, colorbarPrecision=2, extension='.png', dpi=300):
 
-    '''Make either horizonral or normal visibility graph of a time series using function addVisibilityGraph.
+    '''Make either horizontal or normal visibility graph of a time series using function addVisibilityGraph.
     We represent each timepoint in a series as a node.
     Temporal events are detected and indicated with solid blue 
     lines encompassing groups of points, or communities.
@@ -464,8 +463,14 @@ def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=N
         saveDir: str
             Path of directories to save the object to
 
-        dataName: str
+        fileName: str
             Label to include in the file name
+
+        communities: tuple, Default None
+            A tuple containing communities structure of network, and networkx Graph:
+                List of list, e.g. [[],[],...]
+
+                networkx.Graph
         
         fontsize: float, Default 16
             Labels fontsize
@@ -531,7 +536,7 @@ def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=N
 
     return
 
-def makeVisibilityBarGraph(data, times, saveDir, fileName, AdjacencyMatrix=None,horizontal=False, barWidth=0.2, dotColor='b', barColor='r', arrowColor='k', id='', extension='.png', figsize=(8,4), dpi=300):
+def makeVisibilityBarGraph(data, times, saveDir, fileName, AdjacencyMatrix=None, horizontal=False, barWidth=0.2, dotColor='b', barColor='r', arrowColor='k', id='', extension='.png', figsize=(8,4), dpi=300):
 
     """Bar-plot style visibility graph.
     Representing the intensities as bars, this is equivalent to connecting the top 
@@ -552,8 +557,7 @@ def makeVisibilityBarGraph(data, times, saveDir, fileName, AdjacencyMatrix=None,
         fileName: str
             Name of the figure file to save
 
-        AdjacencyMatrix: 2d numpy.array or None
-            default is None
+        AdjacencyMatrix: 2d numpy.array, Default None
             Adjacency matrix of network
         
         horizontal: boolean, default False
@@ -949,28 +953,34 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
 
     return None
     
-def PlotHVGBarGraph_Dual(A, data, times, fileName, title='',fontsize=8, barwidth=0.05, figsize=(8,4)):
+def PlotHVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4)):
     
     """Bar-plot style horizontal visibility graph with different link colors for different perspectives
 
-    Args:
-        A: Adjacency matrix
+    Parameters:
+        A: 2d numpy.array
+            Adjacency matrix
         
-        data: Numpy 2-D array of floats
+        data: 2d numpy.array
+            Data used to make the visibility graph
         
-        times: Numpy 1-D array of floats
+        times: 1d numpy.array
+            Times corresponding to data points
         
-        fileName: name of the figure file to save
+        fileName: str
+            Name of the figure file to save
         
-        title: label to add to the figure title
+        title: str, Default ''
+            Label to add to the figure title
         
         figsize: tuple of int, Default (8,4)        
             Figure size in inches
             
-        barwidth: float, default:0.05
-            the bar width
+        barwidth: float, Default 0.05
+            The bar width
 
-        fontsize:int, default=8, the text font size
+        fontsize:int, Default 8
+            The text font size
         
     Returns:
         None
@@ -1025,28 +1035,34 @@ def PlotHVGBarGraph_Dual(A, data, times, fileName, title='',fontsize=8, barwidth
     
     return None
 
-def PlotNVGBarGraph_Dual(A, data, times, fileName, title='',fontsize=8, barwidth=0.05, figsize=(8,4)):
+def PlotNVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4)):
 
     """Bar-plot style natural visibility graph with different link colors for different perspectives
     
-    Args:
-        A: Adjacency matrix
+    Parameters:
+        A: 2d numpy.array
+            Adjacency matrix
         
-        data: Numpy 2-D array of floats
+        data: 2d numpy.array
+            Data used to make the visibility graph
         
-        times: Numpy 1-D array of floats
+        times: 1d numpy.array
+            Times corresponding to data points
         
-        fileName: name of the figure file to save
+        fileName: str
+            Name of the figure file to save
         
-        title: the figure title
+        title: str, Default ''
+            Label to add to the figure title
         
-        figsize: tuple of int, Default (8,4)
+        figsize: tuple of int, Default (8,4)        
             Figure size in inches
             
-        barwidth: float, default:0.05
-            the bar width
-        
-        fontsize:int, default=8, the text font size
+        barwidth: float, Default 0.05
+            The bar width
+
+        fontsize:int, Default 8
+            The text font size
         
     Returns:
         None

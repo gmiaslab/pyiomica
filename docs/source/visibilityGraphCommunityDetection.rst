@@ -1,4 +1,4 @@
-visibility Graph Community Detection
+Visibility Graph Community Detection
 ====================================
 
 Submodule **pyiomica.visibilityGraphCommunityDetection**

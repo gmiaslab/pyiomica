@@ -176,8 +176,8 @@ Normal (left) and Horizontal (right) bar-style visibility graph:
    
    
 
-Visibility Graph Community Detection examples
----------------------------------------------
+Visibility Graph Community Detection
+------------------------------------
 
 .. literalinclude:: ../examples/examplesVisibilityGraphCommunityDetection.py
 

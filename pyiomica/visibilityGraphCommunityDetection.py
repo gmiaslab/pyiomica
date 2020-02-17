@@ -1,44 +1,40 @@
-'''visibility Graph Community detection functions'''
+"""Visibility Graph Community detection functions.
+"""
 
 import numpy as np
 import networkx as nx
 
-
 def createVisibilityGraph(data, times, graph_type='natural', weight=None, withsign=False):
+
     """Calculate adjacency matrix of visibility graph, create the networkx.Graph network.
 
-    Args:
-    
-        data: Numpy 2-D array of floats
+    Parameters:
+        data: 2d numpy.array
+            Data to process
         
-        times:list of floats
+        times: 1d numpy.array
+            Times corresponding to provided data points
         
-        weight: str, default:None
-        
-            None: no weighted
-            
-            'time': weight = abs(times[i] - times[j])
-            
-            'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
-            
-            'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
-            
-        graph_type: string, default: 'natural'
-        
-            "horizontal", Horizontal Visibility Graph
-            
-            "natural",natural Visibility Graph
-            
-            "dual_horizontal", dual perspective horizontal visibility graph
-            
-            "dual_natural", dual perspective natural visibility graph            
-            
-        withsign: boolean, Default False
+        weight: str, Default None
+            Type of normalization:
+                None: no weighted
 
-        
-            Whether to return the sign of adjacency matrix, the link from normal perspective VG is positive,
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
             
-            the link from reverse perspective VG is negative 
+        graph_type: str, Default 'natural'
+            Type of the visibility graph:
+                "horizontal", Horizontal Visibility Graph
+
+                "natural", Natural Visibility Graph
+
+                "dual_horizontal", Dual Perspective Horizontal Visibility Graph
+
+                "dual_natural", Dual Perspective Natural Visibility Graph                   
+        withsign: boolean, Default False
 
             Whether to return the sign of adjacency matrix, 
             the link from normal perspective VG is positive,
@@ -46,17 +42,21 @@ def createVisibilityGraph(data, times, graph_type='natural', weight=None, withsi
 
 
     Returns: tuple
-        networkx.Graph, Adjacency matrix
+        Tuple of two objects:
+            networkx.Graph
+                Graph of networkx type
+            
+            2d numpy.array
+                Adjacency matrix
 
     Usage:
         A = createVisibilityGraph(data, times)
     """
-
     
     idx_nan = np.argwhere(np.isnan(data))
     ndata = np.delete(data, idx_nan)
     ntimes = np.delete(times, idx_nan)
-    if graph_type not in ['horizonral','dual_horizontal','dual_natural','natural']:
+    if graph_type not in ['horizontal','dual_horizontal','dual_natural','natural']:
         print('Unknown graph type: %s, adjust graph type to natural'%(graph_type))
     else:
         print('graph type is: %s' %(graph_type))
@@ -87,28 +87,31 @@ def createVisibilityGraph(data, times, graph_type='natural', weight=None, withsi
     
     
     return G,AdMatrixOfVisibilityGraph
-    
 
 def __getAdjacencyMatrixOfHorizontalVisibilityGraph(data, times, weight=None):
 
     """Calculate adjacency matrix of horizontal visibility graph.
 
-    Args:
-        data: Numpy 2-D array of floats
+    Parameters:
+        data: 2d numpy.array
+            Data to process
         
-        times:list of floats
+        times: 1d numpy.array
+            Times corresponding to provided data points
         
-        weight: str, default:None
-        
-            None: no weighted
-            
-            'time': weight = abs(times[i] - times[j])
-            
-            'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
-            
-            'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
+        weight: str, Default None
+            Type of normalization:
+                None: no weighted
+
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
+
     Returns:
-        Adjacency matrix
+        2d numpy.array
+            Adjacency matrix
 
     Usage:
         A = __getAdjacencyMatrixOfHorizontalVisibilityGraph(data, times)
@@ -142,36 +145,41 @@ def __getAdjacencyMatrixOfHorizontalVisibilityGraph(data, times, weight=None):
                     A[i, j] = A[j, i] = 1
     return A
 
-
 def __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times, weight=None, withsign=False):
 
     """Calculate adjacency matrix of dual perspective horizontal visibility graph.
 
-    Args:
-        data: Numpy 2-D array of floats
+    Parameters:
+        data: 2d numpy.array
+            Data to process
         
-        times:list of floats
+        times: 1d numpy.array
+            Times corresponding to provided data points
         
-        weight: str, default:None
-            None: no weighted
-            'time': weight = abs(times[i] - times[j])
-            'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
-            'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
+        weight: str, Default None
+            Type of normalization:
+                None: no weighted
+
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
             
         withsign: boolean, Default False
 
             Whether to return the sign of adjacency matrix, the link from normal perspective VG is positive,
             the link from reverse perspective VG is negative        
 
-            Whether to return the sign of adjacency matrix, the link from normal perspective VG is positive, the link from reflected perspective VG is negative.        
-
         
     Returns:
-        Adjacency matrix
+        2d numpy.array
+            Adjacency matrix
 
     Usage:
         A = __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times)
     """
+
     A_posi = np.asmatrix(__getAdjacencyMatrixOfHorizontalVisibilityGraph(data, times, weight=weight))
     A_nega = np.asmatrix(__getAdjacencyMatrixOfHorizontalVisibilityGraph(-data, times, weight=weight))
     A_dual = np.where(A_posi >= A_nega, A_posi, -A_nega)
@@ -183,25 +191,30 @@ def __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times, weight=Non
     
     return A_dual
 
-
-
 def __getAdjacencyMatrixOfVisibilityGraph(data, times,weight=None):
 
     """Calculate adjacency matrix of natural visibility graph.
 
-    Args:
-        data: Numpy 2-D array of floats
+    Parameters:
+        data: 2d numpy.array
+            Data to process
         
-        times:list of floats
+        times: 1d numpy.array
+            Times corresponding to provided data points
         
-        weight: str, default:None
-            None: no weighted
-            'time': weight = abs(times[i] - times[j])
-            'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
-            'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
+        weight: str, Default None
+            Type of normalization:
+                None: no weighted
+
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
 
     Returns:
-        Adjacency matrix
+        2d numpy.array
+            Adjacency matrix
 
     Usage:
         A = __getAdjacencyMatrixOfVisibilityGraph(data, times)
@@ -237,22 +250,27 @@ def __getAdjacencyMatrixOfVisibilityGraph(data, times,weight=None):
                     A[i, j] = A[j, i] = 1
 
     return A
-    
 
 def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsign=False):
 
     """Calculate adjacency matrix of dual perspective natural visibility graph.
 
-    Args:
-        data: Numpy 2-D array of floats
+    Parameters:
+        data: 2d numpy.array
+            Data to process
         
-        times:list of floats
+        times: 1d numpy.array
+            Times corresponding to provided data points
         
-        weight: str, default:None        
-            None: no weighted
-            'time': weight = abs(times[i] - times[j])
-            'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
-            'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
+        weight: str, Default None
+            Type of normalization:
+                None: no weighted
+
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
             
         withsign: boolean, Default False
 
@@ -260,15 +278,14 @@ def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsig
             the link from reverse perspective VG is negative 
             
 
-            Whether to return the sign of adjacency matrix, the link from normal perspective VG is positive, the link from reflected perspective VG is negative.
-
-
     Returns:
-        Adjacency matrix
+        2d numpy.array
+            Adjacency matrix
 
     Usage:
         A = __getAdjacencyMatrixOfVisibilityGraph_dual(data, times)
     """
+
     A_posi = np.asmatrix(__getAdjacencyMatrixOfVisibilityGraph(data, times, weight=weight))
     A_nega = np.asmatrix(__getAdjacencyMatrixOfVisibilityGraph(-data, times, weight=weight))
     if min(data)<0:
@@ -280,46 +297,41 @@ def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsig
     else:
         A_dual = abs(A_dual)
 
-    
     return A_dual
 
-
-
-
 def communityDetectByPathLength(G, direction = None, cutoff = None):
-    '''
-    calculate community structure by shortest path length algorithm
     
-    Args:
+    """Calculate community structure by shortest path length algorithm.
     
-    G: networkx.Graph
+    Parameters:
+        G: networkx.Graph
+            Graph of networkx type
     
-    direction:str, default is None, the direction that nodes aggregate to communities
+        direction:str, default None
+            The direction that nodes aggregate to communities:
+                None: no specific direction, e.g. both sides.
+        
+                'left': nodes can only aggregate to the left side hubs, e.g. early hubs
+        
+                'right': nodes can only aggregate to the right side hubs, e.g. later hubs
     
-        None: no specfic direction, e.g. both sieds
+        cutoff: int, float or str, Default None
+            Cutoff is used to combine initial communities, e.g. whenever the shortest path length of two adjacent hub nodes is smaller than cutoff, the communities with the two hub nodes will be combined:
         
-        left: nodes can only aggregate to the lefe side hubs, e.g. early hubs
+                int or float: the percentile of all shortest path length distribution, between 0 ~ 100
         
-        right: nodes can only aggregate to the right side hubs, e.g. later hubs
-    
-    cutoff: will be used to combine initial communities, e.g. whenever the shortest path length of 
-    
-        two adjacent hub nodes is smaller than cutoff, the communities with the two hub nodes will be combined.
+                'auto': use optimized cutoff
         
-        the cutoff can be int,float or string
+                None: no cutoff
         
-        int or float: the percentile of all shortest path length distribution, between 0 ~ 100
-        
-        'auto': use optimized cutoff
-        
-        None: no cutoff
-        
-        the default is None
-        
-    return: communities
+    Returns:
         list of list
-    
-    '''
+            Detected communities in the form of nested list.
+
+    Usage:
+        c = communityDetectByPathLength(G)
+    """
+
     if direction not in ['left', 'right', None]:
         print('Unknown direction type: %s, adjust direction to None'%(direction))
         direction = None
@@ -333,7 +345,7 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
     for node1 in range(len(PL_dict)):
         pl_node1 = PL_dict[node1]
         for node2 in range((node1+1), len(PL_dict)):
-            value_PL_list.append(pl_node1[node2]) # get all path lenght value list
+            value_PL_list.append(pl_node1[node2]) # get all path length value list
     
     nodelist = list(G.nodes)
     nodelist.sort()
@@ -387,7 +399,7 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
             cut = None
             print('Cutoff %f is out of range, adjust cutoff to None'%(cutoff))
     elif cutoff == 'auto':
-        cut = __optimaze_cutoff(PL_dict, value_PL_list, sort_spl)
+        cut = __optimize_cutoff(PL_dict, value_PL_list, sort_spl)
         percentiles = (cut - min(value_PL_list)) / (max(value_PL_list) - min(value_PL_list)) * 100
         print('current cutoff is auto, the optimized percentiles cutoff is %f ' %(percentiles))
     elif cutoff is None:
@@ -418,10 +430,9 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
         
     return c
 
+def __optimize_cutoff(PL_dict, value_PL_list, sort_spl):
 
-def __optimaze_cutoff(PL_dict, value_PL_list, sort_spl):
-
-    """calculate the optimized cutoff, which will be used to combine initial communities
+    """Calculate the optimized cutoff, which will be used to combine initial communities. This function is used internally only.
     """
 
     L = len(sort_spl)

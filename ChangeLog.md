@@ -1,3 +1,16 @@
+- 1.2.0
+
+   * Added new visibility graph based community detection functions. 
+   * Added plotting functions. 
+   * Added examples of visibility graph community detection. 
+   * Updated examples Jupyter notebook. 
+
+
+- 1.1.2
+
+   * Small typographical fixes.
+
+
 - 1.1.1
 
    * Updated examples Jupyter notebook. 
