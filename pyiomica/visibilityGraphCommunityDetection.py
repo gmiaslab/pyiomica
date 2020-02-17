@@ -33,7 +33,8 @@ def createVisibilityGraph(data, times, graph_type='natural', weight=None, withsi
 
                 "dual_horizontal", Dual Perspective Horizontal Visibility Graph
 
-                "dual_natural", Dual Perspective Natural Visibility Graph                   
+                "dual_natural", Dual Perspective Natural Visibility Graph 
+                
         withsign: boolean, Default False
 
             Whether to return the sign of adjacency matrix, 
@@ -169,7 +170,7 @@ def __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times, weight=Non
         withsign: boolean, Default False
 
             Whether to return the sign of adjacency matrix, the link from normal perspective VG is positive,
-            the link from reverse perspective VG is negative        
+            the link from reflected perspective VG is negative        
 
         
     Returns:
@@ -275,7 +276,7 @@ def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsig
         withsign: boolean, Default False
 
             Whether to return the sign of adjacency matrix, the link from normal perspective VG is positive,
-            the link from reverse perspective VG is negative 
+            the link from reflected perspective VG is negative 
             
 
     Returns:
