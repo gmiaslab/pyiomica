@@ -1,8 +1,7 @@
 """Visibility Graph Community detection functions.
 """
 
-import numpy as np
-import networkx as nx
+from .globalVariables import *
 
 def createVisibilityGraph(data, times, graph_type='natural', weight=None, withsign=False):
 
@@ -192,7 +191,7 @@ def __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times, weight=Non
     
     return A_dual
 
-def __getAdjacencyMatrixOfVisibilityGraph(data, times,weight=None):
+def __getAdjacencyMatrixOfVisibilityGraph(data, times, weight=None):
 
     """Calculate adjacency matrix of natural visibility graph.
 
@@ -300,7 +299,7 @@ def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsig
 
     return A_dual
 
-def communityDetectByPathLength(G, direction = None, cutoff = None):
+def communityDetectByPathLength(G, direction=None, cutoff=None):
     
     """Calculate community structure by shortest path length algorithm.
     

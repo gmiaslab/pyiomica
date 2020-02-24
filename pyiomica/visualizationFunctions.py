@@ -46,6 +46,12 @@ def saveFigure(fig, saveDir, label, extension, dpi, close=True):
 
     utilityFunctions.createDirectories(saveDir)
 
+    try:
+        if not extension[0]=='.':
+            extension = ''.join(['.', extension])
+    except:
+        print('Chack figure extension/format')
+
     if extension in ['.png', '.jpeg', '.tiff']:
 
         fig.savefig(os.path.join(saveDir, label + extension), dpi=dpi)
@@ -443,7 +449,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
     return graph_nx, data, communities
 
 def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=None, fontsize=16, nodesize=500, level=0.5, commLineWidth=3.0, lineWidth=2.0, layout='circle', horizontal=False, radius=0.03,
-                        figsize=(10,10), addColorbar=True, colorbarAxisCoordinates=[0.90,0.7,0.02,0.2], colorbarLabelsize=12, colorbarPrecision=2, extension='.png', dpi=300):
+                        figsize=(10,10), addColorbar=True, colorbarAxisCoordinates=[0.90,0.7,0.02,0.2], colorbarLabelsize=12, colorbarPrecision=2, extension='png', dpi=300):
 
     '''Make either horizontal or normal visibility graph of a time series using function addVisibilityGraph.
     We represent each timepoint in a series as a node.
@@ -953,7 +959,7 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
 
     return None
     
-def PlotHVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4)):
+def PlotHVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4), dpi=600):
     
     """Bar-plot style horizontal visibility graph with different link colors for different perspectives
 
@@ -974,7 +980,10 @@ def PlotHVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidt
             Label to add to the figure title
         
         figsize: tuple of int, Default (8,4)        
-            Figure size in inches
+            Figure size in inches      
+            
+        dpi: int, 600        
+            Resolution of the image
             
         barwidth: float, Default 0.05
             The bar width
@@ -1030,12 +1039,12 @@ def PlotHVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidt
     ax.spines['bottom'].set_visible(True)
 
     fig.tight_layout()
-    fig.savefig(fileName, dpi=600)
+    fig.savefig(fileName, dpi=dpi)
     plt.close(fig)
     
     return None
 
-def PlotNVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4)):
+def PlotNVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4), dpi=600):
 
     """Bar-plot style natural visibility graph with different link colors for different perspectives
     
@@ -1057,7 +1066,10 @@ def PlotNVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidt
         
         figsize: tuple of int, Default (8,4)        
             Figure size in inches
-            
+                    
+        dpi: int, 600        
+            Resolution of the image
+
         barwidth: float, Default 0.05
             The bar width
 
@@ -1099,7 +1111,7 @@ def PlotNVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidt
     ax.spines['bottom'].set_visible(True)
 
     fig.tight_layout()
-    fig.savefig(fileName, dpi=600)
+    fig.savefig(fileName, dpi=dpi)
     plt.close(fig)
 
     return None

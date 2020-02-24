@@ -20,7 +20,6 @@ visualizations and computational tools for graph analyses.
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3519891.svg
    :target: https://doi.org/10.5281/zenodo.3519891
 
-
 .. toctree::
    :numbered: 1
    :maxdepth: 4

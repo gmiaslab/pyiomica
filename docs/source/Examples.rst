@@ -172,17 +172,69 @@ Normal (left) and Horizontal (right) bar-style visibility graph:
    .. stuff
    
    
-   
-   
-   
-
+    
+  
 Visibility Graph Community Detection
 ------------------------------------
 
 .. literalinclude:: ../examples/examplesVisibilityGraphCommunityDetection.py
 
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/Time_series_graph.png
+    :title: Time series plot
+    :alt: Cannot load this photo
+    :align: left
+    :width: 300
+    :height: 300
+    :download: false
+    :group: groupLineCommVG
 
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/Natural_Visibility_Graph.png
+    :title: Natural visibility graph
+    :alt: Cannot load this photo
+    :align: right
+    :width: 300
+    :height: 300
+    :download: false
+    :group: groupLineCommVG
 
+.. container:: clearfix
+
+   .. stuff
+
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/Reflected_perspective_Natural_Visibility_Graph.png
+    :title: Reflected perspective visibility graph
+    :alt: Cannot load this photo
+    :align: left
+    :width: 300
+    :height: 300
+    :download: false
+    :group: groupLineCommVG
+
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/Dual_perspective_Natural_Visibility_Graph.png
+    :title: Dual perspective visibility graph
+    :alt: Cannot load this photo
+    :align: right
+    :width: 300
+    :height: 300
+    :download: false
+    :group: groupLineCommVG
+
+.. container:: clearfix
+
+   .. stuff
+
+.. thumbnail:: https://raw.githubusercontent.com/gmiaslab/pyiomica/master/docs/examples/normal_Communities_of_Visibility_Graph.png
+    :title: Detected communities
+    :alt: Cannot load this photo
+    :align: center
+    :width: 300
+    :height: 300
+    :download: false
+    :group: groupLineCommVG
+
+.. container:: clearfix
+
+   .. stuff
 
 Extended DataFrame
 ------------------
