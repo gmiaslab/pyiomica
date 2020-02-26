@@ -367,7 +367,7 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
 
     return fileName
 
-def getCommunitiesOfTimeSeries(data, times, numberOfSplits=1, method='WDPVG'):
+def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, method='WDPVG', direction=None):
 
     '''Get communities of time series
 
@@ -378,7 +378,7 @@ def getCommunitiesOfTimeSeries(data, times, numberOfSplits=1, method='WDPVG'):
         times: 1d numpy.array
             Times corresponding to data points
 
-        numberOfSplits: int, Default 1
+        minNumberOfCommunities: int, Default 2
             Number of communities to find depends on the number of splits.
             This parameter is ignored in methods that automatically
             estimate optimal number of communities.
@@ -390,6 +390,14 @@ def getCommunitiesOfTimeSeries(data, times, numberOfSplits=1, method='WDPVG'):
                 'betweenness_centrality': reflected graph node betweenness centrality based approach
 
                 'WDPVG': weighted dual perspective visibility graph method
+    
+        direction:str, default None
+            The direction that nodes aggregate to communities:
+                None: no specific direction, e.g. both sides.
+        
+                'left': nodes can only aggregate to the left side hubs, e.g. early hubs
+        
+                'right': nodes can only aggregate to the right side hubs, e.g. later hubs
 
     Returns:
         (list, graph)
@@ -411,7 +419,7 @@ def getCommunitiesOfTimeSeries(data, times, numberOfSplits=1, method='WDPVG'):
             return graph_nx, node_to_remove
 
         list_of_nodes = []
-        for i in range(numberOfSplits):
+        for i in range(minNumberOfCommunities-1):
             graph_nx_inv, node = find_and_remove_node(graph_nx_inv)
             list_of_nodes.append(node)
         
@@ -428,15 +436,15 @@ def getCommunitiesOfTimeSeries(data, times, numberOfSplits=1, method='WDPVG'):
         graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
         generator_of_communities = nx.algorithms.community.centrality.girvan_newman(graph_nx)
 
-        for i in range(numberOfSplits):
+        for i in range(minNumberOfCommunities-1):
             communities_for_level = next(generator_of_communities)
         
         communities = list(sorted(c) for c in communities_for_level)
 
     elif method=='WDPVG':
 
-        graph_nx = visibilityGraphCommunityDetection.createVisibilityGraph(data, times, "dual_natural", weight='distance', withsign=True)[0]
-        communities = visibilityGraphCommunityDetection.communityDetectByPathLength(graph_nx, direction=None, cutoff='auto')
+        graph_nx = visibilityGraphCommunityDetection.createVisibilityGraph(data, times, "dual_natural", weight='distance')[0]
+        communities = visibilityGraphCommunityDetection.communityDetectByPathLength(graph_nx, direction=direction, cutoff='auto')
 
     else:
 
