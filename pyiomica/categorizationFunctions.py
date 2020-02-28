@@ -206,7 +206,9 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
                 
     return None
 
-def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, exportClusteringObjects=False, writeClusteringObjectToBinaries=True, autocorrelationBased=True):
+def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf5fileName=None, 
+                                    exportClusteringObjects=False, writeClusteringObjectToBinaries=True, autocorrelationBased=True,
+                                    method='weighted', metric='correlation', significance='Elbow'):
 
     """Visualize time series classification.
     
@@ -232,6 +234,15 @@ def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf
         autocorrelationBased: boolean, Default True
             Whether to label to print on the plots
 
+        method: str, Default 'weighted'
+            Linkage calculation method
+
+        metric: str, Default 'correlation'
+            Distance measure
+
+        significance: str, Default 'Elbow'
+            Method for determining optimal number of groups and subgroups
+
     Returns:
         None
 
@@ -246,8 +257,8 @@ def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf
 
     def internal(className):
         print('\n\n%s of Time Series:'%(className)) 
-        df_data_selected = dataStorage.read(saveDir + dataName + '_selectedTimeSeries%s_%s'%(info,className), hdf5fileName=hdf5fileName)
-        df_classifier_selected = dataStorage.read(saveDir + dataName + '_selected%s_%s'%(info,className), hdf5fileName=hdf5fileName)
+        df_data_selected = dataStorage.read(saveDir + dataName + '_selectedTimeSeries%s_%s'%(info, className), hdf5fileName=hdf5fileName)
+        df_classifier_selected = dataStorage.read(saveDir + dataName + '_selected%s_%s'%(info, className), hdf5fileName=hdf5fileName)
 
         if (df_data_selected is None) or (df_classifier_selected is None):
 
@@ -257,7 +268,7 @@ def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf
             return 
 
         print('Creating clustering object.')
-        clusteringObject = clusteringFunctions.makeClusteringObject(df_data_selected, df_classifier_selected, significance='Elbow') #Silhouette
+        clusteringObject = clusteringFunctions.makeClusteringObject(df_data_selected, df_classifier_selected, method=method, metric=metric, significance=significance)
 
         if clusteringObject is None:
             print('Error creating clustering object')

@@ -567,7 +567,7 @@ class DataFrame(pd.DataFrame):
                 Processed data
 
         Usage:
-            df_data = compareTwoTimeSeries(df_dataH2, df_dataH1, function=np.subtract, compareAllLevelsInIndex=False, mergeFunction=np.median)
+            df_data = df_dataH2.compareTwoTimeSeries(df_dataH1, function=np.subtract, compareAllLevelsInIndex=False, mergeFunction=np.median)
         """
 
         if self.index.names!=df.index.names:

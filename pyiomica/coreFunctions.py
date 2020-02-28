@@ -315,7 +315,11 @@ def getSpikes(inputData, func, cutoffs):
         ipos = np.where(counts_non_missing==i)[0]
         if len(data[ipos])>0:
             points = func(data[ipos], axis=1)
-            spikesIndex.extend(ipos[np.where((points>cutoffs[i][0]) | (points<cutoffs[i][1]))[0]])
+
+            if i in cutoffs.keys():
+                spikesIndex.extend(ipos[np.where((points>cutoffs[i][0]) | (points<cutoffs[i][1]))[0]])
+            else:
+                print('Cuttoff for %s non-missing points is missing'%(i))
 
     return sorted(spikesIndex)
 

@@ -367,7 +367,7 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
 
     return fileName
 
-def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, method='WDPVG', direction=None):
+def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, method='WDPVG', direction='left'):
 
     '''Get communities of time series
 

@@ -338,7 +338,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
     if len(data.shape)>1:
         data = extendedDataFrame.DataFrame(data=data).imputeMissingWithMedian().apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
     if communities is None:
-        communities, graph_nx = clusteringFunctions.getCommunitiesOfTimeSeries(data, times, numberOfCommunities, horizontal=horizontal)
+        communities, graph_nx = clusteringFunctions.getCommunitiesOfTimeSeries(data, times)
     else:
         communities, graph_nx = communities
 
