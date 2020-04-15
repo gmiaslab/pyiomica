@@ -1,3 +1,9 @@
+- 1.2.1
+
+   * Added Reactome pathway overrepresentation analysis functions. 
+   * Added Reactome analysis report export function. 
+   * Added examples of Reactome analysis. 
+   
 - 1.2.0
 
    * Added new visibility graph based community detection functions. 

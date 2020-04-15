@@ -1,7 +1,7 @@
 '''This module contains global constants used in PyIOmica.
 Some of the modules, classes and functions are imported in this module.'''
 
-
+import io
 import os
 import types
 import appdirs

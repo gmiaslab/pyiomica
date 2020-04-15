@@ -4,6 +4,7 @@
 import pymysql
 import datetime
 import urllib.request
+import requests
 
 from .globalVariables import *
 
@@ -569,15 +570,20 @@ def GOAnalysis(data, GetGeneDictionaryOptions={}, AugmentDictionary=True, InputI
     #Get the right GO terms for the BackgroundSet requested and correct Species
     Assignment = GOAnalysisAssigner(BackgroundSet=BackgroundSet, Species=Species , LengthFilter=OntologyLengthFilter) if GOAnalysisAssignerOptions=={} else GOAnalysisAssigner(**GOAnalysisAssignerOptions)
     
+    listToggle = False
+
+    #If the input is simply a list
+    if type(data) is list:
+        data = {'dummy': data}
+        listToggle = True
+
     #The data may be a subgroup from a clustering object, i.e. a pd.DataFrame
     if type(data) is pd.DataFrame:
         id = list(data.index.get_level_values('id'))
         source = list(data.index.get_level_values('source'))
         data = [[id[i], source[i]] for i in range(len(data))]
-
-    #If the input is simply a list
-    listToggle = True if type(data) is list else False
-    data = {'dummy': data} if listToggle else data
+        data = {'dummy': data}
+        listToggle = True
 
     returning = {}
 
@@ -1064,15 +1070,20 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
 
         return
 
+    listToggle = False
+
+    #If the input is simply a list
+    if type(data) is list:
+        data = {'dummy': data}
+        listToggle = True
+
     #The data may be a subgroup from a clustering object, i.e. a pd.DataFrame
     if type(data) is pd.DataFrame:
         id = list(data.index.get_level_values('id'))
         source = list(data.index.get_level_values('source'))
         data = [[id[i], source[i]] for i in range(len(data))]
-
-    #If the input is simply a list
-    listToggle = True if type(data) is list else False
-    data = {'dummy': data} if listToggle else data
+        data = {'dummy': data}
+        listToggle = True
 
     returning = {}
 
@@ -1381,3 +1392,209 @@ def BenjaminiHochbergFDR(pValues, SignificanceLevel=0.05):
                     "q-Value Cutoff": cutoffqValue}
 
     return returning
+
+def ReactomeAnalysis(data, 
+                     uploadURL = 'https://reactome.org/AnalysisService/identifiers/projection',
+                     preDownloadURL = 'https://reactome.org/AnalysisService/download/',
+                     postDownloadURL = '/pathways/TOTAL/result.csv',
+                     headersPOST = {'accept': 'application/json', 'content-type': 'text/plain'},
+                     headersGET =  {'accept': 'text/plain'},
+                     URLparameters = (('interactors', 'false'), ('pageSize', '20'), ('page', '1'), ('sortBy', 'ENTITIES_PVALUE'), ('order', 'ASC'), ('resource', 'TOTAL'))):
+
+    """Reactome POST-GET-style analysis.
+    
+    Parameters: 
+        data: pd.DataFrame or list
+            Data to analyze
+
+        uploadURL: str, Default 'https://reactome.org/AnalysisService/identifiers/projection'
+            URL for POST request
+
+        preDownloadURL: str, Default 'https://reactome.org/AnalysisService/download/'
+            Part 1 of URL for GET request
+
+        postDownloadURL: str, Default '/pathways/TOTAL/result.csv'
+            Part 2 of URL for GET request
+
+        headersPOST: dict, Default {'accept': 'application/json', 'content-type': 'text/plain'}
+            URL headers for POST request
+
+        headersGET: dict, Default {'accept': 'text/plain'}
+            URL headers for GET request
+
+        URLparameters: tuple, Default (('interactors', 'false'), ('pageSize', '20'), ('page', '1'), ('sortBy', 'ENTITIES_PVALUE'), ('order', 'ASC'), ('resource', 'TOTAL'))
+            Parameters for POST request
+
+    Returns:
+        returning
+            Enrichment object
+
+    Usage:
+        goExample1 = ReactomeAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", 
+                                "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", 
+                                "LYN", "MYD88", "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", 
+                                "IRAK4", "PIAS4", "PLAU"])
+    """
+    
+    def internalQueryReactome(data):
+
+        '''Function used internally
+
+        Parameters:
+            data: str, list or list-like
+                Input identifiers in a form of one string, list or a list-like object
+
+        Returns:
+            pandas.DataFrame
+                Reactome enrichemnt result
+
+        Usage:
+            internalQueryReactome('P01023, Q99758, O15439, O43184')
+        '''
+
+        # Check or convert data into a string of delimeter-separated values
+        if type(data) is str:
+            dataString = data.replace("'", "").replace("\"", "")
+        else:
+            if type(data) is list:
+                dataString = str(data).replace("'", "").replace("\"", "").strip(']').strip('[')
+            else:
+                dataString = str(list(data)).replace("'", "").strip(']').strip('[')
+
+        # POST request to uploadURL with specific 'data'
+        response = requests.post(uploadURL, headers=headersPOST, params=URLparameters, data=dataString)
+
+        # Read identifier of the POST request, to use it with GET request
+        responseToken = response.json()['summary']['token']
+
+        # GET the csv result from downloadURL using identifier from POST request
+        response = requests.get(preDownloadURL + responseToken + postDownloadURL, headers=headersGET)
+
+        # Set up a stream from GET response
+        stream = io.StringIO(response.content.decode('utf-8'))
+        
+        # Read GET response stream into pandas DataFrame
+        enrichmentDataFrame = pd.read_csv(stream, index_col=0)
+
+        return enrichmentDataFrame
+
+    listToggle = False
+
+    #If the input is simply a list
+    if type(data) is list:
+        data = {'dummy': data}
+        listToggle = True
+
+    #The data may be a subgroup from a clustering object, i.e. a pd.DataFrame
+    if type(data) is pd.DataFrame:
+        id = list(data.index.get_level_values('id'))
+        data = {'dummy': np.unique(id)}
+        listToggle = True
+    
+    returning = {}
+
+    #Check if a clustering object
+    if "linkage" in data.keys():
+        #Loop through the clustering object, calculate GO for each SubGroup
+        for keyGroup in sorted([item for item in list(data.keys()) if not item=='linkage']):
+            returning[keyGroup] = {}
+            for keySubGroup in sorted([item for item in list(data[keyGroup].keys()) if not item=='linkage']):
+                SubGroupMultiIndex = data[keyGroup][keySubGroup]['data'].index
+                SubGroupGenes = list(SubGroupMultiIndex.get_level_values('id'))
+                SubGroupList = np.unique(SubGroupGenes)
+
+                returning[keyGroup][keySubGroup] = internalQueryReactome(SubGroupList)
+                
+    #The data is a dictionary of type {'Name1': [data1], 'Name2': [data2], ...}
+    else:
+        for key in list(data.keys()):
+            returning.update({key: internalQueryReactome(data[key])})
+
+        #If a single list was provided, return the association for Gene Ontologies
+        returning = returning['dummy'] if listToggle else returning
+
+    return returning
+
+def ExportReactomeEnrichmentReport(data, AppendString="", OutputDirectory=None):
+
+    """Export results from enrichment analysis to Excel spreadsheets.
+    
+    Parameters:
+        data: dictionary or pandas.DataFrame
+            Reactome pathway enrichment results
+
+        AppendString: str, Default ""
+            Custom report name, if empty then time stamp will be used
+
+        OutputDirectory: boolean, Default None
+            Path of directories where the report will be saved
+
+    Returns:
+        None
+
+    Usage:
+        ExportReactomeEnrichmentReport(example1, AppendString='example1', OutputDirectory=None)
+    """
+
+    def FlattenDataForExport(data):
+
+        returning = {}
+
+        if (type(data) is pd.DataFrame):
+            returning['List'] = data
+        elif (type(data) is dict):
+            idata = data[list(data.keys())[0]]
+            if type(idata) is pd.DataFrame:
+                returning = data
+            elif type(idata) is dict:
+                idata = idata[list(idata.keys())[0]]
+                if type(idata) is pd.DataFrame:
+                    for keyClass in list(data.keys()):
+                        for keySubClass in list(data[keyClass].keys()):
+                            returning[str(keyClass)+' '+str(keySubClass)] = data[keyClass][keySubClass]
+        else:
+            print('Results type is not supported...')
+
+        return returning
+
+    def ExportToFile(fileName, data):
+
+        writer = pd.ExcelWriter(fileName)
+
+        for key in list(data.keys()):
+
+            df = data[key]
+
+            df.to_excel(writer, str(key))
+
+            writer.sheets[str(key)].set_column('A:A', df.index.astype(str).map(len).max()+2)
+             
+            format = writer.book.add_format({'text_wrap': True,
+                                             'valign': 'top'})
+
+            for idx, column in enumerate(df.columns):
+                max_len = max((df[column].astype(str).map(len).max(),  # len of largest item
+                            len(str(df[column].name)))) + 1            # len of column name/header adding a little extra space
+
+                width = 50 if ((column=='Pathway name') or (column=='Found reaction identifiers')) else min(180, max_len)
+
+                writer.sheets[str(key)].set_column(idx+1, idx+1, width, format)  # set column width
+
+        writer.save()
+
+        print('Saved:', fileName)
+
+        return None
+    
+    saveDir = os.path.join(os.getcwd(), "Enrichment reports") if OutputDirectory==None else OutputDirectory
+
+    utilityFunctions.createDirectories(saveDir)
+
+    if AppendString=="":
+        AppendString=(datetime.datetime.now().isoformat().replace(' ', '_').replace(':', '_').split('.')[0])
+
+    ExportToFile(os.path.join(saveDir, AppendString + '.xlsx'), FlattenDataForExport(data))
+
+    return None
+
+

@@ -79,6 +79,16 @@ KEGG Analysis examples
 
 
 
+Reactome Analysis examples
+--------------------------
+
+.. literalinclude:: ../examples/examplesReactomeAnalysis.py
+
+
+
+
+
+
 Visibility Graph examples
 -------------------------
 
