@@ -271,7 +271,8 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
             #Fetch all the rows in a list of lists.
             termTable = ucscDatabaseCursor.fetchall()
 
-        except:
+        except Exception as exception:
+            print(exception)
             print ("Error: unable to fetch data")
 
         termTable = np.array(termTable).T

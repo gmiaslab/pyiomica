@@ -289,7 +289,8 @@ def makeClusteringObject(df_data, df_data_autocorr, method='weighted', metric='c
 
     try:
         grouping = getGroupingIndex(df_data_autocorr.values, method=method, metric=metric, significance=significance)
-    except:
+    except Exception as exception:
+        print(exception)
         print('Returning None')
         return None
         

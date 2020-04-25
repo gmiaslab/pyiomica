@@ -36,7 +36,8 @@ def readMathIOmicaData(fileName):
 
     try:
         returning = eval(data)
-    except:
+    except Exception as exception:
+        print(exception)
         print('Error occured while converting data (%s)'%(fileName))
 
     return returning

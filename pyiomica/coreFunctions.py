@@ -67,7 +67,8 @@ def modifiedZScore(subset, printValues=False):
 
                         return np.median((np.abs(data.transpose() - np.median(data,axis)).transpose()),axis)
 
-        except :
+        except Exception as exception:
+            print(exception)
 
             print('Unsupported data type: ', type(expr))
         

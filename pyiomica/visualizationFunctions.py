@@ -49,7 +49,8 @@ def saveFigure(fig, saveDir, label, extension, dpi, close=True):
     try:
         if not extension[0]=='.':
             extension = ''.join(['.', extension])
-    except:
+    except Exception as exception:
+        print(exception)
         print('Chack figure extension/format')
 
     if extension in ['.png', '.jpeg', '.tiff']:
@@ -868,7 +869,8 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
             if len(data_loc[clusters == i + 1]) >= 5.:
                 try:
                     add_label((cluster_line_positions[np.where(order == i)[0][0]] + cluster_line_positions[np.where(order == i)[0][0] + 1]) * 0.5, 'G%sS%s:%s' % (group,i + 1,len(data_loc[clusters == i + 1])))
-                except:
+                except Exception as exception:
+                    print(exception)
                     print('Label printing error!')
         if len(data_loc[clusters == n_clusters]) >= 5.:
             posC = axisMatrix.get_ylim()[0] if n_clusters == 1 else cluster_line_positions[n_clusters - 1]

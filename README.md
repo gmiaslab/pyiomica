@@ -24,6 +24,14 @@ Alternatively, you can install directly from github using:
 pip install git+https://github.com/gmiaslab/pyiomica/
 ```
 
+or
+
+```bash
+git clone https://github.com/gmiaslab/pyiomica/
+python setup.py install
+```
+
+
 ## B. RUNNING PyIOmica
 
 After installation you can run:
