@@ -7,7 +7,7 @@ from pyiomica import dataStorage as ds
 
 EnrichmentOutputDirectory = pio.os.path.join('results', 'EnrichmentOutputDirectory', '')
 
-#Let's do a GO analysis for a group of genes, annotated with their "Gene Symbol":
+#Let's do a Reactome analysis for a group of genes, annotated with their "Gene Symbol":
 ReactomeExample1 = ReactomeAnalysis(["TAB1", "TNFSF13B", "MALT1", "TIRAP", "CHUK", 
                         "TNFRSF13C", "PARP1", "CSNK2A1", "CSNK2A2", "CSNK2B", "LTBR", 
                         "LYN", "MYD88", "GADD45B", "ATM", "NFKB1", "NFKB2", "NFKBIA", 
@@ -25,7 +25,7 @@ ExportReactomeEnrichmentReport(analysisReactomeAssociation,
                                AppendString='analysisReactomeAssociation', 
                                OutputDirectory=EnrichmentOutputDirectory + 'ReactomeAnalysis/')
 
-#Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
+#Let's consider an example from real experimental protein data. We will use already clustered data, from the examples. Let's import the data:
 #ExampleClusteringObject = ds.read(pio.os.path.join(pio.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
 ExampleClusteringObject = ds.read('dev\\results\\SLV_Hourly1TimeSeries\\consolidatedGroupsSubgroups\\SLV_Hourly1TimeSeries_LAG3_Autocorrelations_GroupsSubgroups')
 
