@@ -1,3 +1,8 @@
+- 1.2.2
+
+   * Applied minor fixes related to numpy upgrade.
+   * Fixed typo in name of function extendedDataFrame.getLombScarglePeriodogramOfDataframe 
+
 - 1.2.1
 
    * Added Reactome pathway overrepresentation analysis functions. 

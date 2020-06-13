@@ -127,7 +127,7 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
         df_data = df_data.normalizeSignalsToUnity(referencePoint=referencePoint)
 
         print('Calculating each Time Series Periodogram...')
-        df_dataPeriodograms = extendedDataFrame.getLobmScarglePeriodogramOfDataframe(df_data)
+        df_dataPeriodograms = extendedDataFrame.getLombScarglePeriodogramOfDataframe(df_data)
 
         dataStorage.write(df_dataPeriodograms, saveDir + dataName + '_dataPeriodograms', hdf5fileName=hdf5fileName)
 

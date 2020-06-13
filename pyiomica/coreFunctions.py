@@ -231,7 +231,7 @@ def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1
         freqStep = 0.5 * f0
 
         #get the list of frequencies
-        freq = np.linspace(0.5 * f0, n * UpperFrequencyFactor * 0.5 * f0, n * UpperFrequencyFactor)
+        freq = np.linspace(0.5 * f0, n * UpperFrequencyFactor * 0.5 * f0, int(n * UpperFrequencyFactor))
 
         #calculate the inverse autocorrelation
         inverseAuto = 1.0 / (2.0 * varianceInputPoints) * np.array(tuple(map(lambda f: ampSquaredNormed(np.cos, f, inputTimesNormed, inputDataCentered) + ampSquaredNormed(np.sin, f, inputTimesNormed, inputDataCentered), list(freq))))
@@ -383,7 +383,7 @@ def LombScargle(inputTimes, inputData, inputSetTimes, FrequenciesOnly=False,Norm
 
     #get the list of frequencies, adjusting both the lower frequency (to equal
     #f0 0-effectively a lowpass filter) and the upper cutoff Nyquist by the upper factor specified
-    freq = np.linspace(f0, n / 2 * UpperFrequencyFactor * f0, f0 * (n / 2 * UpperFrequencyFactor) / freqStep)
+    freq = np.linspace(f0, n / 2 * UpperFrequencyFactor * f0, int(f0 * (n / 2 * UpperFrequencyFactor) / freqStep))
 
     if FrequenciesOnly:
         return freq

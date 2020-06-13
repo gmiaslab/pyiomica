@@ -654,9 +654,9 @@ def mergeDataframes(listOfDataframes, axis=0):
 
     return DataFrame(df)
 
-def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True):
+def getLombScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True):
 
-    """Calculate Lobm-Scargle periodogram of DataFrame.
+    """Calculate Lomb-Scargle periodogram of DataFrame.
     
     Parameters:
         df: pandas.DataFrame
@@ -673,7 +673,7 @@ def getLobmScarglePeriodogramOfDataframe(df_data, NumberOfCPUs=4, parallel=True)
             Lomb-Scargle periodograms
 
     Usage:
-        df_periodograms = getLobmScarglePeriodogramOfDataframe(df_data)
+        df_periodograms = getLombScarglePeriodogramOfDataframe(df_data)
     """
 
     if parallel:
@@ -812,4 +812,4 @@ def getRandomPeriodograms(df_data, NumberOfRandomSamples=10**5, NumberOfCPUs=4, 
 
     print('\nCalculating periodograms of %s random samples (sampled with replacement)...'%(df_data_random.shape[0]))
 
-    return getLobmScarglePeriodogramOfDataframe(df_data_random, NumberOfCPUs=NumberOfCPUs)
+    return getLombScarglePeriodogramOfDataframe(df_data_random, NumberOfCPUs=NumberOfCPUs)
