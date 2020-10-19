@@ -102,7 +102,7 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
     #Combined filter
     whatIsFiltered = whatIsFilteredLength * whatIsFilteredSignif
 
-    returning = dict(zip(list(np.array(list(ResultsHCct.keys()))[whatIsFiltered]),list(np.array(list(ResultsHCct.values()))[whatIsFiltered])))
+    returning = dict(zip(list(np.array(list(ResultsHCct.keys()), dtype=object)[whatIsFiltered]),list(np.array(list(ResultsHCct.values()), dtype=object)[whatIsFiltered])))
 
     return {list(data.keys())[0]: returning}
 
@@ -421,7 +421,7 @@ def GOAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, Bac
         geneOntAssoc = utilityFunctions.createReverseDictionary(identifierAssoc)
 
     if LengthFilter!=None:
-        keys, values = np.array(list(geneOntAssoc.keys())), np.array(list(geneOntAssoc.values()))
+        keys, values = np.array(list(geneOntAssoc.keys()), dtype=object), np.array(list(geneOntAssoc.values()), dtype=object)
         index = np.where(LengthFilterFunction(np.array([len(value) for value in values]), LengthFilter))[0]
         geneOntAssoc = dict(zip(keys[index],values[index]))
 
@@ -1304,7 +1304,7 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
             writer.sheets[str(key)].set_column('A:A', df.index.astype(str).map(len).max()+2)
              
-            format = writer.book.add_format({'text_wrap': True,
+            format = writer.book.add_format({'text_wrap': False,
                                              'valign': 'top'})
 
             for idx, column in enumerate(df.columns):
@@ -1570,7 +1570,7 @@ def ExportReactomeEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
             writer.sheets[str(key)].set_column('A:A', df.index.astype(str).map(len).max()+2)
              
-            format = writer.book.add_format({'text_wrap': True,
+            format = writer.book.add_format({'text_wrap': False,
                                              'valign': 'top'})
 
             for idx, column in enumerate(df.columns):

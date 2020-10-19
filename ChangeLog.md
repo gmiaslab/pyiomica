@@ -1,3 +1,10 @@
+- 1.2.3
+
+   * Applied minor fixes of numpy deprecation warnings.
+   * Updated examples Jupyter notebook.
+   * Updated enrichment report export function.
+   * Updated PyIOmica dependency graph.
+
 - 1.2.2
 
    * Applied minor fixes related to numpy upgrade.

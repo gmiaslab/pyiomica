@@ -86,12 +86,7 @@ multiOmicsDataKEGG = KEGGAnalysis(multiOmicsData, AnalysisType='All', MultipleLi
 
 ExportEnrichmentReport(multiOmicsDataKEGG, AppendString='multiOmicsDataKEGG', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
 
-#Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
-ExampleClusteringObject = ds.read(pio.os.path.join(pio.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
-
-if not ExampleClusteringObject is None:
-    #We calculate the KEGGAnalysis for each group in each class:
-    ExampleClusteringObject = KEGGAnalysis(ExampleClusteringObject)
-
-    ExportEnrichmentReport(ExampleClusteringObject, AppendString='ExampleClusteringObject', OutputDirectory=EnrichmentOutputDirectory + 'KEGGAnalysis/')
-
+#Enrichment analysis function KEGGAnalysis can be used with a clustering object.
+#First run examples of use of categorization functions to generate clustering objects.
+#Then run "results = KEGGAnalysis(ds.read(pathToClusteringObjectOfInterest))",
+#to calculate enrichment for each group in each class, and then export enrichment results to a file if necesary.

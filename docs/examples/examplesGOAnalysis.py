@@ -42,11 +42,7 @@ analysisGOMixedMulti = GOAnalysis([["C6orf57", "Protein"], ["CD46", "Protein"], 
 
 ExportEnrichmentReport(analysisGOMixedMulti, AppendString='analysisGOMixedMulti', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
 
-#Let's consider an example from real protein data. We will use already clustered data, from the examples. Let's import the data:
-ExampleClusteringObject = ds.read(pio.os.path.join(pio.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
-
-if not ExampleClusteringObject is None:
-    #We calculate the GOAnalysis for each group in each class:
-    ExampleClusteringObjectGO = GOAnalysis(ExampleClusteringObject, MultipleListCorrection='Automatic')
-
-    ExportEnrichmentReport(ExampleClusteringObjectGO, AppendString='ExampleClusteringObjectGO', OutputDirectory=EnrichmentOutputDirectory + 'GOAnalysis/')
+#Enrichment analysis function GOAnalysis can be used with a clustering object.
+#First run examples of use of categorization functions to generate clustering objects.
+#Then run "results = GOAnalysis(ds.read(pathToClusteringObjectOfInterest))",
+#to calculate enrichment for each group in each class, and then export enrichment results to a file if necesary.

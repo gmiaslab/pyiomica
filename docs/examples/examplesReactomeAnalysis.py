@@ -25,20 +25,7 @@ ExportReactomeEnrichmentReport(analysisReactomeAssociation,
                                AppendString='analysisReactomeAssociation', 
                                OutputDirectory=EnrichmentOutputDirectory + 'ReactomeAnalysis/')
 
-#Let's consider an example from real experimental protein data. We will use already clustered data, from the examples. Let's import the data:
-#ExampleClusteringObject = ds.read(pio.os.path.join(pio.ConstantPyIOmicaExamplesDirectory, 'exampleClusteringObject_SLV_Delta_LAG1_Autocorr'))
-ExampleClusteringObject = ds.read('dev\\results\\SLV_Hourly1TimeSeries\\consolidatedGroupsSubgroups\\SLV_Hourly1TimeSeries_LAG3_Autocorrelations_GroupsSubgroups')
-
-if not ExampleClusteringObject is None:
-    # Input data is a clustering object
-    ReactomeExampleClusteringObject = ReactomeAnalysis(ExampleClusteringObject)
-    ExportReactomeEnrichmentReport(ReactomeExampleClusteringObject, 
-                                   AppendString='ReactomeExampleClusteringObject', 
-                                   OutputDirectory=EnrichmentOutputDirectory + 'ReactomeAnalysis/')
-
-    # Input data is a part of a clustering object, i.e. a DataFrame
-    ReactomeDataFrameEaxample = ReactomeAnalysis(ExampleClusteringObject[1][1]['data'])
-
-    ExportReactomeEnrichmentReport(ReactomeDataFrameEaxample, 
-                                   AppendString='ReactomeDataFrameEaxample', 
-                                   OutputDirectory=EnrichmentOutputDirectory + 'ReactomeAnalysis/')
+#Enrichment analysis function ReactomeAnalysis can be used with a clustering object.
+#First run examples of use of categorization functions to generate clustering objects.
+#Then run "results = ReactomeAnalysis(ds.read(pathToClusteringObjectOfInterest))",
+#to calculate enrichment for each group in each class, and then export enrichment results to a file if necesary using ExportReactomeEnrichmentReport function.
