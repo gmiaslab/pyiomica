@@ -291,7 +291,7 @@ def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf
 
     return None
 
-def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, autocorrelationBased=True):
+def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, autocorrelationBased=True,xLabel='Time', plotLabel='Transformed Expression'):
 
     """Visualize time series classification.
     
@@ -307,6 +307,12 @@ def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, a
 
         autocorrelationBased: boolean, Default True
             Whether autocorrelation or frequency based
+
+        xLabel: str, Default 'Time'
+            X-axis label
+
+        plotLabel: str, Default 'Transformed Expression'
+            Label for the heatmap plot
 
     Returns:
         None
@@ -324,10 +330,13 @@ def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, a
 
         if clusteringObject is None:
             print('Clustering object not found')
+            return
+        if len(clusteringObject['linkage']) < 2:
+            print('Clustering linkage array has only 1 row')
             return 
         
         print('Plotting Dendrogram with Heatmaps.')
-        visualizationFunctions.makeDendrogramHeatmapOfClusteringObject(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=autocorrelationBased)
+        visualizationFunctions.makeDendrogramHeatmapOfClusteringObject(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=autocorrelationBased,xLabel=xLabel, plotLabel=plotLabel)
 
         return
 

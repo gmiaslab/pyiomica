@@ -1,3 +1,9 @@
+- 1.2.4
+
+   * Updated plotting heatmap functions (categorizationFunctions.visualizeTimeSeriesCategorization and visualizationFunctions.makeDendrogramHeatmapOfClusteringObject) to utilize optional custom strings for x-axis and plot labels.
+   * Updated categorizationFunctions.visualizeTimeSeriesCategorization to avoid error for cases where the linkage array has only 1 row.
+
+
 - 1.2.3
 
    * Applied minor fixes of numpy deprecation warnings.

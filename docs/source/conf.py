@@ -42,13 +42,13 @@ def setup(app):
 # -- Project information -----------------------------------------------------
 
 project = 'pyiomica'
-copyright = '2019, S. Domanskyi, C. Piermarocchi, G. Mias'
+copyright = '2020, S. Domanskyi, C. Piermarocchi, G. Mias'
 author = 'S. Domanskyi, C. Piermarocchi, G. Mias'
 
 # The short X.Y version
-version = '1.2.3'
+version = '1.2.4'
 # The full version, including alpha/beta/rc tags
-release = '1.2.3'
+release = '1.2.4'
 
 
 # -- General configuration ---------------------------------------------------

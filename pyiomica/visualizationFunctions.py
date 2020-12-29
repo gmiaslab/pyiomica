@@ -712,9 +712,9 @@ def addColorbarToFigure(fig, data, axisCoordinates=[0.90,0.7,0.02,0.2], cmap=Non
     
     return
 
-def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0, figsize=(12,8), extension='.png', dpi=300):
+def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0, figsize=(12,8), extension='.png', dpi=300, xLabel='Time', plotLabel='Transformed Expression'):
 
-    """Make Dendrogram-Heatmap plot along with VIsibility graphs.
+    """Make Dendrogram-Heatmap plot along with Visibility graphs.
 
     Parameters:
         ClusteringObject: 
@@ -740,6 +740,12 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
             
         dpi: int, Default 300
             Figure resolution 
+        
+        xLabel: str, Default 'Time'
+            Label for the x axis in the heatmap
+
+        plotLabel: str, Default 'Transformed Expression'
+            Label for the heatmap plot
 
     Returns:
         None
@@ -844,7 +850,7 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
 
         return n_clusters, clusters, cluster_line_positions
 
-    def addGroupHeatmapAndColorbar(data_loc, n_clusters, clusters, cluster_line_positions, bottom, top, group, groupColors, fig):
+    def addGroupHeatmapAndColorbar(data_loc, n_clusters, clusters, cluster_line_positions, bottom, top, group, groupColors, fig,xLabel = 'Time',plotLabel = 'Transformed Expression'):
 
         axisMatrix = fig.add_axes([left + 0.205, bottom, dx + 0.025 + 0.075, top - bottom])
 
@@ -884,10 +890,10 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
         if group == 1:
             axisMatrix.set_xticks(range(data_loc.shape[1]))
             axisMatrix.set_xticklabels([('' if (i%2==1 and textScale>1.3) else np.int(time)) for i, time in enumerate(np.round(times,1))], rotation=0, fontsize=6*textScale)
-            axisMatrix.set_xlabel('Time (hours)', fontsize=axisMatrix.xaxis.label._fontproperties._size*textScale)
+            axisMatrix.set_xlabel(xLabel, fontsize=axisMatrix.xaxis.label._fontproperties._size*textScale)
 
         if group == sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage'])[-1]:
-            axisMatrix.set_title('Transformed gene expression', fontsize=axisMatrix.title._fontproperties._size*textScale)
+            axisMatrix.set_title(plotLabel, fontsize=axisMatrix.title._fontproperties._size*textScale)
 
         axisColor = fig.add_axes([0.635 - 0.075 - 0.1 + 0.075,current_bottom + 0.01,0.01, max(0.01,(current_top - current_bottom) - 0.02)])
         plt.colorbar(im, cax=axisColor, ticks=[np.max(im._A),np.min(im._A)])
@@ -929,7 +935,7 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
         else:
             n_clusters, clusters, cluster_line_positions = addGroupDendrogramAndShowSubgroups(ClusteringObject, len(tempData), current_bottom, current_top, group, groupColors, fig)
 
-        addGroupHeatmapAndColorbar(tempData, n_clusters, clusters, cluster_line_positions, current_bottom, current_top, group, groupColors, fig)
+        addGroupHeatmapAndColorbar(tempData, n_clusters, clusters, cluster_line_positions, current_bottom, current_top, group, groupColors, fig,xLabel=xLabel,plotLabel=plotLabel)
 
     data_list = []
     data_names_list = []
@@ -997,7 +1003,7 @@ def PlotHVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidt
         None
 
     Usage:
-        PlotHorizontalVisibilityGraph(A, data, times, 'FIgure.png', 'Test Data')
+        PlotHorizontalVisibilityGraph(A, data, times, 'Figure.png', 'Test Data')
     """
 
     fig, ax = plt.subplots(figsize=figsize)
