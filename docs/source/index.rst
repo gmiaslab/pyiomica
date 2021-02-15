@@ -11,14 +11,16 @@ bioinformatics utilities for analyzing (dynamic) omics datasets.
 PyIOmica extends MathIOmica usage to Python and implements new
 visualizations and computational tools for graph analyses.
 
-.. image:: https://badge.fury.io/gh/gmiaslab%2Fpyiomica.svg
+.. image:: https://img.shields.io/github/v/release/gmiaslab/pyiomica?logo=github
     :target: https://github.com/gmiaslab/pyiomica
-.. image:: https://badge.fury.io/py/pyiomica.svg
+.. image:: https://img.shields.io/pypi/v/pyiomica?logo=pypi
     :target: https://pypi.org/project/pyiomica
 .. image:: https://readthedocs.org/projects/pyiomica/badge/?version=latest&style=flat
     :target: https://pyiomica.readthedocs.io
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3342612.svg
-   :target: https://doi.org/10.5281/zenodo.3342612
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4399955.svg
+    :target: https://doi.org/10.5281/zenodo.4399955
+.. image:: https://img.shields.io/pypi/l/pyiomica
+    :target: https://pypi.org/project/pyiomica
 
 .. toctree::
    :numbered: 1
