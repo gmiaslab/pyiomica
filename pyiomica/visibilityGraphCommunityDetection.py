@@ -1,6 +1,6 @@
 """Visibility Graph Community detection functions.
 """
-
+from .globalVariables import *
 import numpy as np
 import networkx as nx
 
@@ -192,7 +192,7 @@ def __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times, weight=Non
     
     return A_dual
 
-def __getAdjacencyMatrixOfVisibilityGraph(data, times,weight=None):
+def __getAdjacencyMatrixOfVisibilityGraph(data, times, weight=None):
 
     """Calculate adjacency matrix of natural visibility graph.
 
@@ -300,7 +300,7 @@ def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsig
 
     return A_dual
 
-def communityDetectByPathLength(G, direction = None, cutoff = None):
+def communityDetectByPathLength(G, setSourceTarget=None,direction=None, cutoff=None):
     
     """Calculate community structure by shortest path length algorithm.
     
@@ -342,15 +342,19 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
         
     PL_dict = dict(nx.all_pairs_dijkstra_path_length(G)) # get shortest path length
     value_PL_list = []
-
+    
+    Nodes_PL_dict = list(PL_dict.keys())
     for node1 in range(len(PL_dict)):
-        pl_node1 = PL_dict[node1]
+        pl_node1 = PL_dict[Nodes_PL_dict[node1]]
         for node2 in range((node1+1), len(PL_dict)):
-            value_PL_list.append(pl_node1[node2]) # get all path length value list
+            value_PL_list.append(pl_node1[Nodes_PL_dict[node2]]) # get all path length value list
     
     nodelist = list(G.nodes)
     nodelist.sort()
-    PL_node0_node_end = nx.dijkstra_path(G, nodelist[0], nodelist[-1]) #get path length from start to end time point
+    if setSourceTarget != None:
+        PL_node0_node_end = nx.dijkstra_path(G, setSourceTarget[0], setSourceTarget[-1])
+    else: 
+        PL_node0_node_end = nx.dijkstra_path(G, nodelist[0], nodelist[-1]) #get path length from start to end time point
     
     community = {}
 
@@ -401,7 +405,10 @@ def communityDetectByPathLength(G, direction = None, cutoff = None):
             print('Cutoff %f is out of range, adjust cutoff to None'%(cutoff))
     elif cutoff == 'auto':
         cut = __optimize_cutoff(PL_dict, value_PL_list, sort_spl)
-        percentiles = (cut - min(value_PL_list)) / (max(value_PL_list) - min(value_PL_list)) * 100
+        if max(value_PL_list) != min(value_PL_list):
+            percentiles = (cut - min(value_PL_list)) / (max(value_PL_list) - min(value_PL_list)) * 100
+        else:
+            percentiles = 0
         print('current cutoff is auto, the optimized percentiles cutoff is %f ' %(percentiles))
     elif cutoff is None:
         cut = None
