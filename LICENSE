@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2020 G. Mias Lab
+Copyright (c) 2021 G. Mias Lab
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,5 +23,5 @@ SOFTWARE.
 ***Additional Licensing Information***
 Please review the LICENSES folder distributed with the package with regards to 
 additional licensing information for accessing of web resources and content through PyIOmica. 
-These licensing information is applicable to all users of PyIOmica that
+This licensing information is applicable to all users of PyIOmica that
 access any of the associated web resources and content through PyIOmica.
