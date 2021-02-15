@@ -1,3 +1,6 @@
+- 1.2.5
+   * Updated visibilityGraphCommunityDetection functions (correction for division by zero in community calculations)
+
 - 1.2.4
 
    * Updated plotting heatmap functions (categorizationFunctions.visualizeTimeSeriesCategorization and visualizationFunctions.makeDendrogramHeatmapOfClusteringObject) to utilize optional custom strings for x-axis and plot labels.
