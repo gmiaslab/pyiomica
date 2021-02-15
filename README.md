@@ -1,5 +1,11 @@
 ![logo](https://raw.githubusercontent.com/gmiaslab/pyiomica/master/pyiomica/data/PyIOmica.png)
 
+[![release](https://img.shields.io/github/v/release/gmiaslab/pyiomica?logo=github)](https://github.com/gmiaslab/pyiomica)
+[![pypi version](https://img.shields.io/pypi/v/pyiomica?logo=pypi)](https://pypi.org/project/pyiomica)
+[![readthedocs](https://readthedocs.org/projects/pyiomica/badge/?version=latest&style=flat)](https://pyiomica.readthedocs.io)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4399955.svg)](https://doi.org/10.5281/zenodo.4399955)
+[![pypi license](https://img.shields.io/pypi/l/pyiomica)](https://pypi.org/project/pyiomica)
+
 # PyIOmica (pyiomica)
 This repository contains PyIOmica, a Python package that provides bioinformatics utilities for analyzing (dynamic) omics datasets. PyIOmica extends MathIOmica usage to Python and implements new visualizations and computational tools for graph analyses. The documentation is available at Read the Docs: https://pyiomica.readthedocs.io/en/latest/
 
