@@ -11,7 +11,7 @@ visualization of classified temporal data, and network representation of time se
 
 
 The publication describing this software:
- | Sergii Domanskyi, Carlo Piermarocchi, George I Mias, **PyIOmica: longitudinal omics analysis and trend identification**, *Bioinformatics*, btz896, https://doi.org/10.1093/bioinformatics/btz896
+ | Sergii Domanskyi, Carlo Piermarocchi, George I Mias, **PyIOmica: longitudinal omics analysis and trend identification**, *Bioinformatics*, Volume 36, Issue 7, 2020, Pages 2306–2307, https://doi.org/10.1093/bioinformatics/btz896
 
 
 Versions
