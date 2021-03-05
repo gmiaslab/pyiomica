@@ -74,3 +74,8 @@ PyIOmica development and associated research were supported by the Translational
 for Space Health through NASA Cooperative Agreement NNX16AO69A (Project Number T0412, PI: Mias). 
 The content is solely the responsibility of the authors and does not necessarily 
 represent the official views of the supporting funding agencies.
+
+## I. CITATIONS
+If you use PyIOmica in your work please use the following citation:
+
+Sergii Domanskyi, Carlo Piermarocchi, George I Mias, *PyIOmica: longitudinal omics analysis and trend identification*, Bioinformatics, Volume 36, Issue 7, 2020, Pages 2306–2307, https://doi.org/10.1093/bioinformatics/btz896
