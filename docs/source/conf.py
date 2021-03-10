@@ -46,9 +46,9 @@ copyright = '2020, S. Domanskyi, C. Piermarocchi, G. Mias'
 author = 'S. Domanskyi, C. Piermarocchi, G. Mias'
 
 # The short X.Y version
-version = '1.2.4'
+version = '1.2.5'
 # The full version, including alpha/beta/rc tags
-release = '1.2.4'
+release = '1.2.5'
 
 
 # -- General configuration ---------------------------------------------------
