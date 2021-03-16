@@ -202,7 +202,9 @@ def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1
     Usage:
         result = autocorrelation(inputTimes, inputData, inputSetTimes)
     """
-
+    # in case the values passed contain nan entries, theses are removed - this could affect window estimation and ensuing functions.
+    inputTimes = inputTimes[~np.isnan(inputData)
+    inputData = inputData[~np.isnan(inputData)]
     def InverseAutocovariance(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1):
 
         #adjust inputTimes starting point w.r.t.dataset times, AND ZERO-PAD THEM
