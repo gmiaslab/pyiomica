@@ -1,5 +1,10 @@
+- 1.2.6
+
+   * Updated autocorrelation computation function to improve handling of nan values.
+
 - 1.2.5
-   * Updated visibilityGraphCommunityDetection functions (correction for division by zero in community calculations)
+
+   * Updated visibilityGraphCommunityDetection functions (correction for division by zero in community calculations).
 
 - 1.2.4
 
