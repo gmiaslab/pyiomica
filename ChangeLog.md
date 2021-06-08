@@ -1,3 +1,6 @@
+- 1.2.7
+   * Added new functionality in frequencySubjectMatch to enable comparison across subjects, utilizing spectra to identify common changing components, construct networks with such connections, and identify clusters of similar temporal behavior.
+
 - 1.2.6
 
    * Updated autocorrelation computation function to improve handling of nan values.

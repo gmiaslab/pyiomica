@@ -52,7 +52,7 @@ information for use of external associated content.
 
 Contact information
 -------------------------
-- Contributors: Sergii Domanskyi, Carlo Piermarocchi, George I. Mias.
+- Contributors: Sergii Domanskyi, Minzhang Zheng, Carlo Piermarocchi, George I. Mias.
 - G.MiasLab (https://georgemias.org)
 - e-mail: gmiaslab@gmail.com
 - twitter: @gmiaslab

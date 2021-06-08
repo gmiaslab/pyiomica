@@ -12,7 +12,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='pyiomica',
     packages=find_packages(),
-    version='1.2.6',
+    version='1.2.7',
     description='Omics Analysis Tool Suite',
     long_description_content_type="text/markdown",
     long_description=long_description,
@@ -21,7 +21,7 @@ setup(
     author_email='gmiaslab@gmail.com',
     license='MIT',
     url='https://github.com/gmiaslab/pyiomica',
-    download_url='https://github.com/gmiaslab/pyiomica/archive/1.2.6.tar.gz',
+    download_url='https://github.com/gmiaslab/pyiomica/archive/1.2.7.tar.gz',
     keywords=['omics', 'longitudinal','bioinformatics'],
     classifiers=[
         'License :: OSI Approved :: MIT License',

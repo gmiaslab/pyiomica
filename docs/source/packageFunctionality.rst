@@ -9,6 +9,7 @@ Functionality
    enrichmentAnalyses
    extendedDataFrame
    clusteringFunctions
+   frequencySubjectMatch
    visibilityGraphAuxiliaryFunctions
    visibilityGraphCommunityDetection
    visualizationFunctions
