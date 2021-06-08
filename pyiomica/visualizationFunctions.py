@@ -967,7 +967,7 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
 
     return None
     
-def PlotHVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4), dpi=600):
+def PlotHVGBarGraphDual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4), dpi=600):
     
     """Bar-plot style horizontal visibility graph with different link colors for different perspectives
 
@@ -1052,7 +1052,7 @@ def PlotHVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidt
     
     return None
 
-def PlotNVGBarGraph_Dual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4), dpi=600):
+def PlotNVGBarGraphDual(A, data, times, fileName, title='', fontsize=8, barwidth=0.05, figsize=(8,4), dpi=600):
 
     """Bar-plot style natural visibility graph with different link colors for different perspectives
     

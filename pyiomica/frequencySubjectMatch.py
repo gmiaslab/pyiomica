@@ -136,7 +136,7 @@ def getCommunityStructure(cs):
         community_structure[commu] = deepcopy(templist)
     return community_structure
 
-def get_community_genes_dict(community_structure,genelist,endwithString):
+def getCommunityGenesDict(community_structure,genelist,endwithString):
     '''To get gene IDs list of each community within selected individuals' category 
 
     Parameters:
@@ -173,7 +173,7 @@ def get_community_genes_dict(community_structure,genelist,endwithString):
     community_genes_dict = {k: v for k, v in community_genes_dict.items() if len(v)}
     return community_genes_dict
 
-def split_genes(community_gene_dict):
+def splitGenes(community_gene_dict):
     '''Split gene ids, to seperate the genes name from attached labels
 
     Parameters:
@@ -194,7 +194,7 @@ def split_genes(community_gene_dict):
         
     return new_dict
 
-def get_community_top_genes_by_number(community_structure,genelist,endwithString,numberOfTopGenes=500):
+def getCommunityTopGenesByNumber(community_structure,genelist,endwithString,numberOfTopGenes=500):
     '''To get the top ranking genes of each community
 
     Parameters:
@@ -236,7 +236,7 @@ def get_community_top_genes_by_number(community_structure,genelist,endwithString
             
     return community_genes_dict
 
-def get_community_top_genes_by_frequency_ranking(community_structure,genelist,endwithString,frequencyPercentage=50):
+def getCommunityTopGenesByFrequencyRanking(community_structure,genelist,endwithString,frequencyPercentage=50):
     '''To get the top frequency genes of each community
     
     Parameters:
@@ -275,7 +275,7 @@ def get_community_top_genes_by_frequency_ranking(community_structure,genelist,en
             
     return community_genes_dict
 
-def OptimizeK(df,rangeK,saveFig=False,**kargs):
+def optimizeK(df,rangeK,saveFig=False,**kargs):
     '''To optimize the k value of k-mean cluster
 
     Parameters:

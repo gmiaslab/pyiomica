@@ -1,5 +1,21 @@
 - 1.2.8
    * Documentation strings update for frequencySubjectMatch file - typos corrected. 
+   * Functions changed to camelCase for consistency:
+      * in module frequencySubjectMatch:
+         * IOptimazeK -> optimizeK
+         * get_community_genes_dict -> getCommunityGenesDict
+         * split_genes -> splitGenes
+         * get_community_top_genes_by_number -> getCommunityTopGenesByNumber 
+         * get_community_top_genes_by_frequency_ranking -> getCommunityTopGenesByFrequencyRanking
+      * in module clusteringFunctions:
+         * get_n_clusters_from_linkage_Silhouette -> getNClustersFromLinkageSilhouette
+         * get_n_clusters_from_linkage_Elbow -> getNClustersFromLinkageElbow
+      * in module visualizationFunctions
+         * PlotNVGBarGraph_Dual -> PlotNVGBarGraphDual
+         * PlotHVGBarGraphDual -> PlotHVGBarGraph_Dual
+   * example files were modified to reflect above changes
+      * pyiomica_examples.ipynb
+      * examplesVisibilityGraphCommunityDetection.py
 
 - 1.2.7
    * Added new functionality in frequencySubjectMatch to enable comparison across subjects, utilizing spectra to identify common changing components, construct networks with such connections, and identify clusters of similar temporal behavior.

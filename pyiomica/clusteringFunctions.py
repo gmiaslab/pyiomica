@@ -87,7 +87,7 @@ def getEstimatedNumberOfClusters(data, cluster_num_min, cluster_num_max, trials_
                 
     return getPeakPosition(scores, makePlot=True, plotID=plotID)[0]
 
-def get_n_clusters_from_linkage_Elbow(Y):
+def getNClustersFromLinkageElbow(Y):
 
     """ Get optimal number clusters from linkage.
     A point of the highest accelleration of the fusion coefficient of the given linkage.
@@ -101,12 +101,12 @@ def get_n_clusters_from_linkage_Elbow(Y):
             Optimal number of clusters
 
     Usage:
-        n_clusters = get_n_clusters_from_linkage_Elbow(Y)
+        n_clusters = getNClustersFromLinkageElbow(Y)
     """
 
     return np.diff(np.array([[nc, Y[-nc + 1][2]] for nc in range(2,min(50,len(Y)))]).T[1], 2).argmax() + 1 if len(Y) >= 5 else 1
 
-def get_n_clusters_from_linkage_Silhouette(Y, data, metric):
+def getNClustersFromLinkageSilhouette(Y, data, metric):
 
     """Determine the optimal number of cluster in data maximizing the Silhouette score.
 
@@ -125,7 +125,7 @@ def get_n_clusters_from_linkage_Silhouette(Y, data, metric):
             Optimal number of clusters
 
     Usage:
-        n_clusters = get_n_clusters_from_linkage_Silhouette(Y, data, 'euclidean')
+        n_clusters = getNClustersFromLinkageSilhouette(Y, data, 'euclidean')
     """
 
     max_score = 0
@@ -227,9 +227,9 @@ def getGroupingIndex(data, n_groups=None, method='weighted', metric='correlation
 
     if n_groups == None:
         if significance=='Elbow':
-            n_groups = get_n_clusters_from_linkage_Elbow(Y)
+            n_groups = getNClustersFromLinkageElbow(Y)
         elif significance=='Silhouette':
-            n_groups = get_n_clusters_from_linkage_Silhouette(Y, data, metric)
+            n_groups = getNClustersFromLinkageSilhouette(Y, data, metric)
 
     print('n_groups:', n_groups)
 
@@ -275,9 +275,9 @@ def makeClusteringObject(df_data, df_data_autocorr, method='weighted', metric='c
         leaves = hierarchy.dendrogram(Y, no_plot=True)['leaves']
 
         if significance=='Elbow':
-            n_clusters = get_n_clusters_from_linkage_Elbow(Y)
+            n_clusters = getNClustersFromLinkageElbow(Y)
         elif significance=='Silhouette':
-            n_clusters = get_n_clusters_from_linkage_Silhouette(Y, df_data.values, metric)
+            n_clusters = getNClustersFromLinkageSilhouette(Y, df_data.values, metric)
 
         print('n_subgroups:', n_clusters)
 
