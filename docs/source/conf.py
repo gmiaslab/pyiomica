@@ -46,9 +46,9 @@ copyright = '2021, S. Domanskyi, M. Zheng, C. Piermarocchi, G. Mias'
 author = 'S. Domanskyi, M. Zheng, C. Piermarocchi, G. Mias'
 
 # The short X.Y version
-version = '1.2.8'
+version = '1.2.9'
 # The full version, including alpha/beta/rc tags
-release = '1.2.8'
+release = '1.2.9'
 
 
 # -- General configuration ---------------------------------------------------

@@ -8,7 +8,7 @@ Notes:
     For additional information visit: https://github.com/gmiaslab/pyiomica and https://mathiomica.org by G. Mias Lab
 """
 
-print("Loading PyIOmica 1.2.8 (https://github.com/gmiaslab/pyiomica by G. Mias Lab)")
+print("Loading PyIOmica 1.2.9 (https://github.com/gmiaslab/pyiomica by G. Mias Lab)")
 
 
 from .globalVariables import *

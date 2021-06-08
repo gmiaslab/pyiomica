@@ -1,3 +1,7 @@
+- 1.2.9
+   * renamed inconsistencies:
+      * PlotNVGBarGraphDual -> plotNVGBarGraphDual
+      * PlotHVGBarGraphDual -> plotHVGBarGraphDual
 - 1.2.8
    * Documentation strings update for frequencySubjectMatch file - typos corrected. 
    * Functions changed to camelCase for consistency:
@@ -12,7 +16,7 @@
          * get_n_clusters_from_linkage_Elbow -> getNClustersFromLinkageElbow
       * in module visualizationFunctions
          * PlotNVGBarGraph_Dual -> PlotNVGBarGraphDual
-         * PlotHVGBarGraphDual -> PlotHVGBarGraph_Dual
+         * PlotHVGBarGraphDual -> PlotHVGBarGraphDual
    * example files were modified to reflect above changes
       * pyiomica_examples.ipynb
       * examplesVisibilityGraphCommunityDetection.py

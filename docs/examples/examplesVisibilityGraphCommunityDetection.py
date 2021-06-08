@@ -29,20 +29,20 @@ plt.close(fig)
 ### plot weighted natural visibility graph, weight is  Euclidean distance
 g_nx_NVG, A_NVG = visibilityGraphCommunityDetection.createVisibilityGraph(data, tp, "natural", weight = 'distance')
 filename = './Natural_Visibility_Graph.png'
-visualizationFunctions.PlotNVGBarGraphDual(A_NVG, data, tp,fileName = filename,
+visualizationFunctions.plotNVGBarGraphDual(A_NVG, data, tp,fileName = filename,
                                             title ='Natural Visibility Graph', fontsize=20, figsize=(8,3), dpi=300)
 
 ### plot reflected perspective weighted natural visibility graph, weight is  Euclidean distance
 g_nx_revNVG, A_revNVG = visibilityGraphCommunityDetection.createVisibilityGraph(-data, tp, "natural", weight = 'distance')
 filename = './Reflected_perspective_Natural_Visibility_Graph.png'
-visualizationFunctions.PlotNVGBarGraphDual(A_revNVG, -data, tp, fileName = filename,
+visualizationFunctions.plotNVGBarGraphDual(A_revNVG, -data, tp, fileName = filename,
                                             title='Reflected perspective Natural Visibility Graph', fontsize=20, figsize=(8,3), dpi=300)
 
 ### plot dual perspective natural visibility graph, weight is Euclidean distance
 g_nx_dualNVG, A_dualNVG = visibilityGraphCommunityDetection.createVisibilityGraph(data, tp, "dual_natural", 
                                                                                   weight='distance', withsign=True)
 filename = './Dual_perspective_Natural_Visibility_Graph.png'
-visualizationFunctions.PlotNVGBarGraphDual(A_dualNVG, data, tp, fileName=filename,
+visualizationFunctions.plotNVGBarGraphDual(A_dualNVG, data, tp, fileName=filename,
                                             title='Dual perspective Natural Visibility Graph', fontsize=20, figsize=(10,4), dpi=300)
 
 ### plot line layout dual perspective natural visibility graph with community structure, weight is Euclidean distance
