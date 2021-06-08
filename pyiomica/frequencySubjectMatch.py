@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jan 21 14:13:40 2021
 
-@author: MZZheng
-"""
 import pandas as pd
 import numpy as np
 from scipy.stats.stats import pearsonr
@@ -17,23 +13,19 @@ import matplotlib.pyplot as plt
 
 
 def bootstrapGeneral(df, N, shuffling = True):
-    '''
-    To generate bootstrap samples
+    '''To generate bootstrap samples
     
-    Parameters
-    ----------
-    df : pandas dataframe
-        the source dataframe using to generate bootstrap samples
-    N : integer
-        the size of bootstrap samples
-    shuffling : boolean
-        shuffle the data or not, The default is True.
-
-    Returns
-    -------
-    bootstrapDF : pandas dataframe
-        the bootstrap samples
-
+    Parameters:
+        df: pandas dataframe
+            the source dataframe using to generate bootstrap samples
+        N: integer
+            the size of bootstrap samples
+        shuffling : boolean
+            shuffle the data or not, The default is True.
+    
+    Returns:
+        bootstrapDF: pandas dataframe
+            the bootstrap samples
     '''
 
 
@@ -49,28 +41,24 @@ def bootstrapGeneral(df, N, shuffling = True):
     return bootstrapDF
 
 def calculateLinksBetweenSubjectsByDistance(df1,df2,cutoff):
-    '''
-    to calculate the linked time series/Genes from two dataframes base on the Euclidean distance
+    '''To calculate the linked time series/Genes from two dataframes base on the Euclidean distance
     
-    Parameters
-    ----------
-    df1 : pandas dataframe
-        the first time series from df1
-    df2 : pandas dataframe
-        the second time series from df2
-    cutoff : float
-        if the distance between two time series less than cutoff, the two time series is linked
-        time series
-
-    Returns
-    -------
-    numlinkedGenes : integer/float
-        number of linked time series
-    commonGenes : integer/float
-        number of common time series in df1 and df2
-    linkedGenes : list of string
-        the ids/names of linked time series
-
+    Parameters:
+        df1: pandas dataframe
+            the first time series from df1
+        df2: pandas dataframe
+            the second time series from df2
+        cutoff: float
+            if the distance between two time series less than cutoff, the two time series is linked
+            time series
+    
+    Returns:
+        numlinkedGenes: integer/float
+            number of linked time series
+        commonGenes: integer/float
+            number of common time series in df1 and df2
+        linkedGenes: list of string
+            the ids/names of linked time series
     '''
     
     idx = df1.index.intersection(df2.index)
@@ -89,28 +77,25 @@ def calculateLinksBetweenSubjectsByDistance(df1,df2,cutoff):
     return numlinkedGenes, commonGenes,linkedGenes
 
 def calculateLinksBetweenSubjectsByCorrelation(df1,df2,cutoff):
-    '''
-    to calculate the linked time series/Genes from two dataframes base on the pearson correlation
+    '''To calculate the linked time series/Genes from two dataframes base on the pearson correlation
     
-    Parameters
-    ----------
-    df1 : pandas dataframe
-        the first time series from df1
-    df2 : pandas dataframe
-        the second time series from df2
-    cutoff : float
-        if the pearson correlation between two time series less than cutoff, the two time series is linked
-        time series
-
-    Returns
-    -------
-    numlinkedGenes : integer/float
-        number of linked time series
-    commonGenes : integer/float
-        number of common time series in df1 and df2
-    linkedGenes : list of string
-        the ids/names of linked time series
-
+    Parameters:
+        df1: pandas dataframe
+            the first time series from df1
+        df2: pandas dataframe
+            the second time series from df2
+        cutoff: float
+            if the pearson correlation between two time series less than cutoff, the two time series is linked
+            time series
+    
+    Returns:
+        numlinkedGenes: integer/float
+            number of linked time series
+        commonGenes: integer/float
+            number of common time series in df1 and df2
+        linkedGenes: list of string
+            the ids/names of linked time series
+    
     '''
     
     idx = df1.index.intersection(df2.index)
@@ -133,16 +118,13 @@ def getCommunityStructure(cs):
     To change community structure from {node1:community1, node2:community2,...} to
     {community1:[node1, node2,...], community2:[node3, node4,...]}
 
-    Parameters
-    ----------
-    cs : dictionary
-        the community structure as {node1:community1, node2:community2,...}
-
-    Returns
-    -------
-    community_structure : dictionary
-        the community structure as {community1:[node1, node2,...], community2:[node3, node4,...]}
-
+    Parameters:
+        cs: dictionary
+            the community structure as {node1:community1, node2:community2,...}
+        
+    Returns:
+        community_structure: dictionary
+            the community structure as {community1:[node1, node2,...], community2:[node3, node4,...]}
     '''
     commu_list = list(cs.values())
     community_structure = {}
@@ -155,24 +137,22 @@ def getCommunityStructure(cs):
     return community_structure
 
 def get_community_genes_dict(community_structure,genelist,endwithString):
+    '''To get gene IDs list of each community within selected individuals' category 
+
+    Parameters:
+        community_structure: dictionary
+                the community structure as {community1:[node1, node2,...], community2:[node3, node4,...]}
+        genelist: dictionary
+            the gene list of each individuals, the key is the id of individual 
+        endwithString: list of string
+           the selected individuals categories, which attached to the end of the individual ids 
+    
+    Returns:
+        community_genes_dict: dictionary
+            the genes list of each community
+    
     '''
-    To get gene IDs list of each community within selected individuals' category 
 
-    Parameters
-    ----------
-    community_structure : dictionary
-        the community structure as {community1:[node1, node2,...], community2:[node3, node4,...]}
-    genelist : dictionary
-        the gene list of each individuals, the key is the id of individual 
-    endwithString : list of string
-        the selected individuals categories, which attached to the end of the individual ids 
-
-    Returns
-    -------
-    community_genes_dict : dictionary
-        the genes list of each community 
-
-    '''
     community_genes_dict = {}
     for key in community_structure.keys():
     #for k in [1]:    
@@ -194,19 +174,15 @@ def get_community_genes_dict(community_structure,genelist,endwithString):
     return community_genes_dict
 
 def split_genes(community_gene_dict):
-    '''
-    split gene ids, to seperate the genes name from attached labels
+    '''Split gene ids, to seperate the genes name from attached labels
 
-    Parameters
-    ----------
-    community_gene_dict : dictionary
-        the genes ids list of each community
-
-    Returns
-    -------
-    new_dict : TYPE
-        the gene names list of each community
-
+    Parameters:
+        community_gene_dict: dictionary
+            the genes ids list of each community
+    
+    Returns:
+        new_dict: dictionary
+            the gene names list of each community
     '''
     new_dict = {}
     for key in community_gene_dict:
@@ -219,26 +195,23 @@ def split_genes(community_gene_dict):
     return new_dict
 
 def get_community_top_genes_by_number(community_structure,genelist,endwithString,numberOfTopGenes=500):
+    '''To get the top ranking genes of each community
+
+    Parameters:
+        community_structure: dictionary
+            the community structure as {community1:[node1, node2,...], community2:[node3, node4,...]}
+        genelist: dictionary
+            the genes list of each community 
+        endwithString: list of string
+            the selected individuals categories, which attached to the end of the individual ids 
+        numberOfTopGenes: integer, optional
+            the number of top ranking genes. The default is 500.
+    
+    Returns:
+        community_genes_dict: dictionary
+            the top ranking genes of each community
     '''
-    To get the top ranking genes of each community
 
-    Parameters
-    ----------
-    community_structure : dictionary
-        the community structure as {community1:[node1, node2,...], community2:[node3, node4,...]}
-    genelist : dictionary
-        the genes list of each community 
-    endwithString : list of string
-        the selected individuals categories, which attached to the end of the individual ids 
-    numberOfTopGenes : integer, optional
-        the number of top ranking genes. The default is 500.
-
-    Returns
-    -------
-    community_genes_dict : dictionary
-        the top ranking genes of each community
-
-    '''
     community_genes_dict = {}
     for key in community_structure.keys():
     #for k in [1]:    
@@ -264,26 +237,23 @@ def get_community_top_genes_by_number(community_structure,genelist,endwithString
     return community_genes_dict
 
 def get_community_top_genes_by_frequency_ranking(community_structure,genelist,endwithString,frequencyPercentage=50):
-    '''    
-    To get the top frequency genes of each community
+    '''To get the top frequency genes of each community
     
-    Parameters
-    ----------
-    community_structure : dictionary
-        the community structure as {community1:[node1, node2,...], community2:[node3, node4,...]}
-    genelist : dictionary
-        the genes list of each community 
-    endwithString : list of string
-        the selected individuals categories, which attached to the end of the individual ids 
-    frequencyPercentage : float, optional
-        the top percentage frequency of choosed genes, The default is 50.
-
-    Returns
-    -------
-    community_genes_dict : dictionary
-        the top percentage frequency genes of each community
-
+    Parameters:
+        community_structure: dictionary
+            the community structure as {community1:[node1, node2,...], community2:[node3, node4,...]}
+        genelist: dictionary
+            the genes list of each community 
+        endwithString: list of string
+            the selected individuals categories, which attached to the end of the individual ids 
+        frequencyPercentage: float, optional
+            the top percentage frequency of choosed genes, The default is 50.
+    
+    Returns:
+        community_genes_dict: dictionary
+            the top percentage frequency genes of each community
     '''
+
     community_genes_dict = {}
     for key in community_structure.keys():
     #for k in [1]:    
@@ -305,26 +275,23 @@ def get_community_top_genes_by_frequency_ranking(community_structure,genelist,en
             
     return community_genes_dict
 
-def OptimazeK(df,rangeK,saveFig=False,**kargs):
-    '''
-    To optimaze the k value of k-mean cluster
+def OptimizeK(df,rangeK,saveFig=False,**kargs):
+    '''To optimize the k value of k-mean cluster
 
-    Parameters
-    ----------
-    df : pandas dataframe
-        the data source to do k-mean cluster
-    rangeK : python range, e.g. rangeK = range(0,10)
-        the K value range
-    saveFig : boolean, optional
-        save figure or not. The default is False.
-    **kargs : figure name
-       if saveFig is true, the **kargs is the figure name 
-
-    Returns
-    -------
-    optimazek : integer
-        the optimazed K value
-
+    Parameters:
+        df: pandas dataframe
+            the data source to do k-mean cluster
+        rangeK: python range, e.g. rangeK = range(0,10)
+            the K value range
+        saveFig: boolean, optional
+            save figure or not. The default is False.
+        \*\*kargs: figure name
+            if saveFig is true, the \*\*kargs is the figure name 
+    
+    Returns:
+        optimizek:integer
+            the optimized K value
+    
     '''
     
     sil = []
@@ -338,7 +305,7 @@ def OptimazeK(df,rangeK,saveFig=False,**kargs):
         sil.append(silhouette_score(df, labels, metric = 'euclidean'))
     
     maxindex = sil.index(max(sil))
-    optimazek = K[maxindex]
+    optimizek = K[maxindex]
     
     if saveFig:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6)) # create figure & 1 axis
@@ -355,5 +322,5 @@ def OptimazeK(df,rangeK,saveFig=False,**kargs):
         fig.savefig(kargs['figname'])   # save the figure to file
         plt.close(fig) 
     
-    return optimazek
+    return optimizek
     
