@@ -1,9 +1,5 @@
 {% extends "!layout.html" %}
 {% block document %}
-<meta name="sourcename" content="{{ sourcename }}" />
-    {% if "index" in sourcename %}
-<script type='text/javascript' src='https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js'></script>
-<div align="right" data-badge-type="donut" data-doi="10.1093/bioinformatics/btz896" data-hide-no-mentions="true" class="altmetric-embed"></div>
-    {% endif %}
-{{ super() }}
+    <li><a href="https://georgemias.org">G. Mias Lab</a> &raquo;</li>
+    {{ super() }}
 {% endblock %}
