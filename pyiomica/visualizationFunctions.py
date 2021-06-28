@@ -253,7 +253,7 @@ def makeLombScarglePeriodograms(df, saveDir, dataName, minNumberOfNonzeroPoints=
 def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95], 
                    numberOfVGs=1, groups_ac_colors=['b'], fig=None, numberOfCommunities=6, printCommunities=False, 
                    fontsize=None, nodesize=None, level=0.55, commLineWidth=0.5, lineWidth=1.0,
-                   withLabel=True, withTitle=False, layout='circle', radius=0.07, noplot=False, horizontal=False, communities=None):
+                   withLabel=True, withTitle=False, layout='circle', radius=0.07, noplot=False, horizontal=False, communities=None, minNumberOfCommunities=2, communitiesMethod='betweenness_centrality', direction='left', weight='distance'):
     
     """Draw a Visibility graph of data on a provided Matplotlib figure.
     We represent each timepoint in a series as a node.
@@ -321,11 +321,45 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
         noplot: boolean, Default False
             Whether to make a plot or only calculate communities
 
+        horizontal: boolean, Default False
+            Whether to use horizontal or natural visibility graph. 
+
         communities: tuple, Default None
             A tuple containing communities sturcture of network, and networkx Graph:
                 List of list, e.g. [[],[],...]
 
                 networkx.Graph 
+
+        minNumberOfCommunities: int, Default 2
+            Number of communities to find depends on the number of splits.
+            This parameter is ignored in methods that automatically
+            estimate optimal number of communities.
+
+        communitiesMethod: str, Default 'betweenness_centrality'
+            String defining the method to use for communitiy detection:
+                'Girvan_Newman': edge betweenness centrality based approach
+
+                'betweenness_centrality': reflected graph node betweenness centrality based approach
+
+                'WDPVG': weighted dual perspective visibility graph method (note to also set weight variable)
+
+        direction:str, default 'left'
+            The direction that nodes aggregate to communities:
+                None: no specific direction, e.g. both sides.
+
+                'left': nodes can only aggregate to the left side hubs, e.g. early hubs
+
+                'right': nodes can only aggregate to the right side hubs, e.g. later hubs
+
+        weight: str, Default 'distance'
+            Type of weight for communitiesMethod='WDPVG':
+                None: no weighted
+
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
             
     Returns:
         tuple
@@ -339,14 +373,14 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
     if len(data.shape)>1:
         data = extendedDataFrame.DataFrame(data=data).imputeMissingWithMedian().apply(lambda data: np.sum(data[data > 0.0]) / len(data), axis=0).values
     if communities is None:
-        communities, graph_nx = clusteringFunctions.getCommunitiesOfTimeSeries(data, times)
+        communities, graph_nx = clusteringFunctions.getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=minNumberOfCommunities, horizontal=horizontal, method=communitiesMethod, direction=direction, weight=weight) 
     else:
         communities, graph_nx = communities
 
     if printCommunities:
-        print(list_of_nodes, '\n')
+        print('Communities:')
         [print(community) for community in communities]
-        print()
+        print('\n')
 
     if noplot:
         return graph_nx, data, communities
@@ -449,8 +483,7 @@ def addVisibilityGraph(data, times, dataName='G1S1', coords=[0.05,0.95,0.05,0.95
 
     return graph_nx, data, communities
 
-def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=None, fontsize=16, nodesize=500, level=0.5, commLineWidth=3.0, lineWidth=2.0, layout='circle', horizontal=False, radius=0.03,
-                        figsize=(10,10), addColorbar=True, colorbarAxisCoordinates=[0.90,0.7,0.02,0.2], colorbarLabelsize=12, colorbarPrecision=2, extension='png', dpi=300):
+def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=None, minNumberOfCommunities=2, communitiesMethod='betweenness_centrality', direction='left', weight='distance', printCommunities=False,fontsize=16, nodesize=500, level=0.5, commLineWidth=3.0, lineWidth=2.0, layout='circle', horizontal=False, radius=0.03, figsize=(10,10), addColorbar=True, colorbarAxisCoordinates=[0.90,0.7,0.02,0.2], colorbarLabelsize=12, colorbarPrecision=2, extension='png', dpi=300):
 
     '''Make either horizontal or normal visibility graph of a time series using function addVisibilityGraph.
     We represent each timepoint in a series as a node.
@@ -473,12 +506,50 @@ def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=N
         fileName: str
             Label to include in the file name
 
+        horizontal: boolean, Default False
+            Whether to use horizontal or natural visibility graph. Note that if communitiesMethod 'WDPVG' is set, this setting has no effect. 
+
         communities: tuple, Default None
-            A tuple containing communities structure of network, and networkx Graph:
+            A tuple containing communities sturcture of network, and networkx Graph:
                 List of list, e.g. [[],[],...]
 
-                networkx.Graph
-        
+                networkx.Graph 
+
+        minNumberOfCommunities: int, Default 2
+            Number of communities to find depends on the number of splits.
+            This parameter is ignored in methods that automatically
+            estimate optimal number of communities.
+
+        communitiesMethod: str, Default 'betweenness_centrality'
+            String defining the method to use for communitiy detection:
+                'Girvan_Newman': edge betweenness centrality based approach
+
+                'betweenness_centrality': reflected graph node betweenness centrality based approach
+
+                'WDPVG': weighted dual perspective visibility graph method (note to also set weight variable)
+
+        direction:str, default 'left'
+            The direction that nodes aggregate to communities:
+                None: no specific direction, e.g. both sides.
+
+                'left': nodes can only aggregate to the left side hubs, e.g. early hubs
+
+                'right': nodes can only aggregate to the right side hubs, e.g. later hubs
+
+
+        weight: str, Default 'distance'
+            Type of weight for communitiesMethod='WDPVG':
+                None: no weighted
+
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
+
+        printCommunities: boolean, Default False
+            Whether to print communities details to screen
+
         fontsize: float, Default 16
             Labels fontsize
                     
@@ -535,7 +606,7 @@ def makeVisibilityGraph(intensities, positions, saveDir, fileName, communities=N
 
     addVisibilityGraph(intensities, positions, fig=fig, fontsize=fontsize, nodesize=nodesize, level=level, 
                         commLineWidth=commLineWidth, lineWidth=lineWidth, withLabel=False, layout=layout, 
-                        printCommunities=False, radius=radius, horizontal=horizontal,communities=communities)
+                        printCommunities=printCommunities, radius=radius, horizontal=horizontal,communities=communities, minNumberOfCommunities=minNumberOfCommunities, communitiesMethod=communitiesMethod, direction=direction, weight=weight)
 
     addColorbarToFigure(fig, intensities, axisCoordinates=colorbarAxisCoordinates, labelsize=colorbarLabelsize, precision=colorbarPrecision)
 
@@ -623,7 +694,7 @@ def makeVisibilityBarGraph(data, times, saveDir, fileName, AdjacencyMatrix=None,
                     level1 = data[i]
                     level2 = data[j]
 
-                ax.annotate(s='', xy=(times[i],level1), xytext=(times[j],level2), 
+                ax.annotate(text='', xy=(times[i],level1), xytext=(times[j],level2), 
                             arrowprops=dict(arrowstyle='<->', shrinkA=0, shrinkB=0, linestyle='--'))
 
     ax.set_title('%s Time Series'%(id), fontdict={'color': arrowColor})
@@ -654,7 +725,7 @@ def makePlotOfPeak(data_all, scores, selected_peak, selected_peak_value, plotID)
     ax.plot(scores.T[0], scores.T[1], 'ro', ms=5)
     ax.plot(selected_peak, selected_peak_value, 'bo', alpha=0.5, ms=10)
 
-    saveFigure(fig, saveDir, 'spline_%s' % ('' if plotID == None else str(plotID)), extension, dpi)
+    # saveFigure(fig, saveDir, 'spline_%s' % ('' if plotID == None else str(plotID)), extension, dpi)
 
     return
 
@@ -712,7 +783,7 @@ def addColorbarToFigure(fig, data, axisCoordinates=[0.90,0.7,0.02,0.2], cmap=Non
     
     return
 
-def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0, figsize=(12,8), extension='.png', dpi=300, xLabel='Time', plotLabel='Transformed Expression'):
+def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName, AutocorrNotPeriodogr=True, textScale=1.0, figsize=(12,8), extension='.png', dpi=300, xLabel='Time', plotLabel='Transformed Expression',horizontal=False, minNumberOfCommunities=2, communitiesMethod='WDPVG', direction='left', weight='distance'):
 
     """Make Dendrogram-Heatmap plot along with Visibility graphs.
 
@@ -746,6 +817,40 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
 
         plotLabel: str, Default 'Transformed Expression'
             Label for the heatmap plot
+        
+        horizontal: boolean, Default False
+            Whether to use horizontal or natural visibility graph. Note that if communitiesMethod 'WDPVG' is set, this setting has no effect. 
+
+        minNumberOfCommunities: int, Default 2
+            Number of communities to find depends on the number of splits.
+            This parameter is ignored in methods that automatically
+            estimate optimal number of communities.
+
+        communitiesMethod: str, Default 'WDPVG'
+            String defining the method to use for communitiy detection:
+                'Girvan_Newman': edge betweenness centrality based approach
+
+                'betweenness_centrality': reflected graph node betweenness centrality based approach
+
+                'WDPVG': weighted dual perspective visibility graph method (note to also set weight variable)
+
+        direction:str, default 'left'
+            The direction that nodes aggregate to communities:
+                None: no specific direction, e.g. both sides.
+
+                'left': nodes can only aggregate to the left side hubs, e.g. early hubs
+
+                'right': nodes can only aggregate to the right side hubs, e.g. later hubs
+
+        weight: str, Default 'distance'
+            Type of weight for communitiesMethod='WDPVG':
+                None: no weighted
+
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
 
     Returns:
         None
@@ -961,7 +1066,7 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
 
         coords = [x_min + x_displacement, x_min + x_displacement + height / (12. / 8.), y_min + indVG * height + (0.5 + indVG) * y_displacement, y_min + (indVG + 1) * height + (0.5 + indVG) * y_displacement]
 
-        addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, groupColors, fig)
+        addVisibilityGraph(dataVG, times, dataNameVG, coords, numberOfVGs, groupColors, fig,horizontal=horizontal, minNumberOfCommunities=minNumberOfCommunities, communitiesMethod=communitiesMethod, direction=direction, weight=weight)
     
     saveFigure(fig, saveDir, dataName + '_DendrogramHeatmap', extension, dpi)
 
@@ -1019,7 +1124,7 @@ def plotHVGBarGraphDual(A, data, times, fileName, title='', fontsize=8, barwidth
                     level = np.max([data[i],data[j]])
                 else:
                     level = 0
-                ax.annotate(s='', xy=(times[i],level), xytext=(times[j],level), 
+                ax.annotate(text='', xy=(times[i],level), xytext=(times[j],level), 
                         arrowprops=dict(arrowstyle='->', shrinkA=0, shrinkB=0,linestyle='--', color='r'))
                             
             if i>j and A[i,j] < 0:
@@ -1029,7 +1134,7 @@ def plotHVGBarGraphDual(A, data, times, fileName, title='', fontsize=8, barwidth
                     level = np.max([data[i],data[j]])
                 else:
                     level = 0
-                ax.annotate(s='', xy=(times[i],level), xytext=(times[j],level), 
+                ax.annotate(text='', xy=(times[i],level), xytext=(times[j],level), 
                                 arrowprops=dict(arrowstyle='->', shrinkA=0, shrinkB=0,linestyle='--', color='b'))
                     
 
@@ -1098,11 +1203,11 @@ def plotNVGBarGraphDual(A, data, times, fileName, title='', fontsize=8, barwidth
     for i in range(A.shape[0]):
         for j in range(A.shape[1]):
             if i>j and A[i,j] > 0:
-                ax.annotate(s='', xy=(times[i],data[i]), xytext=(times[j],data[j]), 
+                ax.annotate(text='', xy=(times[i],data[i]), xytext=(times[j],data[j]), 
                             arrowprops=dict(arrowstyle='->', shrinkA=0, shrinkB=0,linestyle='--',color='r'))
                             
             if i>j and A[i,j] < 0:
-                ax.annotate(s='', xy=(times[i],data[i]), xytext=(times[j],data[j]), 
+                ax.annotate(text='', xy=(times[i],data[i]), xytext=(times[j],data[j]), 
                             arrowprops=dict(arrowstyle='->', shrinkA=0, shrinkB=0,linestyle='--',color='b'))                
 
     ax.set_title('%s'%(title), fontdict={'color': 'k'},fontsize=fontsize)

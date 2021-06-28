@@ -1,3 +1,10 @@
+- 1.3.0
+   * updated internal code for annotate() function to use "text" versus "s"
+   * updated makeVisibilityGraph function
+   * updated addVisibilityGraph function with additional selection for community detection methods 
+   * updated getCommunitiesOfTimeSeries to process horizontal and natural visibility graphs
+   * updated visualizeTimeSeriesCategorization for community detection options selection for displayed visibility graphs
+   * updated makeDendrogramHeatmapOfClusteringObject for community detection method options for displayed visibility graphs
 - 1.2.9
    * renamed inconsistencies:
       * PlotNVGBarGraphDual -> plotNVGBarGraphDual

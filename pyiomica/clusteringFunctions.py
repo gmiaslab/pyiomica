@@ -368,7 +368,7 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
 
     return fileName
 
-def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, method='WDPVG', direction='left'):
+def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, horizontal=False, method='WDPVG', direction='left',weight='distance'):
 
     '''Get communities of time series
 
@@ -383,6 +383,9 @@ def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, method='WD
             Number of communities to find depends on the number of splits.
             This parameter is ignored in methods that automatically
             estimate optimal number of communities.
+        
+        horizontal: boolean, Default False
+            Whether to use horizontal of normal visibility graph
 
         method: str, Default 'betweenness_centrality'
             Name of the method to use:
@@ -390,15 +393,23 @@ def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, method='WD
 
                 'betweenness_centrality': reflected graph node betweenness centrality based approach
 
-                'WDPVG': weighted dual perspective visibility graph method
+                'WDPVG': weighted dual perspective visibility graph method (also set weight variable)
     
-        direction:str, default None
+        direction:str, default 'left'
             The direction that nodes aggregate to communities:
                 None: no specific direction, e.g. both sides.
-        
                 'left': nodes can only aggregate to the left side hubs, e.g. early hubs
-        
                 'right': nodes can only aggregate to the right side hubs, e.g. later hubs
+        
+        weight: str, Default 'distance'
+            Type of weight for method='WDPVG':
+                None: no weighted
+
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
 
     Returns:
         (list, graph)
@@ -409,9 +420,12 @@ def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, method='WD
     '''
 
     if method=='betweenness_centrality':
-
-        graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
-        graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(-data, times))
+        if horizontal:
+            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data))
+            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(-data))
+        else:  
+            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
+            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(-data, times))
     
         def find_and_remove_node(graph_nx):
             bc = nx.betweenness_centrality(graph_nx)
@@ -433,8 +447,10 @@ def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, method='WD
         communities = [list(range(list_of_nodes[i],list_of_nodes[i + 1])) for i in range(len(list_of_nodes) - 1)]
 
     elif method=='Girvan_Newman':
-
-        graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
+        if horizontal:
+            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data))
+        else:
+            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
         generator_of_communities = nx.algorithms.community.centrality.girvan_newman(graph_nx)
 
         for i in range(minNumberOfCommunities-1):
@@ -443,8 +459,11 @@ def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, method='WD
         communities = list(sorted(c) for c in communities_for_level)
 
     elif method=='WDPVG':
+        if horizontal:
+            graph_nx = visibilityGraphCommunityDetection.createVisibilityGraph(data, times, "dual_horizontal", weight=weight)[0]
+        else:
+            graph_nx = visibilityGraphCommunityDetection.createVisibilityGraph(data, times, "dual_natural", weight=weight)[0]
 
-        graph_nx = visibilityGraphCommunityDetection.createVisibilityGraph(data, times, "dual_natural", weight='distance')[0]
         communities = visibilityGraphCommunityDetection.communityDetectByPathLength(graph_nx, direction=direction, cutoff='auto')
 
     else:

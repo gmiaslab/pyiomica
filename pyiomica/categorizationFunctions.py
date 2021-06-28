@@ -291,7 +291,7 @@ def clusterTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, hdf
 
     return None
 
-def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, autocorrelationBased=True,xLabel='Time', plotLabel='Transformed Expression'):
+def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, autocorrelationBased=True,xLabel='Time', plotLabel='Transformed Expression',horizontal=False, minNumberOfCommunities=2, communitiesMethod='WDPVG', direction='left', weight='distance'):
 
     """Visualize time series classification.
     
@@ -314,6 +314,40 @@ def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, a
         plotLabel: str, Default 'Transformed Expression'
             Label for the heatmap plot
 
+        
+        horizontal: boolean, Default False
+            Whether to use horizontal or natural visibility graph. 
+
+        minNumberOfCommunities: int, Default 2
+            Number of communities to find depends on the number of splits.
+            This parameter is ignored in methods that automatically
+            estimate optimal number of communities.
+
+        communitiesMethod: str, Default 'WDPVG'
+            String defining the method to use for communitiy detection:
+                'Girvan_Newman': edge betweenness centrality based approach
+
+                'betweenness_centrality': reflected graph node betweenness centrality based approach
+
+                'WDPVG': weighted dual perspective visibility graph method (note to also set weight variable)
+
+        direction:str, default 'left'
+            The direction that nodes aggregate to communities:
+                None: no specific direction, e.g. both sides.
+
+                'left': nodes can only aggregate to the left side hubs, e.g. early hubs
+
+                'right': nodes can only aggregate to the right side hubs, e.g. later hubs
+
+        weight: str, Default 'distance'
+            Type of weight for communitiesMethod='WDPVG':
+                None: no weighted
+
+                'time': weight = abs(times[i] - times[j])
+
+                'tan': weight = abs((data[i] - data[j])/(times[i] - times[j])) + 10**(-8)
+
+                'distance': weight = A[i, j] = A[j, i] = ((data[i] - data[j])**2 + (times[i] - times[j])**2)**0.5
     Returns:
         None
 
@@ -336,7 +370,7 @@ def visualizeTimeSeriesCategorization(dataName, saveDir, numberOfLagsToDraw=3, a
             return 
         
         print('Plotting Dendrogram with Heatmaps.')
-        visualizationFunctions.makeDendrogramHeatmapOfClusteringObject(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=autocorrelationBased,xLabel=xLabel, plotLabel=plotLabel)
+        visualizationFunctions.makeDendrogramHeatmapOfClusteringObject(clusteringObject, saveDir, dataName + '_%s_%sBased'%(className,info), AutocorrNotPeriodogr=autocorrelationBased,xLabel=xLabel, plotLabel=plotLabel,horizontal=horizontal, minNumberOfCommunities=minNumberOfCommunities, communitiesMethod=communitiesMethod, direction=direction, weight=weight)
 
         return
 

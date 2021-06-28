@@ -624,7 +624,7 @@ class DataFrame(pd.DataFrame):
         else:
             return self._constructor(new_data).__finalize__(self)
 
-        return data
+        return
 
 def mergeDataframes(listOfDataframes, axis=0):
 
