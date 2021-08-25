@@ -3,7 +3,7 @@
 [![release](https://img.shields.io/github/v/release/gmiaslab/pyiomica?logo=github)](https://github.com/gmiaslab/pyiomica)
 [![pypi version](https://img.shields.io/pypi/v/pyiomica?logo=pypi)](https://pypi.org/project/pyiomica)
 [![readthedocs](https://readthedocs.org/projects/pyiomica/badge/?version=latest&style=flat)](https://pyiomica.readthedocs.io)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4399955.svg)](https://doi.org/10.5281/zenodo.4399955)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5251359.svg)](https://doi.org/10.5281/zenodo.5251359)
 [![pypi license](https://img.shields.io/pypi/l/pyiomica)](https://pypi.org/project/pyiomica)
 
 # PyIOmica (pyiomica)
