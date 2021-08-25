@@ -13,8 +13,7 @@ from . import (utilityFunctions,
 from .extendedDataFrame import DataFrame
 
 
-def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05, fraction=0.75, constantSignalsCutoff=0., lowValuesToTag=1., lowValuesToTagWith=1., 
-                                      NumberOfRandomSamples=10**5, NumberOfCPUs=4, referencePoint=0, autocorrelationBased=True, calculateAutocorrelations=False, calculatePeriodograms=False, preProcessData=True):
+def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=None, p_cutoff=0.05, fraction=0.75, constantSignalsCutoff=0., lowValuesToTag=1., lowValuesToTagWith=1., NumberOfRandomSamples=10**5, NumberOfCPUs=4, referencePoint=0, autocorrelationBased=True, calculateAutocorrelations=False, calculatePeriodograms=False, preProcessData=True):
         
     """Time series classification.
     
@@ -147,7 +146,7 @@ def calculateTimeSeriesCategorization(df_data, dataName, saveDir, hdf5fileName=N
         df_dataAutocorrelations = utilityFunctions.runCPUs(NumberOfCPUs, coreFunctions.getAutocorrelationsOfData, [(df_data.iloc[i], df_data.columns.values) for i in range(len(df_data.index))])
 
         df_dataAutocorrelations = pd.DataFrame(data=df_dataAutocorrelations[1::2], index=df_data.index, columns=df_dataAutocorrelations[0])
-        df_dataAutocorrelations.columns = ['Lag ' + str(column) for column in df_dataAutocorrelations.columns]
+        df_dataAutocorrelations.columns = ['Lag ' + str(columnID) for columnID in range(len(df_dataAutocorrelations.columns))]
         dataStorage.write(df_dataAutocorrelations, saveDir + dataName + '_dataAutocorrelations', hdf5fileName=hdf5fileName)
 
     df_data = dataStorage.read(saveDir + dataName + '_df_data_transformed', hdf5fileName=hdf5fileName)

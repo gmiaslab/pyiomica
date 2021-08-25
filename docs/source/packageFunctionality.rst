@@ -14,3 +14,4 @@ Functionality
    visibilityGraphCommunityDetection
    visualizationFunctions
    utilityFunctions
+   dataStorage

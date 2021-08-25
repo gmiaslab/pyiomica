@@ -1,3 +1,6 @@
+- 1.3.1
+   * updated code for calculateTimeSeriesCategorization to output correct labels for Lag classifications when exporting to Excel files
+   * modified clueringFunctions exportClusteringObject to output components of clustering objects in the same order as they appear in heatmaps (i.e. top to bottom, instead of bottom to up, which was the previous behavior)
 - 1.3.0
    * updated internal code for annotate() function to use "text" versus "s"
    * updated makeVisibilityGraph function

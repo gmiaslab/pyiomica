@@ -347,8 +347,8 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
     for group in sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage']):
         for subgroup in sorted([item for item in list(ClusteringObject[group].keys()) if not item=='linkage']):
 
-            df_data = ClusteringObject[group][subgroup]['data']
-            df_dataAutocorr = ClusteringObject[group][subgroup]['dataAutocorr']
+            df_data = ClusteringObject[group][subgroup]['data'].iloc[::-1]
+            df_dataAutocorr = ClusteringObject[group][subgroup]['dataAutocorr'].iloc[::-1]
 
             if includeData==True and includeAutocorr==True:
                 df = pd.concat((df_data,df_dataAutocorr), sort = False, axis=1)
