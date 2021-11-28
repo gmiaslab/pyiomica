@@ -76,6 +76,11 @@ The content is solely the responsibility of the authors and does not necessarily
 represent the official views of the supporting funding agencies.
 
 ## I. CITATIONS
-If you use PyIOmica in your work please use the following citation:
+- If you use PyIOmica in your work please use the following citation:
 
-Sergii Domanskyi, Carlo Piermarocchi, George I Mias, *PyIOmica: longitudinal omics analysis and trend identification*, Bioinformatics, Volume 36, Issue 7, 2020, Pages 2306–2307, https://doi.org/10.1093/bioinformatics/btz896
+   - Sergii Domanskyi, Carlo Piermarocchi and George I Mias, *PyIOmica: longitudinal omics analysis and trend identification*. Bioinformatics, 36(7), 2306–2307 (2020). https://doi.org/10.1093/bioinformatics/btz896
+
+- If you use PyIOmica's visibility graph functionality, please also consider the following citation:
+
+   - Minzhang Zheng, Sergii Domanskyi, Carlo Piermarocchi, and George I Mias, *Visibility graph based temporal community detection with applications in biological time series*, Sci Rep 11, 5623 (2021). https://doi.org/10.1038/s41598-021-84838-x
+

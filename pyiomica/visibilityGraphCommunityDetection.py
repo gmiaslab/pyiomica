@@ -300,7 +300,7 @@ def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsig
 
     return A_dual
 
-def communityDetectByPathLength(G, setSourceTarget=None,direction=None, cutoff=None):
+def communityDetectByPathLength(G, outputTimePoints=False, setSourceTarget=None, direction=None, cutoff=None):
     
     """Calculate community structure by shortest path length algorithm.
     
@@ -308,6 +308,12 @@ def communityDetectByPathLength(G, setSourceTarget=None,direction=None, cutoff=N
         G: networkx.Graph
             Graph of networkx type
     
+        outputTimePoints:boolean, default False
+            Whether to output timepoints for communities or indices
+
+        setSourceTarget:list, default None 
+            List for nodes to consider to use when finding weighted shortest path. First element used for source (starting node), and last for target (ending node)
+        
         direction:str, default None
             The direction that nodes aggregate to communities:
                 None: no specific direction, e.g. both sides.
@@ -432,6 +438,14 @@ def communityDetectByPathLength(G, setSourceTarget=None,direction=None, cutoff=N
             sort_spl = sort_spl_backup[:]
         
     c = list(community.values())
+    if outputTimePoints:
+        timepoint=nx.get_node_attributes(G, 'timepoint')
+        c_prime = []
+        for ls in c:
+            c_prime.append([timepoint[key] for key in ls])
+            
+        c = c_prime
+    
     for row in c:
         row.sort()
 

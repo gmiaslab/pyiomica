@@ -1,3 +1,5 @@
+- 1.3.3
+   * updated functionality for visibility graph community detection for communityDetectByPathLength to output community times as an option
 - 1.3.2
    * updated code for ReactomeAnalysis, set header parameter headersGET = {'accept":'text/CSV'} for Reactome analysis service compatibility
 - 1.3.1
