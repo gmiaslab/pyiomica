@@ -1399,7 +1399,7 @@ def ReactomeAnalysis(data,
                      preDownloadURL = 'https://reactome.org/AnalysisService/download/',
                      postDownloadURL = '/pathways/TOTAL/result.csv',
                      headersPOST = {'accept': 'application/json', 'content-type': 'text/plain'},
-                     headersGET =  {'accept': 'text/plain'},
+                     headersGET =  {'accept': 'text/CSV'},
                      URLparameters = (('interactors', 'false'), ('pageSize', '20'), ('page', '1'), ('sortBy', 'ENTITIES_PVALUE'), ('order', 'ASC'), ('resource', 'TOTAL'))):
 
     """Reactome POST-GET-style analysis.
@@ -1420,7 +1420,7 @@ def ReactomeAnalysis(data,
         headersPOST: dict, Default {'accept': 'application/json', 'content-type': 'text/plain'}
             URL headers for POST request
 
-        headersGET: dict, Default {'accept': 'text/plain'}
+        headersGET: dict, Default {'accept': 'text/CSV'}
             URL headers for GET request
 
         URLparameters: tuple, Default (('interactors', 'false'), ('pageSize', '20'), ('page', '1'), ('sortBy', 'ENTITIES_PVALUE'), ('order', 'ASC'), ('resource', 'TOTAL'))

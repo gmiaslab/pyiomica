@@ -1,3 +1,5 @@
+- 1.3.2
+   * updated code for ReactomeAnalysis, set header parameter headersGET = {'accept":'text/CSV'} for Reactome analysis service compatibility
 - 1.3.1
    * updated code for calculateTimeSeriesCategorization to output correct labels for Lag classifications when exporting to Excel files
    * modified clueringFunctions exportClusteringObject to output components of clustering objects in the same order as they appear in heatmaps (i.e. top to bottom, instead of bottom to up, which was the previous behavior)
