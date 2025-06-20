@@ -1,3 +1,6 @@
+## 1.4.0.1
+- Trigger Zenodo release for 1.4.0.1. No code changes.
+
 ## 1.4.0
 
 - Updated codebase for compatibility with modern NumPy, pandas, and NetworkX (removed deprecated usages, updated aggregation and normalization logic).
