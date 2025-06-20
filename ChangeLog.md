@@ -1,5 +1,5 @@
-## 1.4.0.1
-- Trigger Zenodo release for 1.4.0.1. No code changes.
+## 1.4.1
+- Maintenance release: No code changes. Created to trigger Zenodo archiving and update metadata for the 1.4.0 release.
 
 ## 1.4.0
 
