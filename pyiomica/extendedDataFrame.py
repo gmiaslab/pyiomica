@@ -85,7 +85,7 @@ class DataFrame(pd.DataFrame):
 
         print('Filtering out low-quality signals (with more than %s%% zero points)' %(np.round(100.*(1.-min_fraction_of_non_zeros), 3)))
 
-        min_number_of_non_zero_points = np.int(np.ceil(min_fraction_of_non_zeros * self.shape[1]))
+        min_number_of_non_zero_points = int(np.ceil(min_fraction_of_non_zeros * self.shape[1]))
         new_data = self.loc[self.index[np.count_nonzero(self, axis=1) >= min_number_of_non_zero_points]]
 
         if (self.shape[0] - new_data.shape[0]) > 0:
@@ -124,7 +124,7 @@ class DataFrame(pd.DataFrame):
 
         print('Filtering out low-quality signals (with more than %s%% missing points)' %(np.round(100.*(1.-min_fraction_of_non_missing), 3)))
 
-        min_number_of_non_zero_points = np.int(np.ceil(min_fraction_of_non_missing * self.shape[1]))
+        min_number_of_non_zero_points = int(np.ceil(min_fraction_of_non_missing * self.shape[1]))
         new_data = self.loc[self.index[(~np.isnan(self)).sum(axis=1) >= min_number_of_non_zero_points]]
 
         if (self.shape[0] - new_data.shape[0]) > 0:
@@ -196,9 +196,9 @@ class DataFrame(pd.DataFrame):
             df_data.tagValueAsMissing(inplace=True)
         """
 
-        print('Tagging %s values with %s'%(value, np.NaN))
 
-        new_data = self.replace(to_replace=value, value=np.NaN, inplace=False)
+        print('Tagging %s values with %s'%(value, np.nan))
+        new_data = self.replace(to_replace=value, value=np.nan, inplace=False)
 
         if inplace:
             self._update_inplace(new_data)
@@ -227,9 +227,9 @@ class DataFrame(pd.DataFrame):
             df_data.tagMissingAsValue(inplace=True)
         """
 
-        print('Tagging %s values with %s'%(np.NaN, value))
 
-        new_data = self.replace(to_replace=np.NaN, value=value, inplace=False)
+        print('Tagging %s values with %s'%(np.nan, value))
+        new_data = self.replace(to_replace=np.nan, value=value, inplace=False)
 
         if inplace:
             self._update_inplace(new_data)
@@ -424,7 +424,7 @@ class DataFrame(pd.DataFrame):
 
         return
 
-    def quantileNormalize(self, output_distribution='original', averaging=np.mean, ties=np.mean, inplace=False):
+    def quantileNormalize(self, output_distribution='original', averaging=np.mean, ties="mean", inplace=False):
 
         """Quantile Normalize signals in a DataFrame. 
     
@@ -464,15 +464,14 @@ class DataFrame(pd.DataFrame):
 
         print('Quantile normalizing signals...')
 
+
         if output_distribution=='original':
 
             def rankTransform(series, weights):
-
                 se_temp = pd.Series(index=scipy.stats.rankdata(series.values, method='min'), 
-                               data=weights[scipy.stats.rankdata(series.values, method='ordinal')-1])
-
+                                   data=weights[scipy.stats.rankdata(series.values, method='ordinal')-1])
+                # Use string 'mean' for .agg() to avoid pandas FutureWarning
                 series[:] = pd.Series(se_temp.index).replace(to_replace=se_temp.groupby(level=0).agg(ties).to_dict()).values
-
                 return series
 
             weights = averaging(np.sort(self.values, axis=0), axis=1)
@@ -579,7 +578,9 @@ class DataFrame(pd.DataFrame):
             df1_grouped, df2_grouped = self, df
         else:
             def aggregate(df):
-                return df.groupby(level=['source', 'id']).agg(mergeFunction)
+                # Use string 'median' if mergeFunction is np.median to avoid pandas FutureWarning
+                agg_func = 'median' if mergeFunction is np.median else mergeFunction
+                return df.groupby(level=['source', 'id']).agg(agg_func)
 
             df1_grouped, df2_grouped = aggregate(self), aggregate(df)
 

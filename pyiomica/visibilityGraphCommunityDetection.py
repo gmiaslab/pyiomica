@@ -68,15 +68,15 @@ def createVisibilityGraph(data, times, graph_type='natural', weight=None, withsi
         print('weight is: %s' %(weight))
     
     if graph_type == "horizontal":
-        AdMatrixOfVisibilityGraph = np.asmatrix(__getAdjacencyMatrixOfHorizontalVisibilityGraph(ndata, ntimes, weight=weight))
+        AdMatrixOfVisibilityGraph = np.array(__getAdjacencyMatrixOfHorizontalVisibilityGraph(ndata, ntimes, weight=weight))
     elif graph_type == "dual_horizontal":
-        AdMatrixOfVisibilityGraph = np.asmatrix(__getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(ndata, ntimes, weight=weight, withsign=withsign))
+        AdMatrixOfVisibilityGraph = np.array(__getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(ndata, ntimes, weight=weight, withsign=withsign))
     elif graph_type == "dual_natural":
-        AdMatrixOfVisibilityGraph = np.asmatrix(__getAdjacencyMatrixOfVisibilityGraph_dual(ndata, ntimes, weight=weight, withsign=withsign))
+        AdMatrixOfVisibilityGraph = np.array(__getAdjacencyMatrixOfVisibilityGraph_dual(ndata, ntimes, weight=weight, withsign=withsign))
     else:
-        AdMatrixOfVisibilityGraph = np.asmatrix(__getAdjacencyMatrixOfVisibilityGraph(ndata, ntimes, weight=weight))
+        AdMatrixOfVisibilityGraph = np.array(__getAdjacencyMatrixOfVisibilityGraph(ndata, ntimes, weight=weight))
         
-    G = nx.convert_matrix.from_numpy_matrix(abs(AdMatrixOfVisibilityGraph))
+    G = nx.from_numpy_array(abs(AdMatrixOfVisibilityGraph))
     
     labels = {}
     intensity = {} 
@@ -181,8 +181,8 @@ def __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times, weight=Non
         A = __getAdjacencyMatrixOfHorizontalVisibilityGraph_dual(data, times)
     """
 
-    A_posi = np.asmatrix(__getAdjacencyMatrixOfHorizontalVisibilityGraph(data, times, weight=weight))
-    A_nega = np.asmatrix(__getAdjacencyMatrixOfHorizontalVisibilityGraph(-data, times, weight=weight))
+    A_posi = np.array(__getAdjacencyMatrixOfHorizontalVisibilityGraph(data, times, weight=weight))
+    A_nega = np.array(__getAdjacencyMatrixOfHorizontalVisibilityGraph(-data, times, weight=weight))
     A_dual = np.where(A_posi >= A_nega, A_posi, -A_nega)
     
     if withsign == True:
@@ -287,8 +287,8 @@ def __getAdjacencyMatrixOfVisibilityGraph_dual(data, times, weight=None, withsig
         A = __getAdjacencyMatrixOfVisibilityGraph_dual(data, times)
     """
 
-    A_posi = np.asmatrix(__getAdjacencyMatrixOfVisibilityGraph(data, times, weight=weight))
-    A_nega = np.asmatrix(__getAdjacencyMatrixOfVisibilityGraph(-data, times, weight=weight))
+    A_posi = np.array(__getAdjacencyMatrixOfVisibilityGraph(data, times, weight=weight))
+    A_nega = np.array(__getAdjacencyMatrixOfVisibilityGraph(-data, times, weight=weight))
     if min(data)<0:
         A_dual = np.where(A_posi >= A_nega, A_posi, -A_nega)
     else:

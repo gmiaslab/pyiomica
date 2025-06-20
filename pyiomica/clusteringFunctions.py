@@ -421,11 +421,11 @@ def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, horizontal
 
     if method=='betweenness_centrality':
         if horizontal:
-            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data))
-            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(-data))
+            graph_nx = nx.from_numpy_array(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data))
+            graph_nx_inv = nx.from_numpy_array(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(-data))
         else:  
-            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
-            graph_nx_inv = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(-data, times))
+            graph_nx = nx.from_numpy_array(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
+            graph_nx_inv = nx.from_numpy_array(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(-data, times))
     
         def find_and_remove_node(graph_nx):
             bc = nx.betweenness_centrality(graph_nx)
@@ -448,9 +448,9 @@ def getCommunitiesOfTimeSeries(data, times, minNumberOfCommunities=2, horizontal
 
     elif method=='Girvan_Newman':
         if horizontal:
-            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data))
+            graph_nx = nx.from_numpy_array(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfHVG(data))
         else:
-            graph_nx = nx.from_numpy_matrix(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
+            graph_nx = nx.from_numpy_array(visibilityGraphAuxiliaryFunctions.getAdjacencyMatrixOfNVG(data, times))
         generator_of_communities = nx.algorithms.community.centrality.girvan_newman(graph_nx)
 
         for i in range(minNumberOfCommunities-1):

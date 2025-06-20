@@ -104,12 +104,22 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFor
         write(exampleDataFrame, '/dir1/exampleDataFrame', hdf5fileName='/dir2/data.h5')
     """
 
+    def to_py_str(x):
+        if isinstance(x, (str, int, float, bool)) or x is None:
+            return x
+        if hasattr(x, 'tolist'):
+            x = x.tolist()
+        if isinstance(x, (list, tuple)):
+            return type(x)(to_py_str(i) for i in x)
+        if hasattr(x, 'item') and not isinstance(x, str):
+            return to_py_str(x.item())
+        if type(x).__name__.startswith('str_') or type(x).__name__.startswith('bytes_'):
+            return str(x)
+        return x
     if jsonFormat:
         utilityFunctions.createDirectories("/".join(fileName.split("/")[:-1]))
-
         with gzip.GzipFile(fileName, 'w') as tempFile:
-            tempFile.write(json.dumps(data).encode('utf-8'))
-
+            tempFile.write(json.dumps(to_py_str(data)).encode('utf-8'))
         return None
 
     if hdf5fileName!=None and type(data) in [pd.DataFrame, DataFrame]:
@@ -138,11 +148,8 @@ def write(data, fileName, withPKLZextension = True, hdf5fileName = None, jsonFor
         if hdf5fileName!=None:
             print('HDF5 format is not supported for data type:', type(data))
             print('Recording data to a pickle file.')
-
         utilityFunctions.createDirectories("/".join(fileName.split("/")[:-1]))
-
         with gzip.open(fileName + ('.pklz' if withPKLZextension else ''),'wb') as temp_file:
-            pickle.dump(data, temp_file, protocol=4)
-
+            pickle.dump(to_py_str(data), temp_file, protocol=4)
     return None
 

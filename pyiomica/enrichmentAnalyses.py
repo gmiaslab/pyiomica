@@ -5,6 +5,7 @@ import pymysql
 import datetime
 import urllib.request
 import requests
+import os
 
 from .globalVariables import *
 
@@ -25,12 +26,12 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
     
     listData = data[list(data.keys())[0]]
 
-    #If input data was a list of genes, convert it to pairs with label "Generic"
-    if not type(listData[0]) is list:
+    # Robustly handle input as [gene, ...] or [[gene, type], ...]
+    if not isinstance(listData[0], (list, tuple)):
         listData = [[item, 'Unknown'] for item in listData]
-    else:
-        if len(listData[0])==1:
-            listData = [[item[0], 'Unknown'] for item in listData]
+    elif len(listData[0]) == 1:
+        listData = [[item[0], 'Unknown'] for item in listData]
+    # else: already [[gene, type], ...] or [[gene, ...], ...]
 
     #Get IDs for each gene
     dataForGeneTranslation = [item[0] if type(item) is list else item for item in listData]
@@ -102,8 +103,26 @@ def internalAnalysisFunction(data, multiCorr, MultipleList,  OutputID, InputID, 
     #Combined filter
     whatIsFiltered = whatIsFilteredLength * whatIsFilteredSignif
 
-    returning = dict(zip(list(np.array(list(ResultsHCct.keys()), dtype=object)[whatIsFiltered]),list(np.array(list(ResultsHCct.values()), dtype=object)[whatIsFiltered])))
-
+    keys = list(ResultsHCct.keys())
+    values = list(ResultsHCct.values())
+    filtered_keys = np.array(keys)[whatIsFiltered]
+    filtered_values = np.array(values, dtype=object)[whatIsFiltered]
+    def to_py_str(x):
+        if isinstance(x, (str, int, float, bool)) or x is None:
+            return x
+        if hasattr(x, 'tolist'):
+            x = x.tolist()
+        if isinstance(x, (list, tuple)):
+            return type(x)(to_py_str(i) for i in x)
+        if hasattr(x, 'item') and not isinstance(x, str):
+            return to_py_str(x.item())
+        if type(x).__name__.startswith('str_') or type(x).__name__.startswith('bytes_'):
+            return str(x)
+        return x
+    # Only convert key to str if it is not a tuple/list (to preserve multi-omics keys)
+    def safe_key(k):
+        return k if isinstance(k, (tuple, list)) else str(k)
+    returning = dict((safe_key(k), to_py_str(v)) for k, v in zip(filtered_keys, filtered_values))
     return {list(data.keys())[0]: returning}
 
 def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", ImportDirectly=False, PyIOmicaDataDirectory=None, OBOFile="goBasicObo.txt"):
@@ -131,10 +150,8 @@ def OBOGODictionary(FileURL="http://purl.obolibrary.org/obo/go/go-basic.obo", Im
     Usage:
         OBODict = OBOGODictionary()
     """
-
     global ConstantPyIOmicaDataDirectory
-
-    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory is None else PyIOmicaDataDirectory
     fileGOOBO = os.path.join(PyIOmicaDataDirectory, OBOFile)
     fileGOOBOgz = fileGOOBO + '.gz'
 
@@ -239,7 +256,6 @@ def GetGeneDictionary(geneUCSCTable = None, UCSCSQLString = None, UCSCSQLSelectL
         hg19.kgXref.kgID = hg19.knownToU133Plus2.name"}
 
     global ConstantPyIOmicaDataDirectory
-
     PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory
 
     if geneUCSCTable is None:
@@ -421,9 +437,10 @@ def GOAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, Bac
         geneOntAssoc = utilityFunctions.createReverseDictionary(identifierAssoc)
 
     if LengthFilter!=None:
-        keys, values = np.array(list(geneOntAssoc.keys()), dtype=object), np.array(list(geneOntAssoc.values()), dtype=object)
+        keys = list(geneOntAssoc.keys())
+        values = list(geneOntAssoc.values())
         index = np.where(LengthFilterFunction(np.array([len(value) for value in values]), LengthFilter))[0]
-        geneOntAssoc = dict(zip(keys[index],values[index]))
+        geneOntAssoc = dict(zip(np.array(keys)[index], np.array(values, dtype=object)[index]))
 
         #Create corresponding identifierAssoc
         identifierAssoc = utilityFunctions.createReverseDictionary(geneOntAssoc)
@@ -745,8 +762,7 @@ def KEGGAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, B
     """
     
     global ConstantPyIOmicaDataDirectory
-    
-    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory is None else PyIOmicaDataDirectory
 
     ##if the user asked us to import directly, import directly from KEGG website, otherwise, get it from a directory they specify
     fileAssociations = [os.path.join(PyIOmicaDataDirectory, item) for item in [KEGGQuery1 + "_" + KEGGQuery2 + "KEGGMemberToPathAssociation.json.gz", 
@@ -794,23 +810,36 @@ def KEGGAnalysisAssigner(PyIOmicaDataDirectory = None, ImportDirectly = False, B
         idToPath = dataStorage.read(fileAssociations[0], jsonFormat=True)[1]
         pathToID = dataStorage.read(fileAssociations[1], jsonFormat=True)[1]
 
-    if BackgroundSet!=[]:
-        #Using provided background list to create annotation projection to limited background space
-        keys, values = np.array(list(idToPath.keys())), np.array(list(idToPath.values()))
-        index = np.where([(((len(values[i])==True)*(values[i][0]!=values[i][0]))==False)*(keys[i] in BackgroundSet) for i in range(len(keys))])[0]
-        idToPath = dict(zip(keys[index],values[index]))
+    if BackgroundSet:
+        # Using provided background list to create annotation projection to limited background space
+        keys = list(idToPath.keys())
+        values = list(idToPath.values())
+        index = [
+            i for i in range(len(keys))
+            if (
+                not (len(values[i]) and values[i][0] != values[i][0])
+            ) and (keys[i] in BackgroundSet)
+        ]
+        idToPath = dict(
+            zip([keys[i] for i in index], [values[i] for i in index])
+        )
 
-        #Create corresponding reverse dictionary
+        # Create corresponding reverse dictionary
         pathToID = utilityFunctions.createReverseDictionary(idToPath)
 
-    if LengthFilter!=None:
-        keys, values = np.array(list(pathToID.keys())), np.array(list(pathToID.values()))
-        index = np.where(LengthFilterFunction(np.array([len(value) for value in values]), LengthFilter))[0]
-        pathToID = dict(zip(keys[index],values[index]))
+    if LengthFilter is not None:
+        keys = list(pathToID.keys())
+        values = list(pathToID.values())
+        index = [
+            i for i in range(len(keys))
+            if LengthFilterFunction(len(values[i]), LengthFilter)
+        ]
+        pathToID = dict(
+            zip([keys[i] for i in index], [values[i] for i in index])
+        )
 
-        #Create corresponding reverse dictionary
+        # Create corresponding reverse dictionary
         idToPath = utilityFunctions.createReverseDictionary(pathToID)
-
     return {KEGGQuery2 : {Labels[0]: idToPath, Labels[1]: pathToID}}
 
 def KEGGDictionary(PyIOmicaDataDirectory = None, ImportDirectly = False, KEGGQuery1 = "pathway", KEGGQuery2 = "hsa"):
@@ -878,6 +907,7 @@ def KEGGDictionary(PyIOmicaDataDirectory = None, ImportDirectly = False, KEGGQue
             return
 
     return associationKEGG
+
 
 def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, AugmentDictionary = True, InputID = ["UniProt ID", "Gene Symbol"],
                 OutputID = "KEGG Gene ID", MolecularInputID = ["cpd"], MolecularOutputID = "cpd", KEGGAnalysisAssignerOptions = {}, BackgroundSet = [], 
@@ -1000,10 +1030,8 @@ def KEGGAnalysis(data, AnalysisType = "Genomic", GetGeneDictionaryOptions = {}, 
     argsLocal = locals().copy()
 
     global ConstantPyIOmicaDataDirectory
-
     obtainConstantGeneDictionary(None, {}, True)
-    
-    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory is None else PyIOmicaDataDirectory
 
     #Gene Identifier based analysis
     if AnalysisType=="Genomic":
@@ -1188,8 +1216,7 @@ def MassDictionary(PyIOmicaDataDirectory=None):
     """
 
     global ConstantPyIOmicaDataDirectory
-
-    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory==None else PyIOmicaDataDirectory
+    PyIOmicaDataDirectory = ConstantPyIOmicaDataDirectory if PyIOmicaDataDirectory is None else PyIOmicaDataDirectory
 
     fileMassDict = os.path.join(PyIOmicaDataDirectory, "PyIOmicaMassDictionary.json.gz")
 
@@ -1222,7 +1249,7 @@ def MassDictionary(PyIOmicaDataDirectory=None):
 
     return MassDict
 
-def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
+def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None, overwrite=True):
 
     """Export results from enrichment analysis to Excel spreadsheets.
     
@@ -1235,6 +1262,9 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
         OutputDirectory: boolean, Default None
             Path of directories where the report will be saved
+
+        overwrite: boolean, Default True
+            If set to True, will overwrite existing files with the same name
 
     Returns:
         None
@@ -1277,9 +1307,15 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
         return returning
 
-    def ExportToFile(fileName, data):
+    def ExportToFile(fileName, data, overwrite=False):
 
-        writer = pd.ExcelWriter(fileName)
+        if os.path.exists(fileName) and not overwrite:
+            print(f"File {fileName} already exists. Set `overwrite=True` to overwrite.")
+            return
+        
+        fullPath = os.path.abspath(fileName)
+        os.makedirs(os.path.dirname(fullPath), exist_ok=True)
+        writer = pd.ExcelWriter(fullPath)
 
         for key in list(data.keys()):
             keys, values = list(data[key].keys()), list(data[key].values())
@@ -1294,13 +1330,43 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
             df['Significant'] = df['Significant'].map(bool)
 
-            cleanup = lambda value: value.replace("']], ['", ' | ').replace("[", '').replace("]", '').replace("'", '').replace(", Unknown", '')
-            df['List of gene hits'] = df['List of gene hits'].map(str).apply(cleanup)
-            df['Description'] = df['Description'].map(str).apply(cleanup)
+            cleanup = lambda value: value.replace("]]', ['", ' | ').replace("[", '').replace("]", '').replace("'", '').replace(", Unknown", '')
+
+            def flatten_and_join_genes(x):
+                # If all elements are [gene, label] pairs, output only gene IDs
+                if isinstance(x, (list, tuple)) and all(isinstance(i, (list, tuple)) and len(i) > 0 for i in x):
+                    flat = [str(i[0]) for i in x if i and i[0] not in (None, '', 'Unknown')]
+                # If all elements are strings (single-label case), output as-is
+                elif isinstance(x, (list, tuple)) and all(isinstance(i, str) for i in x):
+                    flat = [str(g) for g in x if g not in (None, '', 'Unknown')]
+                else:
+                    # fallback: flatten and join as before
+                    def to_py_str(y):
+                        if isinstance(y, (str, int, float, bool)) or y is None:
+                            return y
+                        if hasattr(y, 'tolist'):
+                            y = y.tolist()
+                        if isinstance(y, (list, tuple)):
+                            return [to_py_str(i) for i in y]
+                        if hasattr(y, 'item') and not isinstance(y, str):
+                            return to_py_str(y.item())
+                        if type(y).__name__.startswith('str_') or type(y).__name__.startswith('bytes_'):
+                            return str(y)
+                        return y
+                    def flatten(z):
+                        if isinstance(z, (list, tuple)):
+                            return [a for i in z for a in flatten(i)]
+                        else:
+                            return [z]
+                    flat = flatten(to_py_str(x))
+                    flat = [str(g) for g in flat if g not in (None, '', 'Unknown')]
+                return cleanup(', '.join(flat))
+            df['List of gene hits'] = df['List of gene hits'].apply(flatten_and_join_genes)
+            df['Description'] = df['Description'].map(str).apply(lambda x: cleanup(str(x)) if not isinstance(x, str) else cleanup(x))
 
             df.sort_values(by='BH-corrected p-Value', inplace=True)
 
-            df.to_excel(writer, str(key))
+            df.to_excel(excel_writer=writer, sheet_name=str(key))
 
             writer.sheets[str(key)].set_column('A:A', df.index.astype(str).map(len).max()+2)
              
@@ -1315,7 +1381,7 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
                 writer.sheets[str(key)].set_column(idx+1, idx+1, width, format)  # set column width
 
-        writer.save()
+        writer.close()
 
         print('Saved:', fileName)
 
@@ -1328,7 +1394,7 @@ def ExportEnrichmentReport(data, AppendString="", OutputDirectory=None):
     if AppendString=="":
         AppendString=(datetime.datetime.now().isoformat().replace(' ', '_').replace(':', '_').split('.')[0])
 
-    ExportToFile(saveDir + AppendString + '.xlsx', FlattenDataForExport(data))
+    ExportToFile(saveDir + AppendString + '.xlsx', FlattenDataForExport(data),overwrite = overwrite)
 
     return None
 
@@ -1516,7 +1582,7 @@ def ReactomeAnalysis(data,
 
     return returning
 
-def ExportReactomeEnrichmentReport(data, AppendString="", OutputDirectory=None):
+def ExportReactomeEnrichmentReport(data, AppendString="", OutputDirectory=None, overwrite = True):
 
     """Export results from enrichment analysis to Excel spreadsheets.
     
@@ -1558,15 +1624,20 @@ def ExportReactomeEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
         return returning
 
-    def ExportToFile(fileName, data):
+    def ExportToFile(fileName, data, overwrite=False):
+        if os.path.exists(fileName) and not overwrite:
+            print(f"File {fileName} already exists. Set `overwrite=True` to overwrite.")
+            return
 
-        writer = pd.ExcelWriter(fileName)
+        fullPath = os.path.abspath(fileName)
+        os.makedirs(os.path.dirname(fullPath), exist_ok=True)
+        writer = pd.ExcelWriter(fullPath)
 
         for key in list(data.keys()):
 
             df = data[key]
 
-            df.to_excel(writer, str(key))
+            df.to_excel(excel_writer=writer, sheet_name=str(key))
 
             writer.sheets[str(key)].set_column('A:A', df.index.astype(str).map(len).max()+2)
              
@@ -1581,7 +1652,7 @@ def ExportReactomeEnrichmentReport(data, AppendString="", OutputDirectory=None):
 
                 writer.sheets[str(key)].set_column(idx+1, idx+1, width, format)  # set column width
 
-        writer.save()
+        writer.close()
 
         print('Saved:', fileName)
 
@@ -1594,7 +1665,7 @@ def ExportReactomeEnrichmentReport(data, AppendString="", OutputDirectory=None):
     if AppendString=="":
         AppendString=(datetime.datetime.now().isoformat().replace(' ', '_').replace(':', '_').split('.')[0])
 
-    ExportToFile(os.path.join(saveDir, AppendString + '.xlsx'), FlattenDataForExport(data))
+    ExportToFile(os.path.join(saveDir, AppendString + '.xlsx'), FlattenDataForExport(data),overwrite=overwrite)
 
     return None
 

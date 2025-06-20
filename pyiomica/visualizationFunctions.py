@@ -994,7 +994,7 @@ def makeDendrogramHeatmapOfClusteringObject(ClusteringObject, saveDir, dataName,
 
         if group == 1:
             axisMatrix.set_xticks(range(data_loc.shape[1]))
-            axisMatrix.set_xticklabels([('' if (i%2==1 and textScale>1.3) else np.int(time)) for i, time in enumerate(np.round(times,1))], rotation=0, fontsize=6*textScale)
+            axisMatrix.set_xticklabels([('' if (i%2==1 and textScale>1.3) else int(time)) for i, time in enumerate(np.round(times,1))], rotation=0, fontsize=6*textScale)
             axisMatrix.set_xlabel(xLabel, fontsize=axisMatrix.xaxis.label._fontproperties._size*textScale)
 
         if group == sorted([item for item in list(ClusteringObject.keys()) if not item=='linkage'])[-1]:

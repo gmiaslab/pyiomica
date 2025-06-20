@@ -88,13 +88,25 @@ def createReverseDictionary(inputDictionary):
         revDict = createReverseDictionary(Dict)
     """
 
-    keys, values = np.array(list(inputDictionary.keys())), np.array(list(inputDictionary.values()))
+    keys = list(inputDictionary.keys())
+    values = list(inputDictionary.values())
     df = pd.DataFrame(np.array([[keys[i], value] for i in range(len(keys)) for value in values[i]]))
     dfGrouped = df.groupby(df.columns[1])
     keys, values = list(dfGrouped.indices.keys()), list(dfGrouped.indices.values())
     GOs = df.values.T[0]
-
-    return dict(zip(keys, [GOs[value].tolist() for value in values]))
+    def to_py_str(x):
+        if isinstance(x, (str, int, float, bool)) or x is None:
+            return x
+        if hasattr(x, 'tolist'):
+            x = x.tolist()
+        if isinstance(x, (list, tuple)):
+            return type(x)(to_py_str(i) for i in x)
+        if hasattr(x, 'item') and not isinstance(x, str):
+            return to_py_str(x.item())
+        if type(x).__name__.startswith('str_') or type(x).__name__.startswith('bytes_'):
+            return str(x)
+        return x
+    return dict((str(k), to_py_str(GOs[value].tolist())) for k, value in zip(keys, values))
 
 def createDirectories(path):
 

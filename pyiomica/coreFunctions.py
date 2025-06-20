@@ -246,14 +246,14 @@ def autocorrelation(inputTimes, inputData, inputSetTimes, UpperFrequencyFactor=1
     #create the amplitude spectrum from the input data:
     #add a zero at the first element to make the DFT work, sample only half the
     #points because we have oversampled by 2 in the inverseAutocovariance
-    inverseAmplitudes = np.concatenate(([0], inputInverseAuto[:np.int(inputInverseAuto.shape[0] / 2), 1]))
+    inverseAmplitudes = np.concatenate(([0], inputInverseAuto[:int(inputInverseAuto.shape[0] / 2), 1]))
 
     #do the DCT-III transform:
     autoCorrs = scipy.fftpack.dct(inverseAmplitudes, type=3, norm='ortho')
 
     #divide everything by a normalization factor so that the autocorrelation at lag 0 = 1
     #make sure we are only returning autocorrelations for the lags we can rely on, i.e.  for up to N/2 time points
-    values = autoCorrs[:np.int(np.floor(0.5 * len(autoCorrs)))] / autoCorrs[0]
+    values = autoCorrs[:int(np.floor(0.5 * len(autoCorrs)))] / autoCorrs[0]
 
     return np.vstack((inputSetTimes[:len(values)], values))
 
