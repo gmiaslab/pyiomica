@@ -42,7 +42,7 @@ def setup(app):
 # -- Project information -----------------------------------------------------
 
 project = 'pyiomica'
-copyright = '2021, S. Domanskyi, M. Zheng, C. Piermarocchi, G. Mias'
+copyright = '2025, S. Domanskyi, M. Zheng, C. Piermarocchi, G. Mias'
 author = 'S. Domanskyi, M. Zheng, C. Piermarocchi, G. Mias'
 
 # The short X.Y version
