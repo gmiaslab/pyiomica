@@ -1,3 +1,6 @@
+## 1.4.2
+- Updated code for Excel writer compatibility.
+
 ## 1.4.1
 - Maintenance release: No code changes. Created to trigger Zenodo archiving and update metadata for the 1.4.0 release.
 

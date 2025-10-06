@@ -362,7 +362,7 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
             df.index.name = 'Index'
             df.to_excel(writer, 'G%sS%s'%(group, subgroup))
 
-    writer.save()
+    writer.close()
 
     print('Saved clustering object to:', fileName)
 
