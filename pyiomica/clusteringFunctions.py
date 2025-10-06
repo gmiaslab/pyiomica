@@ -360,7 +360,7 @@ def exportClusteringObject(ClusteringObject, saveDir, dataName, includeData=True
                 df = pd.DataFrame(index=df_data.index)
 
             df.index.name = 'Index'
-            df.to_excel(writer, 'G%sS%s'%(group, subgroup))
+            df.to_excel(writer, sheet_name='G%sS%s'%(group, subgroup))
 
     writer.close()
 

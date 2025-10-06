@@ -1,3 +1,6 @@
+## 1.4.3
+- Updated code for df.to_excel future compatibility
+- Updated Zenodo archiving in documentation 
 ## 1.4.2
 - Updated code for Excel writer compatibility.
 
